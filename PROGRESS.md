@@ -24,7 +24,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
-| P13 | GCS & insights 🎯 D11 | J+M | todo | | | |
+| P13 | GCS & insights 🎯 D11 | J+M | in-progress | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-26; stacked on P12 |
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
