@@ -29,6 +29,8 @@ make dev-local              # web :3000 + worker :8000 against the LOCAL Supabas
 
 ## Deploying
 
+**Live:** web https://brandlens-app.vercel.app (Vercel project `brandlens`), worker https://brandlens-worker.onrender.com (Render service `brandlens-worker`). Both deploy automatically on every push to `main`. The steps below are for recreating them from scratch.
+
 Supabase project: `BrandLens`, **ap-southeast-1 (Singapore)**. Migrations: `supabase db push --db-url <session-pooler-URI>`; demo data: `make seed-demo url=<SUPABASE_URL>` (then any running worker embeds the vault).
 
 **Worker → Render** (free tier, Docker):

@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P10 partial (your deploy steps pending) → then tag `v0.7-core-loop`; P11 is unblocked
+**Current phase:** P10 partial (Render secrets pending, then verify + tag `v0.7-core-loop`); P11 is unblocked
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -21,7 +21,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
-| P10 | Deploy & core-loop E2E 🎯 D7 | Both | partial | M (Claude, /complete) | phase/P10-deploy | cloud DB done; Render/Vercel = user steps |
+| P10 | Deploy & core-loop E2E 🎯 D7 | Both | partial | M (Claude) | phase/P10-deploy → main | web live; Render secrets = user step |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
 | P13 | GCS & insights 🎯 D11 | J+M | todo | | | |
@@ -31,33 +31,24 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P10 / **partial** (branch `phase/P10-deploy`, stacked on P09 → … → P00; none merged). Everything automatable is done and verified. Creating the Render and Vercel services (and entering their secrets) is yours.
-- **⚠ Fix in `apps/worker/.env`:**
-  1. **`DATABASE_URL` host is wrong.** The project is in **ap-southeast-1 (Singapore)**, not Mumbai. Use `aws-0-ap-southeast-1.pooler.supabase.com:5432` (session pooler); `ap-south-1` gives "tenant/user not found".
-  2. Retired model IDs: `GROQ_MODEL_TEXT=openai/gpt-oss-120b`, `GROQ_MODEL_VISION=qwen/qwen3.8-27b`, `GEMINI_MODEL_TEXT=gemini-3.5-flash`, `GEMINI_MODEL_VISION=gemini-3.5-flash`.
-  Every cloud run so far substituted both in-process.
-- **Done (2026-10-26):**
-  - **Cloud Supabase** (`BrandLens`, ref `stybifjeivqrmnsbjdia`, ap-southeast-1, PG 17): all **17 migrations pushed** (`supabase db push --db-url`), demo data seeded (`make seed-demo`: 6 users, 2 campaigns, 4 facts, 6 rules), and the vault embedded by a worker run against cloud.
-  - Cloud hero review: the 4 expected deterministic findings plus an A-01 LLM suggestion, done in 4.6 s.
-  - **Core-loop e2e against the cloud stack** (local `next dev` on `.env.local` + worker on cloud): **3/3 passed** (F02→F05, 44 s).
-  - **`apps/worker/Dockerfile`:** python:3.12-slim, uv 0.9.9, `uv sync --frozen --no-dev`, **bge-small baked into `/app/.models` at build**, non-root `app` (uid 10001), `HEALTHCHECK /healthz`, honours `$PORT`. Built locally (2.8 GB unpacked). The container ran **healthy** against local Supabase and consumed `noop` jobs. Plus `.dockerignore`.
-  - **`render.yaml` Blueprint:** `brandlens-worker`, Docker, `rootDir: apps/worker`, free plan, **singapore**, health check `/healthz`. Non-secret env is prefilled (queue, providers, working model IDs, model cache, `OCR_ENGINE=tesseract`, `ENV=production`); secrets are `sync: false`.
-  - **Free-tier sleep:** the web's optional `WORKER_URL` env makes each submit ping `/healthz` via `after()`, and `.github/workflows/keepalive.yml` pings every 10 min when the repo variable `WORKER_URL` is set.
-  - **`e2e/core-loop.spec.ts`** (runs with `E2E_WORKER=1` locally or `E2E_BASE_URL=https://…`); `review.spec.ts` keeps the local-only stale-decision test. Playwright `baseURL` honours `E2E_BASE_URL`.
-  - **CI:** a new `worker-image` job builds the Docker image. pgTAP already runs. E2E is **manual** (needs the worker with LLM keys).
-  - README "Running locally" and "Deploying" sections.
-- **Your steps (exact; also in the README "Deploying" section):**
-  1. Fix `apps/worker/.env` as above.
-  2. **Render:** Dashboard → New → **Blueprint** → this repo (merge or push the branch first). Enter the secrets: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` (Singapore session pooler), `GROQ_API_KEY`, `GEMINI_API_KEY`, `LANGFUSE_*`, and optionally `DISCORD_WEBHOOK_URL` + `SITE_URL`.
-  3. **Vercel:** import the repo, Root Directory `apps/web`. Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_DEMO_MODE=true`, `DISCORD_WEBHOOK_URL`, `WORKER_URL`.
-  4. In Supabase Auth → URL Configuration, set the Site URL and Redirect URLs to the Vercel URL.
-  5. Set the GitHub repo variable `WORKER_URL`.
-  6. Verify with `E2E_BASE_URL=https://<app>.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts`, check the Render logs for `review done`, then `git tag v0.7-core-loop`.
+- **Phase / status:** P10 / **partial**: one manual step left (Render secrets). `main` = `phase/P10-deploy` (fast-forwarded, user decision); all branches pushed to `github.com/maanit-gupta/BrandLens` (private, default branch `main`).
+- **Live now (2026-10-26):**
+  - **Web (Vercel):** project `brandlens` (team `maanit-s-team`, `prj_vOQ3t2b16wzKSDDYM7NPiU7OC1mH`), root `apps/web`, functions in `sin1`, production domain **https://brandlens-app.vercel.app** (`brandlens.vercel.app` was taken). The production deploy of `29c630d` is **Ready**; `/` → `/login` returns 200. Env (production + preview): Supabase URL/publishable key, `SUPABASE_SECRET_KEY` + `DISCORD_WEBHOOK_URL` (sensitive, piped from `.env.local` by the CLI, never read), `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_DEMO_MODE=true`, `WORKER_URL`, `EMAIL_FROM`. Standard deployment protection: the production domain is public, previews need a Vercel login.
+  - **Worker (Render):** service `brandlens-worker` (`srv-dbfn53vb9u1s73dicgkg`), Docker (`apps/worker/Dockerfile`, context `apps/worker`), free plan, singapore, auto-deploy from `main`, URL **https://brandlens-worker.onrender.com**. The image **builds**; the container exits at startup because the secrets are missing (fail-fast names them). Non-secret env and `SITE_URL` are set.
+  - **GitHub:** repo variable `WORKER_URL` is set, so `keepalive.yml` pings every 10 min.
+  - Created with the MCPs/CLI rather than the `render.yaml` Blueprint; the Blueprint stays as the from-scratch recipe.
+- **Your remaining steps:**
+  1. Render dashboard → `brandlens-worker` → **Environment**: add `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` (Singapore session pooler, :5432), `GROQ_API_KEY`, `GEMINI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and optionally `DISCORD_WEBHOOK_URL` → Save and deploy.
+  2. Render → **Settings → Health Check Path** = `/healthz` (the MCP can't set it).
+  3. Optional: Supabase → Auth → URL Configuration → Site URL `https://brandlens-app.vercel.app` (only email links use it; password sign-in works without it).
+- **Then verify (next session can do this):** Render logs show the worker polling; `cd apps/web && E2E_BASE_URL=https://brandlens-app.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts`; Render logs show `review done`; then `git tag v0.7-core-loop && git push --tags`, mark P10 `done`.
 - **Gotchas:**
-  - zsh doesn't word-split unquoted `$VARS`, so use `--env-file` for `docker run`.
-  - Render free = 512 MB. bge-small loads lazily (about 300 MB); switch to Starter if OOM. PaddleOCR (P11) won't fit, so keep `OCR_ENGINE=tesseract` there.
+  - Every push to `main` redeploys **both** services. Phase branches only get Vercel previews (behind Vercel login).
+  - Render free = 512 MB. bge-small loads lazily (about 300 MB); switch to Starter if it OOMs. PaddleOCR (P11) won't fit, so keep `OCR_ENGINE=tesseract` there.
+  - The local `apps/worker/.env` still has `OCR_ENGINE=paddle` and `MODEL_CACHE_DIR=./.models` (fine locally). Render uses `tesseract` and `/app/.models`.
+  - `vercel env add` rejects `--sensitive` for `NEXT_PUBLIC_*` (they're public anyway); use `--environment`, since the positional form is deprecated.
   - Every cloud and e2e run that reaches approved or publish-ready posts to the real Discord webhook.
-- **Exact next step:** your deploy steps (above), then tag. Meanwhile **P11 (image checks)** is unblocked (deps P07), as are P12 and P14.
+- **Exact next step:** after you finish the Render secrets, run the verify step above. **P11 (image checks)** is unblocked in parallel (deps P07), as are P12 and P14.
 
 ## Decisions log (append-only)
 
