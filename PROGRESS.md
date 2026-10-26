@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P13 partial (on `phase/P13-gcs-insights`, stacked on unmerged P12)
+**Current phase:** P14 (P13 done on `phase/P13-gcs-insights`, stacked on unmerged P12)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -24,41 +24,25 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
-| P13 | GCS & insights 🎯 D11 | J+M | partial | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-26; stacked on P12 |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` (local); not merged |
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P13 / **partial** (2026-10-26) on `phase/P13-gcs-insights`, stacked on P12, which is done but **not merged, not deployed, and its cloud migration isn't applied** (see Open questions). A WIP commit stops the session at the usage limit.
-- **P12 summary:** done. See its Decisions rows and `apps/worker/eval/pdf_report.md`: deck 9/9; 40 pages in 7.0 s at 484 MB peak, recorded inside the worker image at `--memory=512m`; `e2e/pdf-check.spec.ts` green locally.
-- **P13, built and verified locally:**
-  - Migration `20261026100019_insights.sql`:
-    - `rule_gcs(org, since)`: SPEC §11 per rule-card **version**; "AI wrong" dismissals aren't counted.
-    - `insights_summary(org, since)`: KPI tiles, top issues, and the `simulated` flag.
-    - `flag_unclear_rules(org)`: direct-DB/worker only. Inserts a pending placeholder, audits it, queues `generate_examples`.
-    - `decide_example_suggestion(id, keep[])`: brand admin. Appends the kept examples (`source: generated`) through `revise_rule_card`, giving v n+1, re-embedded.
-    - `example_suggestions` added to the realtime publication.
-  - pgTAP `supabase/tests/05_insights.test.sql` (20 tests) passes via `make test-db`.
-  - Worker: `prompts/examples_v1.md`, `pipeline/examples.py` (schema: exactly 3 items with both kinds; dismissed quotes redacted; verbatim copies dropped), `jobs/generate_examples.py` (one LLM call; on degraded it removes the placeholder), and the Discord `notify_unclear_rule`. `review_version` calls `flag_unclear_rules` after each review (best effort). Tests: `tests/test_insights.py` (6).
-  - `scripts/simulate_activity.py` + `make simulate-activity` (local; `url=` for cloud, refuses on mismatch). It writes 157 archived "[Simulated]" contents through `private.apply_transition` and `simulated: true` audit events. Local result matches plan p.19 exactly: **TV-04 41/60 UNCLEAR, VS-02 22/73 watch, CL-03 63/97, G-07 88/99**. Real Groq generated 3 TV-04 examples in 2.3 s.
-  - Web:
-    - `/insights` (`app/(app)/insights/page.tsx`): KPI tiles, the "Illustrative data" pill, the Recharts bar chart plus a data table, and the watchlist (`components/insights/watchlist.tsx`) with a native `<dialog>` drawer that approves or rejects each example. Before/after reads e.g. "v1: GCS 60 (UNCLEAR) · v2 added 2 generated examples".
-    - `lib/insights/actions.ts`.
-    - `/settings/ai-use` lists models and prompt versions from runs in the last 30 days.
-  - `e2e/insights.spec.ts` passes locally (21 s, axe clean with the drawer open).
-- **Left to do for P13:**
-  1. Run `make check` and fix anything red. The web code is tsc/eslint-clean per file, but the full run is untested after the last changes. `test_intent_verification_is_fast` is flaky when the laptop is busy; it skips at load/CPU > 0.5.
-  2. Log the dependency (below; done) and the decisions (Decisions rows to add: GCS per rule version; placeholder suggestion for idempotency; examples via revise_rule_card; drawer as a native dialog).
-  3. Check that `embed_vault` ran for TV-04 v2 after approval (worker log "vault embedded").
-  4. Day-11 checklist, then tag `v0.11-feature-complete` (after merging P12/P13 with user approval).
-  5. Update the README "Changes since Round 1" and the AI-assistance sections.
+- **Phase / status:** P13 / **done** (2026-10-27) on `phase/P13-gcs-insights`, stacked on P12. Neither P12 nor P13 is merged or deployed; cloud migrations `20261026100018` and `20261026100019` aren't applied yet (see Open questions).
+- **What exists now:**
+  - SQL (`20261026100019_insights.sql`): `rule_gcs`, `insights_summary`, `flag_unclear_rules`, `decide_example_suggestion`; pgTAP `05_insights` (20 tests).
+  - Worker: `generate_examples` job, `prompts/examples_v1.md`, `pipeline/examples.py`, Discord `notify_unclear_rule`; `review_version` calls `flag_unclear_rules` after every review.
+  - `make simulate-activity` gives TV-04 41/60 UNCLEAR, VS-02 22/73, CL-03 63/97, G-07 88/99 (plan p.19).
+  - Web: `/insights` (KPI tiles, chart + table, watchlist, suggestions drawer), `/settings/ai-use` models list.
+  - Verified 2026-10-27: `make check` green (171 pytest, 74 Vitest, 100 pgTAP). Full Playwright suite on a fresh `db-reset → seed-assets-local → simulate-activity` passes. TV-04 v2 was re-embedded (new `embedding_source_hash`).
+- **Day-11 checklist:** image and PDF overlays (`image-check`, `pdf-check`), risk routing, comments and diff (`review`, `core-loop`), and the GCS dashboard (`insights`) all pass locally. Tagged `v0.11-feature-complete` locally (not pushed).
 - **Gotchas:**
-  - The migration file `20261026100019` was edited after being applied locally only (enum cast; dropped the card-age guard in `blocks`). Run `make db-reset` before relying on local state.
-  - Local `make dev-local` posts to the real Discord webhook if one is configured in `apps/worker/.env`.
-  - Browse at `localhost`, not `127.0.0.1` (dev hydration).
-- **Exact next step:** `make db-reset && make seed-assets-local`, start `make dev-local`, run `make check`, then `make simulate-activity` and `E2E_WORKER=1 pnpm exec playwright test e2e/insights.spec.ts e2e/pdf-check.spec.ts`. Record the decisions, set P13 to done, commit. Then ask the user to merge P12 and P13 and deploy (cloud migrations 18 and 19 first).
+  - `e2e/insights.spec.ts` isn't re-runnable: it approves TV-04 v2. Run `make db-reset && make seed-assets-local && make simulate-activity` first.
+  - Local `make dev-local` posts to the real Discord webhook if one is configured.
+- **Exact next step:** P14 (golden set and eval gate).
 
 ## Decisions log (append-only)
 
@@ -168,6 +152,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P12 | Embeddings run in length-sorted batches under 512 padded tokens (`EMBED_TOKEN_BUDGET`) | The 40-page run was OOM-killed at 512 MB: one long query padded a 25-text batch (peak 1015 MB); now 484 MB. Also protects long text drafts |
 | 2026-10-26 | P12 | Latency test takes the best median of 3 rounds and skips when load/CPU > 0.5 | It measured a busy laptop, not the code (same 17–21 ms with and without the P12 change) |
 | 2026-10-26 | P12 | PDF findings resolve like image findings ("Mark fixed in the PDF", then upload the corrected file); the findings list follows the selected page, with a "Show all pages" toggle; "Show on page N" pins the selection | A PDF can't be patched in place; the pin survives the mouseleave caused by scrolling |
+| 2026-10-27 | P13 | GCS is computed per rule-card **version** (`rule_gcs`); "AI wrong" dismissals don't count against a rule | A revised card starts a fresh score, so the before/after of the example flow is visible; model errors aren't guideline ambiguity |
+| 2026-10-27 | P13 | `flag_unclear_rules` inserts a pending placeholder `example_suggestions` row before queueing `generate_examples` | Idempotent: one generation per UNCLEAR version even though every review calls it |
+| 2026-10-27 | P13 | Approved examples are appended through `revise_rule_card` (v n+1, `source: generated`), then re-embedded by `embed_vault` | Reuses the P05 archive/approve atomics and the `embedding_source_hash` re-embed path |
+| 2026-10-27 | P13 | Suggestions drawer is a native `<dialog>` | Focus trap, Esc and inert background for free; axe-clean |
+| 2026-10-27 | P13 | Simulated history is written as archived contents through `private.apply_transition`, with `simulated: true` audit events driving the "Illustrative data" pill | Never bypasses the state machine; the pill appears only when simulator data is in the window |
+| 2026-10-27 | P13 | Activating a finding (overlay click, keyboard focus) pins it in the draft workspace | The scroll the click causes fired mouseleave on the box and cleared the highlight (flaky image e2e under load) |
 
 **Dependencies and licences** (append when adding any dependency):
 

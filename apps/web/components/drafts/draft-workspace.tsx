@@ -172,7 +172,10 @@ export function DraftWorkspace({
   ]);
 
   const focus = (fid: string | null, scroll = false) => {
-    if (fid && fid !== pinned) setPinned(null);
+    // Activation (click or keyboard focus) pins the selection: the scroll it causes fires a
+    // mouseleave on the overlay box, which must not clear the highlight.
+    if (fid && scroll) setPinned(fid);
+    else if (fid && fid !== pinned) setPinned(null);
     setActive(fid ?? pinned);
     // PDFs: keyboard focus on a finding from another page turns to that page.
     const onPage = fid ? visible.find((f) => f.id === fid)?.page : null;
