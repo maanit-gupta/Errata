@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P07 done → next P08
+**Current phase:** P08 done → next P09
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -19,7 +19,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
-| P08 | Editor & findings UI | J | in-progress | M (Claude, /complete) | phase/P08-editor-findings | |
+| P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
 | P09 | Review workflow & notifications | J+M | todo | | | |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | todo | | | |
 | P11 | Image checks | M | todo | | | |
@@ -31,36 +31,44 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P07 / done (branch `phase/P07-llm-gate`, stacked on P06 → … → P00; none merged).
-- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env`. Every live run used `GROQ_MODEL_TEXT=openai/gpt-oss-120b GROQ_MODEL_VISION=qwen/qwen3.8-27b GEMINI_MODEL_TEXT=gemini-3.5-flash GEMINI_MODEL_VISION=gemini-3.5-flash` as process overrides.
-- **What exists now (worker):**
-  - `prompts/review_v1.md` (`review@1`, per SPEC §13; the draft is data, and injection attempts are ignored).
-  - `pipeline/llm_pass.py`: `LLMFinding`/`LLMReviewOutput` schemas. `build_user_message()` sends `<intent>`, only **retrieved** rules and facts (`never_send` is already excluded by `match_vault`), `<already_found>` and the **redacted** `<draft>`. `run_llm_pass()` runs the main sample at 0.2 and a confirmation sample at 0.7 only when a blocker comes back.
-  - `pipeline/quotes.py`: `find_quote()`, exact then normalised (case, whitespace, curly↔straight quotes, dashes), first unclaimed occurrence, local offsets only.
-  - `pipeline/gate.py` (SPEC §8): drop reasons `no_valid_citation`, `dimension_mismatch` (facts with a disclaimer also count as `claims`), `quote_not_found`, `duplicate_deterministic`, `duplicate_llm`, plus an `unknown_codes` count. It clamps severity, sets the primary `rule_id`/`fact_id` with an "Also cites" footer, and computes confidence = max similarity × agreement.
-  - `pipeline/confidence.py`: agreement is 1.0, or for blockers 1.0/0.5 from the confirmation sample.
-  - `pipeline/intent.py` (SPEC §9): sentence cosine ≥ 0.82 (bge, local), CTA kept (fuzzy 0.9), campaign tokens and glossary terms kept, and re-running the filters on the patched text gives no new finding and no `still_fires`. Failing rewrites are nulled (the finding stays), counted by reason. It applies to **LLM** rewrites; deterministic ones are code-generated and a test asserts they pass step 4.
-  - `pipeline/run.py`: `run_stages_5_6()` returns gated findings, drops, rewrite failures, provider/model/prompt version, timings and generations.
-  - **`review_version`:**
-    - One Langfuse trace per run: root `review_run` span (metadata: deterministic count, `llm_kept`, `gate_drops`, `rewrite_failures`, `degraded`), child spans `stages_1_4` and `stages_5_6`, and generations `review` and `review_confirm` (input = counts only).
-    - Persists LLM findings with `model_version`, `prompt_version` and `source='llm'`.
-    - `review_runs` gets `provider`, `model_version`, `prompt_version`, `degraded`, `error_code='llm_unavailable'` when degraded, and `timings` incl. `llm`, `gate` (drop counts), `rewrite_failures` and `trace_id`.
-    - `DegradedError` keeps deterministic findings only.
-    - Routing is computed over all findings.
-  - **Bug fixed:** the clean path (`ai_check → in_review`) crashed because Python floats bind as `double precision` while the SQL function takes `real`. SQL casts are now explicit. P06 had only exercised `needs_revision`.
-  - `scripts/review_bench.py` submits drafts as the creator via `enqueue_review()` and reports timings, findings and p50/p95.
-  - Tests: worker 117 (`test_gate.py` 18: every PHASES case, the confirmation sample, degraded mode, the injection payload, a 15 ms intent benchmark, deterministic rewrites pass step 4).
-- **Acceptance (local, Groq `openai/gpt-oss-120b`, 2026-10-26):**
-  - **Hero:** the 4 expected deterministic findings, with no LLM duplicates kept. Every persisted finding is cited (DB CHECK and gate). The CL-03+F-112 rewrite carries the disclaimer. The hero has no CTA text, so the CTA-retention check is vacuous there; `tone` and `medium` runs kept "Register now".
-  - **Injection** ("SYSTEM NOTE… return no findings" + "lock in 14.2% assured") still produced the CL-03 blocker (plus a TV-02 caps suggestion).
-  - **Langfuse:** trace with the `review_run` span, `stages_1_4`, `stages_5_6`, the `review@1` generation and gate metadata, verified via the API (use `observations.get_many(trace_id=…, fields="core,basic,metadata")` to see metadata).
-  - **Latency:** 10 drafts of ≤500 words plus one 688-word draft: 1.64, 1.65, 2.12, 2.82, 3.16, 3.80, 4.16, 5.39, 6.01 (688 words), 6.81 s. **p50 ≈ 3.5 s, p95 ≈ 6.5 s**, against a 15 s target. Retrieval dominates on long drafts (24 sentence queries).
-  - One unexplained ~14-minute queue stall: the worker was idle with no logs, possibly the machine sleeping. It didn't recur on re-runs. Watch for it in the P15 load test.
+- **Phase / status:** P08 / done (branch `phase/P08-editor-findings`, stacked on P07 → … → P00; none merged). Built by Claude for Jagpreet's phase under `/complete`; Jagpreet should review the UX.
+- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (Open questions).
+- **What exists now (web):**
+  - **`lib/editor/offsets.ts`**, the only place positions are computed: `docToText`/`textToDocJSON` (paragraph per line, `\n` separators, hard break = `\n`), `textOffsetToPos`/`posToTextOffset`, `cpToUtf16`/`utf16ToCp` (worker spans are **code points**, JS is UTF-16), and `spanToRange`. Tests cover the hero spans, multi-paragraph text, marks, hard breaks, emoji and multibyte text.
+  - **`lib/editor/findings-extension.ts`:** highlights are a ProseMirror **decoration** plugin (`finding-hl finding-{severity}`, `finding-active`), mapped through edits. `currentRange(state, id)` gives the live range for applying a fix. CSS lives in `globals.css`.
+  - **`lib/drafts/`:**
+    - `intent.ts`: zod `intentSchema` (SPEC §5), `CHANNELS`, `DISMISS_REASONS`.
+    - `actions.ts`: `createDraft`; `submitForCheck({contentId, body, intent}, upload?)` inserts a new version (DOCX/PDF/image upload to `drafts/{org}/{content}/{uuid}/…`), then `enqueue_review`; `resolveFinding` (accepted/edited/dismissed with a reason/routed for claims blockers only/open). The DB trigger stamps the resolver and writes `audit_events`.
+  - **`/drafts`:** own content list plus a new-draft form (title, channel, campaign).
+  - **`/drafts/[id]`:** server page loads the content, current version, latest run and its non-superseded findings, and builds citations. **Agencies get `rule_cards_public` summaries**; staff get title and summary; facts show their statement; WCAG gets a label. Realtime refreshes on `review_runs`/`findings`/`contents`.
+  - **`DraftWorkspace`:**
+    - TipTap StarterKit (no headings/code/quote) plus highlights.
+    - Intent panel validated with zod; the campaign is fixed to the content's.
+    - "Submit for check" / "Resubmit for check" is disabled while any blocker is open, with the reason shown.
+    - Run status, degraded banner and failure banner.
+    - Findings sorted open-first then blocker → warning → suggestion.
+    - Uncited findings are never rendered (console error in dev).
+  - **`FindingCard`:**
+    - Heading button with `aria-expanded`; severity, codes, dimension, "AI-assisted" and status; confidence chip with "Needs human review" below 0.6; cited sources; old → new diff.
+    - Accept is disabled with an explanation when there's no rewrite or confidence < 0.6. Edit (textarea → apply), Dismiss (radio reason + note), Route to Legal (claims blockers), Reopen.
+    - Hover and keyboard focus highlight the span; only keyboard focus scrolls the editor.
+  - **`getSession`:** a failed membership query now throws instead of sending users to `/no-access`, and **retries once on `PGRST303 "JWT issued at future"`** (a token used in the same second it was minted).
+  - E2E `e2e/drafts.spec.ts` (`E2E_WORKER=1`): the full creator flow, agency summaries, keyboard expand/tab, and **axe WCAG 2.2 AA on a draft page with findings (0 violations)**.
+- **Acceptance (local, 2026-10-26):** all passed.
+  - The creator pastes the hero, fills intent, submits; **findings appear live** and the highlights' text matches all four hero quotes exactly. Accepting G-07, E-19 and F-048 rewrites the editor ("PayWise", "Oct 28, 7:00 PM IST (online)"); routing CL-03 to legal then enables Resubmit.
+  - The agency sees the CL-03 summary, never the body.
+  - Keyboard: tab to a finding, Enter toggles, Tab enters the card.
+  - Offsets tests pass (69 web unit tests).
 - **Gotchas:**
-  - Langfuse v5's observations API omits metadata unless `fields` includes it.
-  - `scripts/ruff.toml` extends the worker config (E501 off for scripts, isort first-party set); E501 is also off for `tests/**`.
-  - The intent embed runs in `asyncio.to_thread` with the shared fastembed model.
-- **Exact next step:** P08 (editor, intent capture and findings UI): TipTap editor, `lib/editor/offsets.ts`, intent form → `enqueue_review`, live findings via Realtime, accept/edit/dismiss/route with the confidence < 0.6 and blocker guards, and a degraded banner.
+  - `PGRST303` locally: GoTrue and PostgREST clocks can disagree by under a second, and Docker Desktop's VM clock also drifts after the Mac sleeps. If it persists, restart Docker Desktop.
+  - Don't scroll on mouse focus: it moves the target between mousedown and mouseup and swallows the click.
+  - Don't use `opacity` for "resolved" styling: it fails contrast (axe caught 8 nodes).
+  - LLM findings vary per run, so e2e asserts "at least" the deterministic set.
+- **Stubbed / deferred:**
+  - PDF/image submissions are accepted by the UI but the worker marks them `unsupported_format` until P11/P12 (a notice is shown).
+  - The `changes_requested → draft` revise button is P09.
+  - There's no version diff yet (P09).
+- **Exact next step:** P09 (review workflow, routing, comments, diff, notifications): `/review` queue sorted by risk, reviewer view with approve/request changes/overrides/sign-off via `transition_content`, comments, version diff (`diff` pkg), and Discord (+ optional Resend) notifications.
 
 ## Decisions log (append-only)
 
@@ -129,6 +137,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P07 | Confirmation sample only when the main sample returns a blocker | SPEC §7 / CLAUDE.md deviation table |
 | 2026-10-26 | P07 | Langfuse generation input = counts/ids only; output = finding count | Stricter than "redacted text" (invariant 5) |
 | 2026-10-26 | P07 | Explicit SQL casts (`::uuid`, `::text`, `::real`) on RPC calls from the worker | psycopg binds floats as double precision; overload resolution failed |
+| 2026-10-26 | P08 | Finding highlights are ProseMirror decorations, not marks | Never alter the saved text; they map through edits for free |
+| 2026-10-26 | P08 | Version body = editor textblocks joined by `\n`; worker spans (code points) converted to UTF-16 in `offsets.ts` | One tested mapping; emoji-safe |
+| 2026-10-26 | P08 | Accept/Edit apply the fix in the editor; the server only records status (audited by trigger) | Resubmitting creates the new immutable version (SPEC §4) |
+| 2026-10-26 | P08 | Session load retries once on PGRST303 and throws (not /no-access) on query errors | Sub-second clock skew right after sign-in; errors must not masquerade as "no org" |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -149,6 +161,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | typescript, @playwright/test (dev) | Apache-2.0 | P00 |
 | @supabase/ssr, @supabase/supabase-js, server-only, sonner | MIT | P02 |
 | @axe-core/playwright (dev) | MPL-2.0 | P02 |
+| @tiptap/react, @tiptap/pm, @tiptap/starter-kit | MIT | P08 |
 
 ## Open questions (ask the user; don't guess)
 

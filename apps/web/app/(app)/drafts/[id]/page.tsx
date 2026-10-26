@@ -1,0 +1,134 @@
+import { notFound } from "next/navigation";
+import type { Citation, FindingView } from "@/components/drafts/finding-card";
+import { DraftWorkspace } from "@/components/drafts/draft-workspace";
+import { PageHeader } from "@/components/page-header";
+import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
+import { requireSession } from "@/lib/auth/session";
+import type { Intent } from "@/lib/drafts/intent";
+import { createClient } from "@/lib/supabase/server";
+
+export const metadata = { title: "Draft" };
+
+export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
+  const { id } = await params;
+  const session = await requireSession();
+  const supabase = await createClient();
+
+  const { data: content } = await supabase
+    .from("contents")
+    .select("id, title, channel, state, owner_id, campaign_id, current_version_id, campaigns(name)")
+    .eq("id", id)
+    .maybeSingle();
+  if (!content) notFound();
+
+  const [{ data: campaigns }, { data: version }] = await Promise.all([
+    supabase.from("campaigns").select("id, name").eq("org_id", session.orgId),
+    content.current_version_id
+      ? supabase
+          .from("versions")
+          .select("id, n, body, intent, format")
+          .eq("id", content.current_version_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  // The latest run for this content (the current version, or the one before a resubmit lands).
+  const { data: run } = version
+    ? await supabase
+        .from("review_runs")
+        .select("id, status, degraded, error_code, version_id, versions!inner(content_id)")
+        .eq("versions.content_id", content.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+
+  const { data: rows } = run
+    ? await supabase
+        .from("findings")
+        .select(
+          "id, dimension, severity, confidence, source, quote, span, explanation, rewrite, status, dismiss_reason, rule_id, fact_id, wcag_ref",
+        )
+        .eq("run_id", run.id)
+        .neq("status", "superseded")
+    : { data: [] };
+
+  // Citations: agencies only ever see rule summaries (SPEC §2 ¹).
+  const ruleIds = [...new Set((rows ?? []).map((r) => r.rule_id).filter((x): x is string => !!x))];
+  const factIds = [...new Set((rows ?? []).map((r) => r.fact_id).filter((x): x is string => !!x))];
+  const isAgency = session.role === "agency_creator";
+  const [{ data: rules }, { data: facts }] = await Promise.all([
+    ruleIds.length
+      ? isAgency
+        ? supabase.from("rule_cards_public").select("id, code, title, summary").in("id", ruleIds)
+        : supabase.from("rule_cards").select("id, code, title, summary").in("id", ruleIds)
+      : Promise.resolve({
+          data: [] as {
+            id: string | null;
+            code: string | null;
+            title: string | null;
+            summary: string | null;
+          }[],
+        }),
+    factIds.length
+      ? supabase.from("facts").select("id, code, statement").in("id", factIds)
+      : Promise.resolve({ data: [] as { id: string; code: string; statement: string }[] }),
+  ]);
+  const ruleById = new Map((rules ?? []).map((r) => [r.id, r]));
+  const factById = new Map((facts ?? []).map((f) => [f.id, f]));
+
+  const findings: FindingView[] = (rows ?? []).map((r) => {
+    const citations: Citation[] = [];
+    const rule = r.rule_id ? ruleById.get(r.rule_id) : undefined;
+    if (rule?.code)
+      citations.push({
+        code: rule.code,
+        kind: "rule",
+        title: rule.title ?? undefined,
+        text: rule.summary ?? undefined,
+      });
+    const fact = r.fact_id ? factById.get(r.fact_id) : undefined;
+    if (fact) citations.push({ code: fact.code, kind: "fact", text: fact.statement });
+    if (r.wcag_ref)
+      citations.push({
+        code: `WCAG ${r.wcag_ref}`,
+        kind: "wcag",
+        title: "Web Content Accessibility Guidelines 2.2",
+      });
+    const span = r.span as { start?: number; end?: number } | null;
+    return {
+      ...r,
+      span: { start: span?.start ?? 0, end: span?.end ?? 0 },
+      citations,
+    } as FindingView;
+  });
+
+  const isOwner = content.owner_id === session.userId || session.role === "brand_admin";
+  const canEdit = isOwner && (content.state === "draft" || content.state === "needs_revision");
+
+  return (
+    <>
+      <RealtimeRefresh orgId={session.orgId} tables={["review_runs", "findings", "contents"]} />
+      <PageHeader eyebrow={content.campaigns?.name ?? "Draft"} title={content.title} />
+      <DraftWorkspace
+        content={{
+          id: content.id,
+          title: content.title,
+          state: content.state,
+          channel: content.channel,
+          campaignId: content.campaign_id,
+        }}
+        campaigns={campaigns ?? []}
+        version={version ? { ...version, intent: (version.intent ?? {}) as Partial<Intent> } : null}
+        run={
+          run
+            ? { id: run.id, status: run.status, degraded: run.degraded, error_code: run.error_code }
+            : null
+        }
+        findings={findings}
+        canEdit={canEdit}
+        canAct={isOwner}
+      />
+    </>
+  );
+}

@@ -27,17 +27,34 @@ export const getSession = cache(async (): Promise<SessionResult> => {
   if (!userId) return { status: "signed_out" };
   const email = typeof data.claims.email === "string" ? data.claims.email : "";
 
-  const [{ data: membership }, { data: profile }] = await Promise.all([
-    supabase
-      .from("memberships")
-      .select("org_id, role, specialist_kind, organisations(name)")
-      .eq("user_id", userId)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
-  ]);
+  const load = () =>
+    Promise.all([
+      supabase
+        .from("memberships")
+        .select("org_id, role, specialist_kind, organisations(name)")
+        .eq("user_id", userId)
+        .order("created_at")
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
+    ]);
+  let [{ data: membership, error: membershipError }, { data: profile }] = await load();
+  // PGRST303 "JWT issued at future": a token used in the same second it was minted can trip
+  // PostgREST when the auth server's clock is a hair ahead (seen right after sign-in). Retry once.
+  if (membershipError?.code === "PGRST303") {
+    await new Promise((r) => setTimeout(r, 1100));
+    [{ data: membership, error: membershipError }, { data: profile }] = await load();
+  }
 
+  // A failed query is an error, not "no organisation" (don't send people to /no-access on a blip).
+  if (membershipError) {
+    console.error(
+      "[session] membership lookup failed",
+      membershipError.code,
+      membershipError.message,
+    );
+    throw new Error("Couldn't load your organisation. Please retry.");
+  }
   if (!membership) return { status: "no_membership", userId, email };
   return {
     status: "ok",

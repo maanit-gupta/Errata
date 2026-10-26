@@ -229,3 +229,38 @@
     outline-offset: 2px;
   }
 }
+
+/* Finding highlights in the draft editor (decorations; never colour alone: cards carry labels). */
+.finding-hl {
+  border-radius: 2px;
+  padding: 0 1px;
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.finding-blocker {
+  background: color-mix(in oklab, var(--blocker) 16%, transparent);
+  text-decoration-color: var(--blocker);
+}
+.finding-warning {
+  background: color-mix(in oklab, var(--warning) 14%, transparent);
+  text-decoration-color: var(--warning);
+  text-decoration-style: dashed;
+}
+.finding-suggestion {
+  background: color-mix(in oklab, var(--suggestion) 12%, transparent);
+  text-decoration-color: var(--suggestion);
+  text-decoration-style: dotted;
+}
+.finding-active {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.draft-editor .ProseMirror {
+  min-height: 16rem;
+  outline: none;
+  line-height: 1.7;
+}
+.draft-editor .ProseMirror p {
+  margin: 0 0 0.75rem;
+}
