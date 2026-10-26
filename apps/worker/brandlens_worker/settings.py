@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     langfuse_public_key: SecretStr
     langfuse_secret_key: SecretStr
 
+    # Notifications (optional): "needs review" messages for worker-made transitions (SPEC §15)
+    discord_webhook_url: SecretStr | None = None
+    site_url: str | None = None
+
     # Runtime
     env: NonEmptyStr
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"

@@ -39,10 +39,15 @@ export const getSession = cache(async (): Promise<SessionResult> => {
       supabase.from("profiles").select("display_name").eq("id", userId).maybeSingle(),
     ]);
   let [{ data: membership, error: membershipError }, { data: profile }] = await load();
-  // PGRST303 "JWT issued at future": a token used in the same second it was minted can trip
-  // PostgREST when the auth server's clock is a hair ahead (seen right after sign-in). Retry once.
-  if (membershipError?.code === "PGRST303") {
-    await new Promise((r) => setTimeout(r, 1100));
+  // PGRST303 "JWT issued at future": right after sign-in, a fresh token can briefly look
+  // future-dated to PostgREST (seen locally after idle periods). Retry a few times.
+  const backoff = [500, 1000, 1500, 3000];
+  for (
+    let attempt = 0;
+    membershipError?.code === "PGRST303" && attempt < backoff.length;
+    attempt++
+  ) {
+    await new Promise((r) => setTimeout(r, backoff[attempt]));
     [{ data: membership, error: membershipError }, { data: profile }] = await load();
   }
 

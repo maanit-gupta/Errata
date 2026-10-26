@@ -59,6 +59,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P06 | Review pipeline stages 1–4: ingest, PII/secret redaction, deterministic filters (terms, facts and campaign bleed, claims, tone, access), retrieval, routing |
 | P07 | LLM review pass, citation gate, confidence scoring, intent verification of rewrites, degraded mode, tracing |
 | P08 | Draft editor (TipTap) with live finding highlights, intent capture, findings panel with accept/edit/dismiss/route, offsets util and tests |
+| P09 | Review queue and reviewer view, decisions via transition_content, version diff, comments, audit trail, Discord/email notifications |
 
 ## Licence
 

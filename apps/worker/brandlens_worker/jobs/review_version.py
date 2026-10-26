@@ -20,6 +20,7 @@ from brandlens_worker import config, db
 from brandlens_worker.embeddings import to_pgvector
 from brandlens_worker.jobs.common import get_embedder, get_router, get_storage, get_tracer
 from brandlens_worker.llm.base import DegradedError
+from brandlens_worker.notify import notify_needs_review
 from brandlens_worker.pipeline.ingest import IngestError
 from brandlens_worker.pipeline.routing import RoutingFinding, has_open_blockers, route
 from brandlens_worker.pipeline.run import (
@@ -89,6 +90,24 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         "explanation": explanation,
         "rewrite": f.rewrite,
     }
+
+
+CARRY_STATUSES = ("routed", "dismissed")
+
+
+def carry_over(rows: list[dict[str, Any]], prior: list[dict[str, Any]]) -> None:
+    """Resubmits keep earlier decisions: a new finding identical to one already routed or dismissed
+    (same dimension, citations and quote) inherits that resolution. `prior` is newest first."""
+    seen: dict[tuple[Any, ...], dict[str, Any]] = {}
+    for item in prior:
+        seen.setdefault((item["dimension"], item["rule_id"], item["fact_id"], item["quote"]), item)
+    for r in rows:
+        match = seen.get((r["dimension"], r["rule_id"], r["fact_id"], r["quote"]))
+        if match:
+            r["status"] = match["status"]
+            r["dismiss_reason"] = match["dismiss_reason"]
+            r["dismiss_note"] = match["dismiss_note"]
+            r["resolved_by"] = match["resolved_by"]
 
 
 async def review_version(ctx: JobContext) -> None:
@@ -227,6 +246,17 @@ async def persist(
         timings["trace_id"] = trace_id
 
     async with ctx.pool.connection() as conn, conn.transaction():
+        cur = await conn.execute(
+            "select f.dimension::text as dimension, f.rule_id::text as rule_id, "
+            "f.fact_id::text as fact_id, f.quote, f.status::text as status, "
+            "f.dismiss_reason::text as dismiss_reason, f.dismiss_note, f.resolved_by "
+            "from public.findings f join public.versions v on v.id = f.version_id "
+            "where v.content_id = %s and f.version_id <> %s "
+            "and f.status in ('routed', 'dismissed') "
+            "order by f.created_at desc",
+            (content_id, p.version_id),
+        )
+        carry_over(rows, list(await cur.fetchall()))
         # Idempotent per run: a retried job replaces its own findings.
         await conn.execute("delete from public.findings where run_id = %s", (p.run_id,))
         for r in rows:
@@ -234,13 +264,17 @@ async def persist(
                 "insert into public.findings "
                 "(org_id, version_id, run_id, dimension, rule_id, fact_id, "
                 "wcag_ref, quote, span, severity, confidence, source, explanation, rewrite, "
-                "model_version, prompt_version) "
-                "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "model_version, prompt_version, status, dismiss_reason, dismiss_note, resolved_by, "
+                "resolved_at) "
+                "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
+                "%s, %s, %s, %s, case when %s <> 'open' then now() end)",
                 (
                     p.org_id, p.version_id, p.run_id, r["dimension"], r["rule_id"], r["fact_id"],
                     r["wcag_ref"], r["quote"], Jsonb(r["span"]), r["severity"], r["confidence"],
                     r["source"], r["explanation"], r["rewrite"],
                     r.get("model_version"), r.get("prompt_version"),
+                    r.get("status", "open"), r.get("dismiss_reason"), r.get("dismiss_note"),
+                    r.get("resolved_by"), r.get("status", "open"),
                 ),
             )  # fmt: skip
         await conn.execute(
@@ -258,7 +292,10 @@ async def persist(
                 p.run_id,
             ),
         )
-        routing = [RoutingFinding(r["dimension"], r["severity"]) for r in rows]
+        routing = [
+            RoutingFinding(r["dimension"], r["severity"], r.get("status", "open")) for r in rows
+        ]
+        notify_title = ""
         if has_open_blockers(routing):
             await conn.execute(
                 "select public.transition_content_system(%s::uuid, 'needs_revision')", (content_id,)
@@ -272,6 +309,20 @@ async def persist(
                 (content_id, to, risk),
             )
             outcome = f"in_review:{to}"
+            cur = await conn.execute(
+                "select title from public.contents where id = %s", (content_id,)
+            )
+            title_row = await cur.fetchone()
+            notify_title = title_row["title"] if title_row else "Content"
+
+    if outcome.startswith("in_review:") and "settings" in ctx.services:
+        notify_needs_review(
+            ctx.services["settings"],
+            title=notify_title,
+            content_id=content_id,
+            route_to=outcome.split(":", 1)[1],
+            risk=risk,
+        )
 
     log.info(
         "review done",

@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P08 done → next P09
+**Current phase:** P09 done → next P10 (needs your decisions, see Open questions)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -20,7 +20,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
-| P09 | Review workflow & notifications | J+M | in-progress | M (Claude, /complete) | phase/P09-review-workflow | |
+| P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | todo | | | |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
@@ -31,44 +31,40 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P08 / done (branch `phase/P08-editor-findings`, stacked on P07 → … → P00; none merged). Built by Claude for Jagpreet's phase under `/complete`; Jagpreet should review the UX.
-- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (Open questions).
-- **What exists now (web):**
-  - **`lib/editor/offsets.ts`**, the only place positions are computed: `docToText`/`textToDocJSON` (paragraph per line, `\n` separators, hard break = `\n`), `textOffsetToPos`/`posToTextOffset`, `cpToUtf16`/`utf16ToCp` (worker spans are **code points**, JS is UTF-16), and `spanToRange`. Tests cover the hero spans, multi-paragraph text, marks, hard breaks, emoji and multibyte text.
-  - **`lib/editor/findings-extension.ts`:** highlights are a ProseMirror **decoration** plugin (`finding-hl finding-{severity}`, `finding-active`), mapped through edits. `currentRange(state, id)` gives the live range for applying a fix. CSS lives in `globals.css`.
-  - **`lib/drafts/`:**
-    - `intent.ts`: zod `intentSchema` (SPEC §5), `CHANNELS`, `DISMISS_REASONS`.
-    - `actions.ts`: `createDraft`; `submitForCheck({contentId, body, intent}, upload?)` inserts a new version (DOCX/PDF/image upload to `drafts/{org}/{content}/{uuid}/…`), then `enqueue_review`; `resolveFinding` (accepted/edited/dismissed with a reason/routed for claims blockers only/open). The DB trigger stamps the resolver and writes `audit_events`.
-  - **`/drafts`:** own content list plus a new-draft form (title, channel, campaign).
-  - **`/drafts/[id]`:** server page loads the content, current version, latest run and its non-superseded findings, and builds citations. **Agencies get `rule_cards_public` summaries**; staff get title and summary; facts show their statement; WCAG gets a label. Realtime refreshes on `review_runs`/`findings`/`contents`.
-  - **`DraftWorkspace`:**
-    - TipTap StarterKit (no headings/code/quote) plus highlights.
-    - Intent panel validated with zod; the campaign is fixed to the content's.
-    - "Submit for check" / "Resubmit for check" is disabled while any blocker is open, with the reason shown.
-    - Run status, degraded banner and failure banner.
-    - Findings sorted open-first then blocker → warning → suggestion.
-    - Uncited findings are never rendered (console error in dev).
-  - **`FindingCard`:**
-    - Heading button with `aria-expanded`; severity, codes, dimension, "AI-assisted" and status; confidence chip with "Needs human review" below 0.6; cited sources; old → new diff.
-    - Accept is disabled with an explanation when there's no rewrite or confidence < 0.6. Edit (textarea → apply), Dismiss (radio reason + note), Route to Legal (claims blockers), Reopen.
-    - Hover and keyboard focus highlight the span; only keyboard focus scrolls the editor.
-  - **`getSession`:** a failed membership query now throws instead of sending users to `/no-access`, and **retries once on `PGRST303 "JWT issued at future"`** (a token used in the same second it was minted).
-  - E2E `e2e/drafts.spec.ts` (`E2E_WORKER=1`): the full creator flow, agency summaries, keyboard expand/tab, and **axe WCAG 2.2 AA on a draft page with findings (0 violations)**.
+- **Phase / status:** P09 / done (branch `phase/P09-review-workflow`, stacked on P08 → … → P00; **none merged to `main`**). Built under `/complete`; Jagpreet should review the reviewer UX.
+- **⚠ Blocked on you before P10** (Open questions): the worker host (Railway vs Fly), whether the cloud Supabase project (Mumbai) exists and may receive these migrations, and the retired model IDs in `apps/worker/.env`.
+- **What exists now:**
+  - **`/review`:** a queue of `in_review` (manager) and `specialist_review` items matching the specialist's kind (the admin sees everything), sorted by risk then age. It shows route, risk, open counts by severity and waiting time.
+  - **`/review/[contentId]`:**
+    - A read-only highlighted version (`HighlightedText`, code points → UTF-16).
+    - Findings with status, resolver name and dismiss reason.
+    - **"What changed"**: a word diff of v(n-1)→v(n) via `diff`, plus the findings those changes resolved.
+    - A routing card with the reason (e.g. "Routed CL-03 · F-112 claim → Legal").
+    - Threaded comments with `@Display Name` chips, optionally anchored to a finding.
+    - An **audit trail** (managers, specialists, admins) and Realtime refresh.
+  - **`DecisionBar`** (role- and state-aware):
+    - In review: Approve with a required override reason per open warning (inserts `override` decisions, then the transition), Request changes (reason), Send to a specialist (route + reason).
+    - Specialist review: Sign off (reason).
+    - Approved: Mark publish-ready, after which a publish-ready badge links to `#audit`.
+    - Archive (manager/admin).
+  - **`lib/review/actions.ts`:** every action goes through `transition_content()`. SQLSTATE maps to plain language: 42501 "Your role can't…", 22023 "not a valid next step", 23514 is the guard message, P0002 "not found". It fires `after()` notifications. `revise()` handles changes requested or needs revision → draft. The draft page has a "Start revising" button.
+  - **Notifications:**
+    - `lib/notify/discord.ts` (embeds, vermilion for changes requested, no body text; 5 s timeout; failures logged) and `lib/notify/email.ts` (Resend, only if `RESEND_API_KEY` + `EMAIL_FROM`; to the owner on changes requested or publish-ready).
+    - Worker `brandlens_worker/notify.py` posts **"needs review"** for worker-made transitions when the **optional** `DISCORD_WEBHOOK_URL` + `SITE_URL` worker settings are set (both added to `.env.example`).
+  - **Worker carry-over:** on persisting a run, findings identical to earlier versions' `routed`/`dismissed` findings (same dimension, rule, fact and quote) inherit that status, reason and resolver. Routing uses statuses, so a routed CL-03 goes **straight to Legal** on resubmit.
+  - E2E `e2e/review.spec.ts` (storyboard) and `e2e/global-setup.ts` (warms local auth before the suite).
 - **Acceptance (local, 2026-10-26):** all passed.
-  - The creator pastes the hero, fills intent, submits; **findings appear live** and the highlights' text matches all four hero quotes exactly. Accepting G-07, E-19 and F-048 rewrites the editor ("PayWise", "Oct 28, 7:00 PM IST (online)"); routing CL-03 to legal then enables Resubmit.
-  - The agency sees the CL-03 summary, never the body.
-  - Keyboard: tab to a finding, Enter toggles, Tab enters the card.
-  - Offsets tests pass (69 web unit tests).
+  - Storyboard F02→F05: creator submits the hero, accepts F-048 and E-19, routes CL-03, resubmits → **lands directly in `specialist_review` (Legal)**. The manager's queue doesn't show it. Legal sees the routing reason, the diff (incl. "7:00 PM IST (online)" inserted) and "findings these changes resolved", then signs off with a reason. The owner marks publish-ready.
+  - **Discord:** the worker's "needs review" (HTTP 204) and the web's "approved" + "publish_ready" (HTTP 204) were delivered to the team webhook (fictional PayWise data).
+  - Wrong-role or stale action: the manager approves content an admin just archived → server rejects → friendly alert.
+  - The audit trail lists all six transitions with actor (e.g. "Dev (Legal)") and reason.
+  - Full e2e: **33 passed** (1 skipped: live LLM guide upload). `make check` is green (worker 120, web 72, pgTAP).
 - **Gotchas:**
-  - `PGRST303` locally: GoTrue and PostgREST clocks can disagree by under a second, and Docker Desktop's VM clock also drifts after the Mac sleeps. If it persists, restart Docker Desktop.
-  - Don't scroll on mouse focus: it moves the target between mousedown and mouseup and swallows the click.
-  - Don't use `opacity` for "resolved" styling: it fails contrast (axe caught 8 nodes).
-  - LLM findings vary per run, so e2e asserts "at least" the deterministic set.
-- **Stubbed / deferred:**
-  - PDF/image submissions are accepted by the UI but the worker marks them `unsupported_format` until P11/P12 (a notice is shown).
-  - The `changes_requested → draft` revise button is P09.
-  - There's no version diff yet (P09).
-- **Exact next step:** P09 (review workflow, routing, comments, diff, notifications): `/review` queue sorted by risk, reviewer view with approve/request changes/overrides/sign-off via `transition_content`, comments, version diff (`diff` pkg), and Discord (+ optional Resend) notifications.
+  - **Local PGRST303 "JWT issued at future":** the first sign-in after an idle period can be rejected by PostgREST for a few seconds. I couldn't reproduce it on demand. `getSession` backs off (0.5/1/1.5/3 s), and Playwright's global setup warms the stack. If it persists, restart Docker Desktop.
+  - The word diff tokenises "0%" as "0" + "%".
+  - The role switcher is a server action, so wait for the role pill before navigating in tests.
+  - e2e runs that reach approved or publish-ready **post to the real Discord webhook** from `.env.local`.
+- **Exact next step:** answer the Open questions, then P10. Deploy the web app to Vercel and the worker to Railway or Fly (Dockerfile with the baked `.models`), push migrations to cloud Supabase, run `make seed-demo url=…`, and run the core-loop e2e against the deployed URLs.
 
 ## Decisions log (append-only)
 
@@ -141,6 +137,11 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P08 | Version body = editor textblocks joined by `\n`; worker spans (code points) converted to UTF-16 in `offsets.ts` | One tested mapping; emoji-safe |
 | 2026-10-26 | P08 | Accept/Edit apply the fix in the editor; the server only records status (audited by trigger) | Resubmitting creates the new immutable version (SPEC §4) |
 | 2026-10-26 | P08 | Session load retries once on PGRST303 and throws (not /no-access) on query errors | Sub-second clock skew right after sign-in; errors must not masquerade as "no org" |
+| 2026-10-26 | P09 | Worker sends Discord "needs review" for its own transitions (optional `DISCORD_WEBHOOK_URL`/`SITE_URL`); web sends the rest via `after()` | `→ in_review/specialist_review` is a worker transition; SPEC §15 assumed web-only |
+| 2026-10-26 | P09 | Routed/dismissed findings carry over to identical findings on the next version | Otherwise a routed claim re-blocks every resubmit and never reaches Legal (§4/§10) |
+| 2026-10-26 | P09 | Queue membership: manager = `in_review`; specialist = `specialist_review` of their kind; admin = all | SPEC §2/§10 |
+| 2026-10-26 | P09 | Audit trail = `audit_events` filtered to the content and its versions (RLS-limited to manager/specialist/admin) | Single source; decisions also produce audit rows |
+| 2026-10-26 | P09 | PGRST303 backoff (≤6 s) in `getSession` + Playwright global warm-up | Local Docker timing after idle; not reproducible on demand |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -162,6 +163,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | @supabase/ssr, @supabase/supabase-js, server-only, sonner | MIT | P02 |
 | @axe-core/playwright (dev) | MPL-2.0 | P02 |
 | @tiptap/react, @tiptap/pm, @tiptap/starter-kit | MIT | P08 |
+| diff | BSD-3-Clause | P09 |
+| httpx (promoted from dev to runtime, worker) | BSD-3-Clause | P09 |
 
 ## Open questions (ask the user; don't guess)
 

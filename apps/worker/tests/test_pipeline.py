@@ -243,3 +243,33 @@ async def test_stages_never_call_the_llm(monkeypatch: pytest.MonkeyPatch) -> Non
     assert len(result.findings) == 4
     assert calls and result.retrieved[0]["code"] == "CL-03"
     assert set(result.timings) == {"ingest", "protect", "filters", "retrieve"}
+
+
+def test_carry_over_keeps_routed_and_dismissed_decisions() -> None:
+    from brandlens_worker.jobs.review_version import carry_over
+
+    rows = [
+        {
+            "dimension": "claims",
+            "rule_id": "r1",
+            "fact_id": "f1",
+            "quote": "lock in 14.2%",
+            "status": "open",
+        },
+        {
+            "dimension": "terms",
+            "rule_id": "r2",
+            "fact_id": None,
+            "quote": "Paywise",
+            "status": "open",
+        },
+    ]
+    prior = [
+        {"dimension": "claims", "rule_id": "r1", "fact_id": "f1", "quote": "lock in 14.2%", "status": "routed",
+         "dismiss_reason": None, "dismiss_note": None, "resolved_by": "u1"},
+    ]  # fmt: skip
+    carry_over(rows, prior)
+    assert rows[0]["status"] == "routed" and rows[0]["resolved_by"] == "u1"
+    assert rows[1]["status"] == "open"
+    to, _ = route([RoutingFinding(r["dimension"], "blocker", r["status"]) for r in rows[:1]])
+    assert to == "legal"

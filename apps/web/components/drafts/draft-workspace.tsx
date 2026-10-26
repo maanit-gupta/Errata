@@ -9,6 +9,7 @@ import { StateBadge, type ContentState } from "@/components/state-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";
+import { revise } from "@/lib/review/actions";
 import { CHANNELS, intentSchema, type Intent } from "@/lib/drafts/intent";
 import {
   FindingHighlights,
@@ -394,11 +395,32 @@ export function DraftWorkspace({
                   : "Saves a new version and checks it. Nothing is ever published automatically."}
             </p>
           </div>
+        ) : canAct && content.state === "changes_requested" ? (
+          <div className="border-accent-text space-y-2 rounded-md border p-3 text-sm">
+            <p>A reviewer asked for changes. See their reason on the review page.</p>
+            <Button
+              className="w-full"
+              disabled={pending}
+              onClick={() =>
+                start(async () => {
+                  const r = await revise(content.id);
+                  if (r.ok) toast.success(r.message);
+                  else toast.error(r.error);
+                  router.refresh();
+                })
+              }
+            >
+              Start revising
+            </Button>
+          </div>
         ) : (
           <p className="bg-muted rounded-md p-3 text-sm">
             {content.state === "ai_check"
               ? "Checking…"
-              : "This draft is with reviewers and can't be edited right now."}
+              : "This draft is with reviewers and can't be edited right now."}{" "}
+            <a href={`/review/${content.id}`} className="underline">
+              Review status
+            </a>
           </p>
         )}
       </aside>

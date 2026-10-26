@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // Core-loop E2E lands in P10. `make e2e` expects `make dev` to already be running.
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
