@@ -57,11 +57,11 @@ for (const theme of ["dark", "light"] as Theme[]) {
     test(`${r.name} · ${theme}: no serious a11y violations`, async ({ page, context, baseURL }) => {
       test.setTimeout(90_000);
       await setTheme(context, baseURL!, theme);
+      await page.emulateMedia({ reducedMotion: "reduce" });
       if (r.role) await signInAsDemo(page, r.role);
       const path = typeof r.path === "string" ? r.path : await r.path(page);
       await page.goto(path);
       await page.waitForLoadState("networkidle").catch(() => {});
-      await page.emulateMedia({ reducedMotion: "reduce" });
       await expectNoSeriousA11yViolations(page, `${r.name}/${theme}`);
       if (phase) {
         const dir = join(__dirname, "../../../docs/screens", phase);

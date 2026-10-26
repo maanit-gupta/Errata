@@ -29,7 +29,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 | U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; worktree .claude/worktrees/ui |
-| U1 | Public landing + /ai-use (DESIGN.md §8) | J | todo | | | |
+| U1 | Public landing + /ai-use (DESIGN.md §8) | J | done | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
 | U2 | UI polish and audit (DESIGN.md §12) | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
@@ -173,6 +173,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | U0 | Demo switch toast uses a short-lived `bl_flash` cookie set by `signInAsDemo` | Survives the server redirect without polluting the URL |
 | 2026-10-27 | U0 | UI gate = `e2e/ui.spec.ts`: axe (serious/critical) per route × theme; `SCREENS=<phase>` writes `docs/screens/<phase>/` | One reusable gate for every UI phase |
 | 2026-10-27 | U0 | `/`, `/ai-use`, `/dev/*` are open paths in the proxy; `/` honours `bl_skip_landing` | Public landing (U1) and the kitchen sink without sign-in |
+| 2026-10-27 | U1 | `/` is the public landing under `app/(marketing)`; the old redirect page is gone. Signed-in visitors get the skip toast; `bl_skip_landing=1` redirects `/` → `/drafts` in the proxy | DESIGN §8 |
+| 2026-10-27 | U1 | "What we heard" attributes by role and city only, paraphrasing plan p.6/p.23; no names until consent is confirmed | DESIGN §8.8; logged as an open question |
+| 2026-10-27 | U1 | Guarantees band and the AI-use Quality table read `apps/worker/eval/report.json` at request time; absent → `TARGET` / "not committed yet" | P14's report isn't committed on this branch; nothing invented |
+| 2026-10-27 | U1 | Carousel has an explicit Pause/Play button besides hover/focus pause, and doesn't rotate under reduced motion | WCAG 2.2.2 needs a pause mechanism for >5s auto-rotation |
+| 2026-10-27 | U1 | `useReducedMotion` is our own `useSyncExternalStore` hook (server snapshot false), not motion's | motion's hook read matchMedia during hydration and caused a mismatch |
+| 2026-10-27 | U1 | Services list corrected: Supabase region Singapore, worker host Render, Langfuse receives ids/counts only (not prompts); one shared `components/ai-use/disclosure.tsx` for `/ai-use` and `/settings/ai-use` | Matches P03/P07/P10 decisions; one source of truth |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -215,6 +221,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 - [x] Merge P11 to `main` (user, 2026-10-26).
 - [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
 - [ ] **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
+- [ ] **Interviewee names on the landing page?** "What we heard" uses role + city only. Confirm consent before adding names or verbatim quotes (DESIGN.md §8.8).
 - [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
