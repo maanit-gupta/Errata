@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P10 partial (Render secrets pending, then verify + tag `v0.7-core-loop`); P11 is unblocked
+**Current phase:** P10 done (core loop live, tagged `v0.7-core-loop`); next P11
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -21,7 +21,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
-| P10 | Deploy & core-loop E2E 🎯 D7 | Both | partial | M (Claude) | phase/P10-deploy → main | web live; Render secrets = user step |
+| P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
 | P13 | GCS & insights 🎯 D11 | J+M | todo | | | |
@@ -31,24 +31,22 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P10 / **partial**: one manual step left (Render secrets). `main` = `phase/P10-deploy` (fast-forwarded, user decision); all branches pushed to `github.com/maanit-gupta/BrandLens` (private, default branch `main`).
-- **Live now (2026-10-26):**
-  - **Web (Vercel):** project `brandlens` (team `maanit-s-team`, `prj_vOQ3t2b16wzKSDDYM7NPiU7OC1mH`), root `apps/web`, functions in `sin1`, production domain **https://brandlens-app.vercel.app** (`brandlens.vercel.app` was taken). The production deploy of `29c630d` is **Ready**; `/` → `/login` returns 200. Env (production + preview): Supabase URL/publishable key, `SUPABASE_SECRET_KEY` + `DISCORD_WEBHOOK_URL` (sensitive, piped from `.env.local` by the CLI, never read), `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_DEMO_MODE=true`, `WORKER_URL`, `EMAIL_FROM`. Standard deployment protection: the production domain is public, previews need a Vercel login.
-  - **Worker (Render):** service `brandlens-worker` (`srv-dbfn53vb9u1s73dicgkg`), Docker (`apps/worker/Dockerfile`, context `apps/worker`), free plan, singapore, auto-deploy from `main`, URL **https://brandlens-worker.onrender.com**. The image **builds**; the container exits at startup because the secrets are missing (fail-fast names them). Non-secret env and `SITE_URL` are set.
-  - **GitHub:** repo variable `WORKER_URL` is set, so `keepalive.yml` pings every 10 min.
-  - Created with the MCPs/CLI rather than the `render.yaml` Blueprint; the Blueprint stays as the from-scratch recipe.
-- **Your remaining steps:**
-  1. Render dashboard → `brandlens-worker` → **Environment**: add `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` (Singapore session pooler, :5432), `GROQ_API_KEY`, `GEMINI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and optionally `DISCORD_WEBHOOK_URL` → Save and deploy.
-  2. Render → **Settings → Health Check Path** = `/healthz` (the MCP can't set it).
-  3. Optional: Supabase → Auth → URL Configuration → Site URL `https://brandlens-app.vercel.app` (only email links use it; password sign-in works without it).
-- **Then verify (next session can do this):** Render logs show the worker polling; `cd apps/web && E2E_BASE_URL=https://brandlens-app.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts`; Render logs show `review done`; then `git tag v0.7-core-loop && git push --tags`, mark P10 `done`.
-- **Gotchas:**
-  - Every push to `main` redeploys **both** services. Phase branches only get Vercel previews (behind Vercel login).
-  - Render free = 512 MB. bge-small loads lazily (about 300 MB); switch to Starter if it OOMs. PaddleOCR (P11) won't fit, so keep `OCR_ENGINE=tesseract` there.
-  - The local `apps/worker/.env` still has `OCR_ENGINE=paddle` and `MODEL_CACHE_DIR=./.models` (fine locally). Render uses `tesseract` and `/app/.models`.
-  - `vercel env add` rejects `--sensitive` for `NEXT_PUBLIC_*` (they're public anyway); use `--environment`, since the positional form is deprecated.
-  - Every cloud and e2e run that reaches approved or publish-ready posts to the real Discord webhook.
-- **Exact next step:** after you finish the Render secrets, run the verify step above. **P11 (image checks)** is unblocked in parallel (deps P07), as are P12 and P14.
+- **Phase / status:** P10 / **done** (2026-10-26). Core loop is live end-to-end in the cloud; tag `v0.7-core-loop`.
+- **What exists now:**
+  - **Web (Vercel):** project `brandlens` (team `maanit-s-team`, `prj_vOQ3t2b16wzKSDDYM7NPiU7OC1mH`), root `apps/web`, functions in `sin1`, **https://brandlens-app.vercel.app**. Deploys from `main`; previews behind Vercel login.
+  - **Worker (Render):** `brandlens-worker` (`srv-dbfn53vb9u1s73dicgkg`), Docker, free plan, singapore, auto-deploy from `main`, **https://brandlens-worker.onrender.com** (`/healthz` 200, health check path set). Both consumers (`review_jobs`, `vault_jobs`) running. Full env set (secrets by the user in the dashboard; non-secrets via the Render MCP, merge mode).
+  - **Cloud Supabase** (ap-southeast-1): all migrations + PayWise demo seed applied.
+  - **Verified:** `E2E_BASE_URL=https://brandlens-app.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts` → 3/3 passed (56 s). Worker logs: two `review done` runs, `degraded: false`, second routed `in_review:legal`, risk 12.0. No OOM on 512 MB.
+  - GitHub repo variable `WORKER_URL` → `keepalive.yml` pings every 10 min.
+- **Stubbed or deferred:** Supabase Auth Site URL still default (only matters for email links). Resend email not configured (open question).
+- **How to run / verify:** `make check` (green); prod e2e command above; Render logs via the Render MCP (`list_logs`, filter `review done`).
+- **Gotchas discovered:**
+  - Saving the Render dashboard Environment form **replaced** the whole env list once (all non-secret vars vanished). Re-add from `render.yaml` with the MCP `update_environment_variables` (default merge mode), and make sure the dashboard form has loaded before saving.
+  - Langfuse project is in the **US** region: `LANGFUSE_HOST=https://us.cloud.langfuse.com`.
+  - Every push to `main` redeploys **both** services. Render free = 512 MB; bge-small fits, PaddleOCR (P11) won't, so keep `OCR_ENGINE=tesseract` in the cloud.
+  - First review after a cold start spends ~11 s in `retrieve` (embedding model load); warm runs ~4 s.
+  - Every cloud e2e run posts to the real Discord webhook.
+- **Exact next step:** **P11 (image checks)**. Create `phase/P11-image-checks` from `main`, read the P11 section of `docs/PHASES.md`, and keep the Tesseract fallback as the cloud path.
 
 ## Decisions log (append-only)
 
@@ -132,6 +130,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P10 | E2E is manual in CI; `worker-image` job builds the Docker image | E2E needs LLM keys and a running worker |
 | 2026-10-26 | P10 | `main` fast-forwarded to `phase/P10-deploy` (P00–P10 linear stack) without PR review; Render + Vercel deploy from `main` (user decision) | GitHub repo was empty; deploys need a stable production branch. Jagpreet can review after the fact |
 | 2026-10-26 | P10 | Render service created via MCP with non-secret env only; secrets pasted by the user in the dashboard; Vercel secrets piped through the CLI | CLAUDE.md: never read secret values |
+| 2026-10-26 | P10 | Langfuse Cloud host = US region (`us.cloud.langfuse.com`) on Render (user answer) | Matches the user's Langfuse project |
+| 2026-10-26 | P10 | Non-secret Render env is restored/managed via the Render MCP in merge mode, never `replace` | A dashboard save wiped the env once; merge never touches user-pasted secrets |
 
 **Dependencies and licences** (append when adding any dependency):
 
