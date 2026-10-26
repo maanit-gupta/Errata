@@ -1,0 +1,19 @@
+{
+  "name": "brandlens",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "packageManager": "pnpm@12.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup": "make setup",
+    "dev": "make dev",
+    "lint": "make lint",
+    "fmt": "make fmt",
+    "test": "make test",
+    "check": "make check",
+    "e2e": "make e2e",
+    "eval": "make eval"
+  }
+}

@@ -21,8 +21,15 @@ coverage/
 *.log
 
 # Model caches (never commit)
+.models/
 model_cache/
 fastembed_cache/
+
+# Eval cache and test artefacts
+eval/.cache/
+test-results/
+playwright-report/
+*.tsbuildinfo
 
 # Local tooling state
 .vercel/

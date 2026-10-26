@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install
+        run: make setup
+
+      # Unit tests never read real env files; next typegen/tsc don't need env either.
+      - name: Lint and types
+        run: make lint
+
+      - name: Unit tests
+        run: make test-worker test-web
+
+  # pgtap:
+  #   # P01: start local Supabase and run pgTAP RLS tests.
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: supabase/setup-cli@v1
+  #     - run: supabase db start
+  #     - run: supabase test db
+  #     - run: supabase db lint
+
+  # eval:
+  #   # P14: golden-set precision gate (make eval exits non-zero on a failed gate).
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: astral-sh/setup-uv@v6
+  #     - run: cd apps/worker && uv sync
+  #     - run: make eval
