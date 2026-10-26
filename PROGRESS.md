@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P09 done → next P10 (needs your decisions, see Open questions)
+**Current phase:** P10 partial (your deploy steps pending) → then tag `v0.7-core-loop`; P11 is unblocked
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -21,7 +21,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
-| P10 | Deploy & core-loop E2E 🎯 D7 | Both | in-progress | M (Claude, /complete) | phase/P10-deploy | |
+| P10 | Deploy & core-loop E2E 🎯 D7 | Both | partial | M (Claude, /complete) | phase/P10-deploy | cloud DB done; Render/Vercel = user steps |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
 | P13 | GCS & insights 🎯 D11 | J+M | todo | | | |
@@ -31,40 +31,33 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P09 / done (branch `phase/P09-review-workflow`, stacked on P08 → … → P00; **none merged to `main`**). Built under `/complete`; Jagpreet should review the reviewer UX.
-- **⚠ Blocked on you before P10** (Open questions): the worker host (Railway vs Fly), whether the cloud Supabase project (Mumbai) exists and may receive these migrations, and the retired model IDs in `apps/worker/.env`.
-- **What exists now:**
-  - **`/review`:** a queue of `in_review` (manager) and `specialist_review` items matching the specialist's kind (the admin sees everything), sorted by risk then age. It shows route, risk, open counts by severity and waiting time.
-  - **`/review/[contentId]`:**
-    - A read-only highlighted version (`HighlightedText`, code points → UTF-16).
-    - Findings with status, resolver name and dismiss reason.
-    - **"What changed"**: a word diff of v(n-1)→v(n) via `diff`, plus the findings those changes resolved.
-    - A routing card with the reason (e.g. "Routed CL-03 · F-112 claim → Legal").
-    - Threaded comments with `@Display Name` chips, optionally anchored to a finding.
-    - An **audit trail** (managers, specialists, admins) and Realtime refresh.
-  - **`DecisionBar`** (role- and state-aware):
-    - In review: Approve with a required override reason per open warning (inserts `override` decisions, then the transition), Request changes (reason), Send to a specialist (route + reason).
-    - Specialist review: Sign off (reason).
-    - Approved: Mark publish-ready, after which a publish-ready badge links to `#audit`.
-    - Archive (manager/admin).
-  - **`lib/review/actions.ts`:** every action goes through `transition_content()`. SQLSTATE maps to plain language: 42501 "Your role can't…", 22023 "not a valid next step", 23514 is the guard message, P0002 "not found". It fires `after()` notifications. `revise()` handles changes requested or needs revision → draft. The draft page has a "Start revising" button.
-  - **Notifications:**
-    - `lib/notify/discord.ts` (embeds, vermilion for changes requested, no body text; 5 s timeout; failures logged) and `lib/notify/email.ts` (Resend, only if `RESEND_API_KEY` + `EMAIL_FROM`; to the owner on changes requested or publish-ready).
-    - Worker `brandlens_worker/notify.py` posts **"needs review"** for worker-made transitions when the **optional** `DISCORD_WEBHOOK_URL` + `SITE_URL` worker settings are set (both added to `.env.example`).
-  - **Worker carry-over:** on persisting a run, findings identical to earlier versions' `routed`/`dismissed` findings (same dimension, rule, fact and quote) inherit that status, reason and resolver. Routing uses statuses, so a routed CL-03 goes **straight to Legal** on resubmit.
-  - E2E `e2e/review.spec.ts` (storyboard) and `e2e/global-setup.ts` (warms local auth before the suite).
-- **Acceptance (local, 2026-10-26):** all passed.
-  - Storyboard F02→F05: creator submits the hero, accepts F-048 and E-19, routes CL-03, resubmits → **lands directly in `specialist_review` (Legal)**. The manager's queue doesn't show it. Legal sees the routing reason, the diff (incl. "7:00 PM IST (online)" inserted) and "findings these changes resolved", then signs off with a reason. The owner marks publish-ready.
-  - **Discord:** the worker's "needs review" (HTTP 204) and the web's "approved" + "publish_ready" (HTTP 204) were delivered to the team webhook (fictional PayWise data).
-  - Wrong-role or stale action: the manager approves content an admin just archived → server rejects → friendly alert.
-  - The audit trail lists all six transitions with actor (e.g. "Dev (Legal)") and reason.
-  - Full e2e: **33 passed** (1 skipped: live LLM guide upload). `make check` is green (worker 120, web 72, pgTAP).
+- **Phase / status:** P10 / **partial** (branch `phase/P10-deploy`, stacked on P09 → … → P00; none merged). Everything automatable is done and verified. Creating the Render and Vercel services (and entering their secrets) is yours.
+- **⚠ Fix in `apps/worker/.env`:**
+  1. **`DATABASE_URL` host is wrong.** The project is in **ap-southeast-1 (Singapore)**, not Mumbai. Use `aws-0-ap-southeast-1.pooler.supabase.com:5432` (session pooler); `ap-south-1` gives "tenant/user not found".
+  2. Retired model IDs: `GROQ_MODEL_TEXT=openai/gpt-oss-120b`, `GROQ_MODEL_VISION=qwen/qwen3.8-27b`, `GEMINI_MODEL_TEXT=gemini-3.5-flash`, `GEMINI_MODEL_VISION=gemini-3.5-flash`.
+  Every cloud run so far substituted both in-process.
+- **Done (2026-10-26):**
+  - **Cloud Supabase** (`BrandLens`, ref `stybifjeivqrmnsbjdia`, ap-southeast-1, PG 17): all **17 migrations pushed** (`supabase db push --db-url`), demo data seeded (`make seed-demo`: 6 users, 2 campaigns, 4 facts, 6 rules), and the vault embedded by a worker run against cloud.
+  - Cloud hero review: the 4 expected deterministic findings plus an A-01 LLM suggestion, done in 4.6 s.
+  - **Core-loop e2e against the cloud stack** (local `next dev` on `.env.local` + worker on cloud): **3/3 passed** (F02→F05, 44 s).
+  - **`apps/worker/Dockerfile`:** python:3.12-slim, uv 0.9.9, `uv sync --frozen --no-dev`, **bge-small baked into `/app/.models` at build**, non-root `app` (uid 10001), `HEALTHCHECK /healthz`, honours `$PORT`. Built locally (2.8 GB unpacked). The container ran **healthy** against local Supabase and consumed `noop` jobs. Plus `.dockerignore`.
+  - **`render.yaml` Blueprint:** `brandlens-worker`, Docker, `rootDir: apps/worker`, free plan, **singapore**, health check `/healthz`. Non-secret env is prefilled (queue, providers, working model IDs, model cache, `OCR_ENGINE=tesseract`, `ENV=production`); secrets are `sync: false`.
+  - **Free-tier sleep:** the web's optional `WORKER_URL` env makes each submit ping `/healthz` via `after()`, and `.github/workflows/keepalive.yml` pings every 10 min when the repo variable `WORKER_URL` is set.
+  - **`e2e/core-loop.spec.ts`** (runs with `E2E_WORKER=1` locally or `E2E_BASE_URL=https://…`); `review.spec.ts` keeps the local-only stale-decision test. Playwright `baseURL` honours `E2E_BASE_URL`.
+  - **CI:** a new `worker-image` job builds the Docker image. pgTAP already runs. E2E is **manual** (needs the worker with LLM keys).
+  - README "Running locally" and "Deploying" sections.
+- **Your steps (exact; also in the README "Deploying" section):**
+  1. Fix `apps/worker/.env` as above.
+  2. **Render:** Dashboard → New → **Blueprint** → this repo (merge or push the branch first). Enter the secrets: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` (Singapore session pooler), `GROQ_API_KEY`, `GEMINI_API_KEY`, `LANGFUSE_*`, and optionally `DISCORD_WEBHOOK_URL` + `SITE_URL`.
+  3. **Vercel:** import the repo, Root Directory `apps/web`. Env: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_DEMO_MODE=true`, `DISCORD_WEBHOOK_URL`, `WORKER_URL`.
+  4. In Supabase Auth → URL Configuration, set the Site URL and Redirect URLs to the Vercel URL.
+  5. Set the GitHub repo variable `WORKER_URL`.
+  6. Verify with `E2E_BASE_URL=https://<app>.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts`, check the Render logs for `review done`, then `git tag v0.7-core-loop`.
 - **Gotchas:**
-  - **Local PGRST303 "JWT issued at future":** the first sign-in after an idle period can be rejected by PostgREST for a few seconds. I couldn't reproduce it on demand. `getSession` backs off (0.5/1/1.5/3 s), and Playwright's global setup warms the stack. If it persists, restart Docker Desktop.
-  - The word diff tokenises "0%" as "0" + "%".
-  - The role switcher is a server action, so wait for the role pill before navigating in tests.
-  - e2e runs that reach approved or publish-ready **post to the real Discord webhook** from `.env.local`.
-- **Exact next step:** answer the Open questions, then P10. Deploy the web app to Vercel and the worker to Railway or Fly (Dockerfile with the baked `.models`), push migrations to cloud Supabase, run `make seed-demo url=…`, and run the core-loop e2e against the deployed URLs.
+  - zsh doesn't word-split unquoted `$VARS`, so use `--env-file` for `docker run`.
+  - Render free = 512 MB. bge-small loads lazily (about 300 MB); switch to Starter if OOM. PaddleOCR (P11) won't fit, so keep `OCR_ENGINE=tesseract` there.
+  - Every cloud and e2e run that reaches approved or publish-ready posts to the real Discord webhook.
+- **Exact next step:** your deploy steps (above), then tag. Meanwhile **P11 (image checks)** is unblocked (deps P07), as are P12 and P14.
 
 ## Decisions log (append-only)
 
@@ -142,6 +135,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P09 | Queue membership: manager = `in_review`; specialist = `specialist_review` of their kind; admin = all | SPEC §2/§10 |
 | 2026-10-26 | P09 | Audit trail = `audit_events` filtered to the content and its versions (RLS-limited to manager/specialist/admin) | Single source; decisions also produce audit rows |
 | 2026-10-26 | P09 | PGRST303 backoff (≤6 s) in `getSession` + Playwright global warm-up | Local Docker timing after idle; not reproducible on demand |
+| 2026-10-26 | P10 | Worker host = **Render** free web service via `render.yaml` Blueprint (user decision) | Replaces Railway/Fly in CLAUDE.md "Delivery" |
+| 2026-10-26 | P10 | Supabase region is ap-southeast-1 (Singapore), Render region singapore | Actual project region (not Mumbai as planned) |
+| 2026-10-26 | P10 | Free-tier sleep mitigated by submit-time `/healthz` ping (`WORKER_URL`) + 10-min GitHub keep-alive | Free web services stop the consumer when idle |
+| 2026-10-26 | P10 | E2E is manual in CI; `worker-image` job builds the Docker image | E2E needs LLM keys and a running worker |
 
 **Dependencies and licences** (append when adding any dependency):
 

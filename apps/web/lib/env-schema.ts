@@ -26,6 +26,7 @@ const serverSchema = clientSchema.extend({
   DISCORD_WEBHOOK_URL: requiredUrl(),
   RESEND_API_KEY: optional(), // blank = email disabled
   EMAIL_FROM: optional(),
+  WORKER_URL: optional(), // optional: pinged on submit to wake a sleeping free-tier worker
 });
 
 export type ClientEnv = z.infer<typeof clientSchema>;

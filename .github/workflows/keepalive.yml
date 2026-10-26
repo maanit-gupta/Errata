@@ -1,0 +1,15 @@
+name: Worker keep-alive
+
+# Render's free web services sleep after ~15 minutes without traffic, which pauses the pgmq
+# consumer. Set the repository variable WORKER_URL (Settings → Variables) to enable this ping.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    if: ${{ vars.WORKER_URL != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS --max-time 60 "${{ vars.WORKER_URL }}/healthz"

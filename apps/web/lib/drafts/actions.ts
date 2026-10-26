@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { serverEnv } from "@/lib/env";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireSession } from "@/lib/auth/session";
@@ -102,11 +104,25 @@ export async function submitForCheck(
 
     const { error: qErr } = await supabase.rpc("enqueue_review", { p_version_id: version.id });
     if (qErr) return { ok: false, error: friendly(qErr.message) };
+    wakeWorker();
     revalidatePath(`/drafts/${contentId}`);
     return { ok: true, message: "Submitted. Findings will appear here in a few seconds." };
   } catch (e) {
     return fail(e);
   }
+}
+
+/** Free-tier hosts sleep when idle; a /healthz ping wakes the worker so it drains the queue. */
+function wakeWorker() {
+  const url = serverEnv().WORKER_URL;
+  if (!url) return;
+  after(async () => {
+    try {
+      await fetch(`${url.replace(/\/$/, "")}/healthz`, { signal: AbortSignal.timeout(60_000) });
+    } catch {
+      // best effort; the job stays queued until the worker is up
+    }
+  });
 }
 
 function friendly(message: string): string {

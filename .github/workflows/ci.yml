@@ -52,6 +52,15 @@ jobs:
       - name: Schema lint
         run: supabase db lint --level error
 
+  worker-image:
+    # The Render image builds (and bakes the embedding model). E2E is manual: it needs the worker
+    # with LLM keys; run `E2E_WORKER=1 pnpm exec playwright test` locally or E2E_BASE_URL=… .
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build worker image
+        run: docker build -t brandlens-worker apps/worker
+
   # eval:
   #   # P14: golden-set precision gate (make eval exits non-zero on a failed gate).
   #   runs-on: ubuntu-latest

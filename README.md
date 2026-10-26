@@ -16,6 +16,30 @@ make check   # lint + types + tests
 
 Copy `apps/web/.env.example` → `apps/web/.env.local` and `apps/worker/.env.example` → `apps/worker/.env`, then fill them in. Both services refuse to start if a variable is missing and name it.
 
+## Running locally
+
+```bash
+make setup && make models   # deps + the bge-small embedding model
+make db-start && make db-reset
+make dev-local              # web :3000 + worker :8000 against the LOCAL Supabase stack
+```
+
+`make dev` runs against whatever `apps/*/.env*` point at (the cloud project). E2E:
+`cd apps/web && E2E_WORKER=1 pnpm exec playwright test` (needs `make dev-local`); add `E2E_LLM=1` for the live guide-upload test.
+
+## Deploying
+
+Supabase project: `BrandLens`, **ap-southeast-1 (Singapore)**. Migrations: `supabase db push --db-url <session-pooler-URI>`; demo data: `make seed-demo url=<SUPABASE_URL>` (then any running worker embeds the vault).
+
+**Worker → Render** (free tier, Docker):
+1. Render Dashboard → **New → Blueprint** → select this repo. `render.yaml` defines `brandlens-worker` (Docker, `apps/worker`, Singapore, health check `/healthz`).
+2. Fill the `sync: false` secrets when prompted: `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `DATABASE_URL` (**session pooler**, `aws-0-ap-southeast-1.pooler.supabase.com:5432`), `GROQ_API_KEY`, `GEMINI_API_KEY`, `LANGFUSE_HOST`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and optionally `DISCORD_WEBHOOK_URL` + `SITE_URL` (the Vercel URL).
+3. Free web services sleep after ~15 min idle, which pauses the queue consumer. Set the web env `WORKER_URL` (each submit pings `/healthz`) and the GitHub repo variable `WORKER_URL` (the `keepalive.yml` workflow pings every 10 min). If the 512 MB instance runs out of memory, switch the plan to Starter.
+
+**Web → Vercel:** import the repo, **Root Directory `apps/web`** (pnpm detected). Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `NEXT_PUBLIC_SITE_URL` (the Vercel URL), `NEXT_PUBLIC_DEMO_MODE=true`, `DISCORD_WEBHOOK_URL`, `WORKER_URL`, optional `RESEND_API_KEY`/`EMAIL_FROM`. Then in Supabase → Authentication → URL Configuration set **Site URL** and add the Vercel URL to **Redirect URLs**.
+
+**Verify:** `cd apps/web && E2E_BASE_URL=https://<your-app>.vercel.app pnpm exec playwright test e2e/core-loop.spec.ts`, and check the Render logs for `review done`.
+
 ## Local database and demo accounts
 
 ```bash
@@ -60,6 +84,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P07 | LLM review pass, citation gate, confidence scoring, intent verification of rewrites, degraded mode, tracing |
 | P08 | Draft editor (TipTap) with live finding highlights, intent capture, findings panel with accept/edit/dismiss/route, offsets util and tests |
 | P09 | Review queue and reviewer view, decisions via transition_content, version diff, comments, audit trail, Discord/email notifications |
+| P10 | Worker Dockerfile, Render Blueprint, cloud migrations and seed, core-loop e2e (local and cloud), keep-alive |
 
 ## Licence
 

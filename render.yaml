@@ -1,0 +1,63 @@
+# Render Blueprint for the BrandLens worker (Dashboard → New → Blueprint → this repo).
+# Secrets use `sync: false`: Render prompts for them on first deploy; they are never committed.
+services:
+  - type: web # free tier has no background workers; the HTTP /healthz keeps it a web service
+    name: brandlens-worker
+    runtime: docker
+    plan: free # free web services sleep after ~15 min idle; see README "Deploying" for the wake-up ping
+    region: singapore # same region as the Supabase project (ap-southeast-1)
+    rootDir: apps/worker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # Supabase: use the SESSION pooler URI (port 5432) for DATABASE_URL, never 6543
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PGMQ_QUEUE
+        value: review_jobs
+      # LLM providers (free tiers). Model IDs verified working on 2026-10-26.
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_FALLBACK_PROVIDER
+        value: gemini
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_MODEL_TEXT
+        value: openai/gpt-oss-120b
+      - key: GROQ_MODEL_VISION
+        value: qwen/qwen3.8-27b
+      - key: GEMINI_MODEL_TEXT
+        value: gemini-3.5-flash
+      - key: GEMINI_MODEL_VISION
+        value: gemini-3.5-flash
+      # Local models (baked into the image at build time)
+      - key: EMBEDDING_MODEL
+        value: BAAI/bge-small-en-v1.5
+      - key: MODEL_CACHE_DIR
+        value: /app/.models
+      - key: OCR_ENGINE
+        value: tesseract
+      # Tracing
+      - key: LANGFUSE_HOST
+        sync: false
+      - key: LANGFUSE_PUBLIC_KEY
+        sync: false
+      - key: LANGFUSE_SECRET_KEY
+        sync: false
+      # Notifications (optional): "needs review" Discord messages for worker transitions
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
