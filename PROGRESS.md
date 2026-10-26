@@ -14,7 +14,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
 | P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26 |
-| P03 | Worker core | M | todo | | | |
+| P03 | Worker core | M | in-progress | M (Claude) | phase/P03-worker-core | |
 | P04 | Vault ingestion & PayWise kit | M | todo | | | |
 | P05 | Vault admin UI | J | todo | | | |
 | P06 | Pipeline stages 1–4 | M | todo | | | |
