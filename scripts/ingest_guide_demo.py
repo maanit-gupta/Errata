@@ -17,7 +17,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import demo_data as d
-
 from brandlens_worker.db import create_pool
 from brandlens_worker.jobs.ingest_guide import ingest_guide
 from brandlens_worker.queue import JobContext, Message

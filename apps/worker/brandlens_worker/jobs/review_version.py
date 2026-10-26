@@ -18,10 +18,17 @@ from pydantic import BaseModel
 
 from brandlens_worker import config, db
 from brandlens_worker.embeddings import to_pgvector
-from brandlens_worker.jobs.common import get_embedder, get_storage
+from brandlens_worker.jobs.common import get_embedder, get_router, get_storage, get_tracer
+from brandlens_worker.llm.base import DegradedError
 from brandlens_worker.pipeline.ingest import IngestError
 from brandlens_worker.pipeline.routing import RoutingFinding, has_open_blockers, route
-from brandlens_worker.pipeline.run import StagesResult, VersionInput, run_stages_1_to_4
+from brandlens_worker.pipeline.run import (
+    LLMStageResult,
+    StagesResult,
+    VersionInput,
+    run_stages_1_to_4,
+    run_stages_5_6,
+)
 from brandlens_worker.pipeline.types import Doc, Fact, Finding, GlossaryTerm, Rule, Vault
 from brandlens_worker.queue import JobContext, JobError
 
@@ -123,20 +130,71 @@ async def review_version(ctx: JobContext) -> None:
             )
             return list(await cur.fetchall())
 
-    try:
-        result = await run_stages_1_to_4(
-            VersionInput(format=row["format"], body=row["body"], data=data, intent=row["intent"]),
-            vault,
-            embed=embed,
-            match_vault=match_vault,
-            topk=config.TOPK,
-        )
-    except IngestError as exc:
-        raise JobError(exc.code) from exc
-    except NotImplementedError as exc:
-        raise JobError("unsupported_format") from exc
+    tracer = get_tracer(ctx)
+    with tracer.trace_run(
+        str(p.run_id), org_id=str(p.org_id), version_id=str(p.version_id)
+    ) as root:
+        try:
+            with tracer.trace_run(str(p.run_id), name="stages_1_4"):
+                result = await run_stages_1_to_4(
+                    VersionInput(
+                        format=row["format"], body=row["body"], data=data, intent=row["intent"]
+                    ),
+                    vault,
+                    embed=embed,
+                    match_vault=match_vault,
+                    topk=config.TOPK,
+                )
+        except IngestError as exc:
+            raise JobError(exc.code) from exc
+        except NotImplementedError as exc:
+            raise JobError("unsupported_format") from exc
 
-    await persist(ctx, p, row["content_id"], vault, result, started)
+        llm: LLMStageResult | None = None
+        try:
+            with tracer.trace_run(str(p.run_id), name="stages_5_6"):
+                llm = await run_stages_5_6(
+                    result,
+                    vault,
+                    row["intent"] or {},
+                    router=get_router(ctx),
+                    embed_sync=embedder.embed,
+                )
+            for g in llm.generations:
+                meta = g["meta"]
+                tracer.generation(
+                    g["name"],
+                    prompt_version=llm.prompt_version,
+                    model=meta.model,
+                    input_meta={
+                        "run_id": str(p.run_id),
+                        "retrieved": len(result.retrieved),
+                        "already_found": len(result.findings),
+                        "redactions": len(result.redacted.redactions),
+                        "words": result.doc.word_count,
+                    },
+                    output={"findings": g["findings"]},
+                    usage={"input": meta.input_tokens or 0, "output": meta.output_tokens or 0},
+                    latency_ms=meta.latency_ms,
+                    metadata={"provider": meta.provider, "cache_hit": meta.cache_hit},
+                )
+        except DegradedError:
+            log.warning(
+                "llm unavailable; deterministic findings only", extra={"run_id": str(p.run_id)}
+            )
+        root.update(
+            metadata={
+                "deterministic": len(result.findings),
+                "llm_kept": len(llm.findings) if llm else 0,
+                "gate_drops": llm.drops if llm else {},
+                "rewrite_failures": llm.rewrite_failures if llm else {},
+                "degraded": llm is None,
+            }
+        )
+        trace_id = tracer.current_trace_id()
+    tracer.flush()
+
+    await persist(ctx, p, row["content_id"], vault, result, started, llm=llm, trace_id=trace_id)
 
 
 async def persist(
@@ -146,10 +204,27 @@ async def persist(
     vault: Vault,
     result: StagesResult,
     started: float,
+    *,
+    llm: LLMStageResult | None,
+    trace_id: str | None,
 ) -> None:
     codes_by_id = {r.id: r.code for r in vault.rules} | {f.id: f.code for f in vault.facts}
     rows = [to_row(f, result.doc, codes_by_id) for f in result.findings]
-    timings = {**result.timings, "total": round((time.perf_counter() - started) * 1000)}
+    if llm:
+        for f in llm.findings:
+            rows.append(
+                {
+                    **to_row(f, result.doc, codes_by_id),
+                    "model_version": llm.model_version,
+                    "prompt_version": llm.prompt_version,
+                }
+            )
+    timings: dict[str, Any] = {**result.timings, **(llm.timings if llm else {})}
+    timings["total"] = round((time.perf_counter() - started) * 1000)
+    timings["gate"] = llm.drops if llm else {}
+    timings["rewrite_failures"] = llm.rewrite_failures if llm else {}
+    if trace_id:
+        timings["trace_id"] = trace_id
 
     async with ctx.pool.connection() as conn, conn.transaction():
         # Idempotent per run: a retried job replaces its own findings.
@@ -158,29 +233,42 @@ async def persist(
             await conn.execute(
                 "insert into public.findings "
                 "(org_id, version_id, run_id, dimension, rule_id, fact_id, "
-                "wcag_ref, quote, span, severity, confidence, source, explanation, rewrite) "
-                "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                "wcag_ref, quote, span, severity, confidence, source, explanation, rewrite, "
+                "model_version, prompt_version) "
+                "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (
                     p.org_id, p.version_id, p.run_id, r["dimension"], r["rule_id"], r["fact_id"],
                     r["wcag_ref"], r["quote"], Jsonb(r["span"]), r["severity"], r["confidence"],
                     r["source"], r["explanation"], r["rewrite"],
+                    r.get("model_version"), r.get("prompt_version"),
                 ),
             )  # fmt: skip
         await conn.execute(
             "update public.review_runs set status = 'done', finished_at = now(), retrieved = %s, "
-            "timings = timings || %s where id = %s",
-            (Jsonb(result.retrieved), Jsonb(timings), p.run_id),
+            "timings = timings || %s, degraded = %s, error_code = %s, provider = %s, "
+            "model_version = %s, prompt_version = %s where id = %s",
+            (
+                Jsonb(result.retrieved),
+                Jsonb(timings),
+                llm is None,
+                None if llm else "llm_unavailable",
+                llm.provider if llm else None,
+                llm.model_version if llm else None,
+                llm.prompt_version if llm else None,
+                p.run_id,
+            ),
         )
         routing = [RoutingFinding(r["dimension"], r["severity"]) for r in rows]
         if has_open_blockers(routing):
             await conn.execute(
-                "select public.transition_content_system(%s, 'needs_revision')", (content_id,)
+                "select public.transition_content_system(%s::uuid, 'needs_revision')", (content_id,)
             )
             outcome, risk = "needs_revision", None
         else:
             to, risk = route(routing)
             await conn.execute(
-                "select public.transition_content_system(%s, 'in_review', null, %s, %s)",
+                "select public.transition_content_system("
+                "%s::uuid, 'in_review', null, %s::text, %s::real)",
                 (content_id, to, risk),
             )
             outcome = f"in_review:{to}"
@@ -191,6 +279,7 @@ async def persist(
             "run_id": str(p.run_id),
             "findings": len(rows),
             "outcome": outcome,
+            "degraded": llm is None,
             "risk": risk,
             "timings": timings,
         },

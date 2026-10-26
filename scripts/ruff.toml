@@ -1,0 +1,8 @@
+# Dev scripts share the worker's ruff config; long SQL/fixture lines are fine here.
+extend = "../apps/worker/pyproject.toml"
+
+[lint]
+extend-ignore = ["E501"]
+
+[lint.isort]
+known-first-party = ["brandlens_worker", "demo_data"]
