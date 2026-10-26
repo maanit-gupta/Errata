@@ -20,7 +20,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
-| P09 | Review workflow & notifications | J+M | todo | | | |
+| P09 | Review workflow & notifications | J+M | in-progress | M (Claude, /complete) | phase/P09-review-workflow | |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | todo | | | |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
