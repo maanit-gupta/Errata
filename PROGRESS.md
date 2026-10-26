@@ -15,7 +15,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
 | P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26 |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
-| P04 | Vault ingestion & PayWise kit | M | todo | | | |
+| P04 | Vault ingestion & PayWise kit | M | in-progress | M (Claude) | phase/P04-vault-ingestion | |
 | P05 | Vault admin UI | J | todo | | | |
 | P06 | Pipeline stages 1–4 | M | todo | | | |
 | P07 | Stages 5–6: LLM, gate, intent | M | todo | | | |
