@@ -1008,10 +1008,47 @@ export type Database = {
       can_edit_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_version: { Args: { p_version_id: string }; Returns: boolean }
+      decide_example_suggestion: {
+        Args: { p_id: string; p_keep: number[] }
+        Returns: {
+          body: string
+          code: string
+          created_at: string
+          dimension: Database["public"]["Enums"]["dimension"]
+          embedding: string | null
+          embedding_source_hash: string | null
+          examples: Json
+          guide_id: string | null
+          id: string
+          never_send: boolean
+          org_id: string
+          severity: Database["public"]["Enums"]["severity"]
+          source_page: number | null
+          status: Database["public"]["Enums"]["rule_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rule_cards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       enqueue_review: { Args: { p_version_id: string }; Returns: string }
       enqueue_vault_job: {
         Args: { p_job: string; p_org: string; p_payload?: Json }
         Returns: number
+      }
+      flag_unclear_rules: {
+        Args: { p_org: string }
+        Returns: {
+          code: string
+          gcs: number
+          rule_id: string
+        }[]
       }
       has_org_role: {
         Args: {
@@ -1019,6 +1056,10 @@ export type Database = {
           roles: Database["public"]["Enums"]["member_role"][]
         }
         Returns: boolean
+      }
+      insights_summary: {
+        Args: { p_org: string; p_since?: string }
+        Returns: Json
       }
       is_org_member: { Args: { org: string }; Returns: boolean }
       is_org_staff: { Args: { org: string }; Returns: boolean }
@@ -1078,6 +1119,23 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      rule_gcs: {
+        Args: { p_org: string; p_since?: string }
+        Returns: {
+          card_status: Database["public"]["Enums"]["rule_status"]
+          code: string
+          dimension: Database["public"]["Enums"]["dimension"]
+          dismissal_rate: number
+          gcs: number
+          low_confidence_rate: number
+          n: number
+          override_rate: number
+          rule_id: string
+          status: string
+          title: string
+          version: number
+        }[]
       }
       storage_content_in_org: { Args: { p_name: string }; Returns: boolean }
       storage_path_uuid: {

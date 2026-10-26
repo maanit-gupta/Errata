@@ -1,4 +1,5 @@
-"""Discord "needs review" notifications for transitions the worker makes (SPEC §15).
+"""Discord notifications the worker sends (SPEC §15): "needs review" for its own transitions and
+"rule is UNCLEAR" when example generation finishes.
 
 Optional (only when DISCORD_WEBHOOK_URL is set), fire-and-forget, never raises, never includes
 draft text: title, route, risk and a link only.
@@ -53,6 +54,31 @@ def notify_needs_review(
     ):
         return
     payload = needs_review_payload(title, content_id, route_to, risk, settings.site_url)
+    task = asyncio.create_task(_post(settings.discord_webhook_url.get_secret_value(), payload))
+    _tasks.add(task)
+    task.add_done_callback(_tasks.discard)
+
+
+def unclear_rule_payload(code: str, gcs: int | None, site_url: str) -> dict[str, Any]:
+    return {
+        "embeds": [
+            {
+                "title": f"⚠️ Rule {code} is UNCLEAR (GCS {gcs if gcs is not None else '–'})",
+                "description": "Three do/don't examples are waiting for a brand admin's approval.",
+                "url": f"{site_url.rstrip('/')}/insights",
+                "color": 0xD63A24,
+            }
+        ]
+    }
+
+
+def notify_unclear_rule(settings: Any, *, code: str, gcs: int | None) -> None:
+    """Schedule the message and return immediately (no-op without a webhook and site URL)."""
+    if not getattr(settings, "discord_webhook_url", None) or not getattr(
+        settings, "site_url", None
+    ):
+        return
+    payload = unclear_rule_payload(code, gcs, settings.site_url)
     task = asyncio.create_task(_post(settings.discord_webhook_url.get_secret_value(), payload))
     _tasks.add(task)
     task.add_done_callback(_tasks.discard)

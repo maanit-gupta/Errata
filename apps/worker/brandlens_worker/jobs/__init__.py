@@ -16,6 +16,7 @@ async def noop(ctx: JobContext) -> None:
 
 def build_registry() -> Registry:
     from brandlens_worker.jobs.embed_vault import embed_vault
+    from brandlens_worker.jobs.generate_examples import generate_examples
     from brandlens_worker.jobs.ingest_guide import ingest_guide
     from brandlens_worker.jobs.review_version import review_version
 
@@ -23,5 +24,6 @@ def build_registry() -> Registry:
     registry.add("noop", noop)
     registry.add("ingest_guide", ingest_guide)
     registry.add("embed_vault", embed_vault)
+    registry.add("generate_examples", generate_examples)
     registry.add("review_version", review_version)
     return registry

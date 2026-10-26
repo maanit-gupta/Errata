@@ -433,6 +433,20 @@ async def persist(
             title_row = await cur.fetchone()
             notify_title = title_row["title"] if title_row else "Content"
 
+    # A rule that crossed into UNCLEAR (SPEC §11) gets example generation queued. Best effort: it
+    # must never fail the review that triggered it.
+    try:
+        async with ctx.pool.connection() as conn:
+            cur = await conn.execute(
+                "select code, gcs from public.flag_unclear_rules(%s)", (p.org_id,)
+            )
+            for flagged in await cur.fetchall():
+                log.info(
+                    "rule flagged unclear", extra={"code": flagged["code"], "gcs": flagged["gcs"]}
+                )
+    except Exception as exc:
+        log.warning("unclear-rule check failed", extra={"error": type(exc).__name__})
+
     if outcome.startswith("in_review:") and "settings" in ctx.services:
         notify_needs_review(
             ctx.services["settings"],

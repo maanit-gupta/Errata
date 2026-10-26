@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P12 done (PDF decks, on branch, not merged); next P13 (needs P09 ✓)
+**Current phase:** P13 partial (on `phase/P13-gcs-insights`, stacked on unmerged P12)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -24,67 +24,41 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
-| P13 | GCS & insights 🎯 D11 | J+M | in-progress | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-26; stacked on P12 |
+| P13 | GCS & insights 🎯 D11 | J+M | partial | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-26; stacked on P12 |
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P12 / **done** (2026-10-26) on `phase/P12-pdf-decks`. **Not merged to `main`, not deployed, cloud migration not applied** (needs a user decision; see Open questions). Production (Render + Vercel) is still P11.
-- **What exists now:**
-  - **Worker `pipeline/pdf.py`** (PyMuPDF `rawdict`, extracted with no clip):
-    - Every word is a `Segment` with its 1-based `page` and a character-accurate box in **render pixels**. Pages are rendered so the long side is ≤ `PDF_RENDER_MAX_SIDE` = 1400 px, and thumbnail and boxes share that pixel space.
-    - Pages are processed one at a time; only the PNG is kept.
-    - `PDF_MAX_PAGES` (40) → `too_many_pages`; `PDF_MAX_WORDS` (12k) → `too_long`; also `unreadable_pdf`, `encrypted_pdf`, `no_text_layer`.
-  - **Hidden text** (SPEC §6 stage 2): glyph colour vs the rendered ring background < `FAINT_TEXT_RATIO`, < `PDF_HIDDEN_PT` (4 pt), alpha 0, or off the page (box pinned to the edge).
-    - `apply_hidden` makes one finding per hidden run. If the claims filter hit it, that becomes a **claims blocker** citing the CL rule, folded in. Otherwise it's **access** A-02 (+ WCAG 1.4.3 when faint).
-    - The explanation names possible concealed claims or prompt injection.
-    - Hidden runs are redacted (`⟦REDACTED:hidden_text⟧`) from the LLM copy via `protect(doc, extra)`.
-  - **Other PDF checks:**
-    - `check_contrast`: WCAG 1.4.3 from the declared glyph colour vs the rendered background, one finding per line run.
-    - `check_links`: WCAG 2.4.4 on link annotations with vague or bare-URL text.
-    - The logo is searched for **inside image placements only** (`detect_logo(confirm=True)` also requires template correlation ≥ 0.72; bold headings collected 29 ORB inliers). Logo size is converted to CSS px at 100% zoom; clear space is checked; a deck page isn't required to carry a logo.
-    - Embedded pictures ≥ `PDF_IMAGE_MIN_PX` get the P11 checks (OCR → every text filter, contrast, VS-01 fills, `check_image(standalone=False)`) and are lifted to page-level image findings.
-  - **LLM, one call per page chunk:** `page_chunks` packs whole pages up to `PDF_CHUNK_WORDS` (700). Each chunk is gated against its own sub-Doc and then shifted back, so a quote repeated on another page can't land there. `timings.llm_calls` records the count.
-  - **Persistence:**
-    - Spans gain `page`.
-    - Page renders upload to `renders/{org}/{content}/{version}/page-{n}.png`.
-    - Migration `20261026100018_review_run_pages.sql` adds `review_runs.pages` (`[{n,width,height,path,words}]`).
-    - `timings.pdf` holds `{pages, hidden, images, cool_images}`.
-  - **Memory fix (all formats):** `Embedder.embed` now runs length-sorted batches under `EMBED_TOKEN_BUDGET` = 512 padded tokens. Before this, one 512-token query batched with 24 sentences peaked around 1 GB and was **OOM-killed at 512 MB** (Render's size). Long text drafts in production were exposed to the same problem.
-  - **Web:**
-    - `components/drafts/pdf-findings.tsx`: thumbnail rail with per-page severity counts (`aria-current`), page canvas reusing `ImageFindings`, previous/next buttons.
-    - `lib/drafts/pages.ts`: zod-validated manifest → signed URLs.
-    - `spanPage()` in `lib/drafts/span.ts`.
-    - `DraftWorkspace` PDF mode: the findings list follows the page, with a "Show all pages" toggle. FindingCard has "Show on page N", which pins the selection, plus a `p. N` chip and "Mark fixed in the PDF".
-    - Review page: the same rail read-only, and a "Show on page N" link (`#show-<id>`).
-  - **Fixture:** `scripts/build_fixture_deck.py` → `fixtures/paywise/deck.pdf` (4 pages, 16:9) + `deck_labels.json` (9 labelled findings with boxes; page 1 clean).
-  - **Eval:** `make eval-pdf` → `apps/worker/eval/pdf_report.md`. The committed copy was recorded **inside the worker image at `--memory=512m` with real bge-small**:
-    - deck 9/9 recall, 9/9 precision
-    - 40 pages in 7.0 s
-    - peak RSS 484 MB, 453 MB after the 4-page deck, so memory is flat in page count
-    - 2 LLM chunks
-  - **Tests:** `tests/test_pdf.py` (11). Shared fixtures moved to pytest-free `tests/kit_fixture.py` and `tests/pdf_labels.py`, so evals run in the production image.
-- **Verified locally against the real pipeline:** `e2e/pdf-check.spec.ts` passes with `E2E_WORKER=1` (12 s; local DB + Storage + worker + real Groq). The run recorded 3.8 s total, 1 LLM call, not degraded, 9 findings on pages 2/3/3/3/4/4/4/4/4. The spec covers: rail, clean page 1, the page-3 hidden CL-03 blocker overlay, the faint disclaimer, the page filter, "Show on page 2" jumping and highlighting, the page-4 picture claim, VS-01 and VS-03, axe clean, and the review page "Show on page 3".
-- **Stubbed or deferred:**
-  - VS-02 (photo warmth) for pictures inside decks: the warmth pre-filter is counted (`cool_images`), but the per-chunk LLM call is text-only.
-  - Vector-drawn logos aren't detected (raster logos only).
-  - Scanned PDFs (no text layer) are rejected with `no_text_layer` rather than OCR'd page by page.
-  - Reading grade on a PDF highlights the first word.
-- **How to run / verify:**
-  - `make check` (green: 164 pytest + 1 skipped, 74 Vitest, pgTAP pass)
-  - `make eval-pdf`
-  - Local UI: `make db-reset && make seed-assets-local && make dev-local`, then `cd apps/web && E2E_WORKER=1 pnpm exec playwright test e2e/pdf-check.spec.ts`
-  - The 512 MB check command is in the `eval/pdf_eval.py` docstring.
-- **Gotchas discovered:**
-  - Browse the dev server at `localhost`, not `127.0.0.1`. Next 16 dev blocks dev resources cross-origin, so the page never hydrates and clicks silently do nothing.
-  - The local `brandlens-worker:local` image was stale (pre-P11, no cv2). It was rebuilt this phase.
-  - `test_intent_verification_is_fast` is a 15 ms latency budget. It failed about 1 run in 3 with unchanged code while a video call loaded the laptop (load average 6.5). It now takes the best median of 3 rounds and **skips when the 1-minute load average per CPU > 0.5**.
-  - `make test-db` wipes Storage rows: rerun `make seed-assets-local` before local e2e.
-- **Exact next step:**
-  1. Ask the user to approve merging P12 to `main`, applying migration `20261026100018` to cloud **before** the web deploy (the web selects `review_runs.pages`), and redeploying Render + Vercel.
-  2. Then P13 (GCS telemetry and insights) on `phase/P13-gcs-insights`.
+- **Phase / status:** P13 / **partial** (2026-10-26) on `phase/P13-gcs-insights`, stacked on P12, which is done but **not merged, not deployed, and its cloud migration isn't applied** (see Open questions). A WIP commit stops the session at the usage limit.
+- **P12 summary:** done. See its Decisions rows and `apps/worker/eval/pdf_report.md`: deck 9/9; 40 pages in 7.0 s at 484 MB peak, recorded inside the worker image at `--memory=512m`; `e2e/pdf-check.spec.ts` green locally.
+- **P13, built and verified locally:**
+  - Migration `20261026100019_insights.sql`:
+    - `rule_gcs(org, since)`: SPEC §11 per rule-card **version**; "AI wrong" dismissals aren't counted.
+    - `insights_summary(org, since)`: KPI tiles, top issues, and the `simulated` flag.
+    - `flag_unclear_rules(org)`: direct-DB/worker only. Inserts a pending placeholder, audits it, queues `generate_examples`.
+    - `decide_example_suggestion(id, keep[])`: brand admin. Appends the kept examples (`source: generated`) through `revise_rule_card`, giving v n+1, re-embedded.
+    - `example_suggestions` added to the realtime publication.
+  - pgTAP `supabase/tests/05_insights.test.sql` (20 tests) passes via `make test-db`.
+  - Worker: `prompts/examples_v1.md`, `pipeline/examples.py` (schema: exactly 3 items with both kinds; dismissed quotes redacted; verbatim copies dropped), `jobs/generate_examples.py` (one LLM call; on degraded it removes the placeholder), and the Discord `notify_unclear_rule`. `review_version` calls `flag_unclear_rules` after each review (best effort). Tests: `tests/test_insights.py` (6).
+  - `scripts/simulate_activity.py` + `make simulate-activity` (local; `url=` for cloud, refuses on mismatch). It writes 157 archived "[Simulated]" contents through `private.apply_transition` and `simulated: true` audit events. Local result matches plan p.19 exactly: **TV-04 41/60 UNCLEAR, VS-02 22/73 watch, CL-03 63/97, G-07 88/99**. Real Groq generated 3 TV-04 examples in 2.3 s.
+  - Web:
+    - `/insights` (`app/(app)/insights/page.tsx`): KPI tiles, the "Illustrative data" pill, the Recharts bar chart plus a data table, and the watchlist (`components/insights/watchlist.tsx`) with a native `<dialog>` drawer that approves or rejects each example. Before/after reads e.g. "v1: GCS 60 (UNCLEAR) · v2 added 2 generated examples".
+    - `lib/insights/actions.ts`.
+    - `/settings/ai-use` lists models and prompt versions from runs in the last 30 days.
+  - `e2e/insights.spec.ts` passes locally (21 s, axe clean with the drawer open).
+- **Left to do for P13:**
+  1. Run `make check` and fix anything red. The web code is tsc/eslint-clean per file, but the full run is untested after the last changes. `test_intent_verification_is_fast` is flaky when the laptop is busy; it skips at load/CPU > 0.5.
+  2. Log the dependency (below; done) and the decisions (Decisions rows to add: GCS per rule version; placeholder suggestion for idempotency; examples via revise_rule_card; drawer as a native dialog).
+  3. Check that `embed_vault` ran for TV-04 v2 after approval (worker log "vault embedded").
+  4. Day-11 checklist, then tag `v0.11-feature-complete` (after merging P12/P13 with user approval).
+  5. Update the README "Changes since Round 1" and the AI-assistance sections.
+- **Gotchas:**
+  - The migration file `20261026100019` was edited after being applied locally only (enum cast; dropped the card-age guard in `blocks`). Run `make db-reset` before relying on local state.
+  - Local `make dev-local` posts to the real Discord webhook if one is configured in `apps/worker/.env`.
+  - Browse at `localhost`, not `127.0.0.1` (dev hydration).
+- **Exact next step:** `make db-reset && make seed-assets-local`, start `make dev-local`, run `make check`, then `make simulate-activity` and `E2E_WORKER=1 pnpm exec playwright test e2e/insights.spec.ts e2e/pdf-check.spec.ts`. Record the decisions, set P13 to done, commit. Then ask the user to merge P12 and P13 and deploy (cloud migrations 18 and 19 first).
 
 ## Decisions log (append-only)
 
@@ -222,6 +196,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | pytesseract | Apache-2.0 | P11 |
 | Tesseract OCR (system binary, Docker `tesseract-ocr`) | Apache-2.0 | P11 |
 | paddleocr, paddlepaddle (optional extra `ocr-paddle`, not installed by default) | Apache-2.0 | P11 |
+| recharts | MIT | P13 |
 
 ## Open questions (ask the user; don't guess)
 
