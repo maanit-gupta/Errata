@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P00 done → next P01
+**Current phase:** P01 done → next P03 (M) / P02 (J)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -12,7 +12,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | ID | Phase | Owner | Status | Owner/Session | Branch | Notes |
 |---|---|---|---|---|---|---|
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
-| P01 | DB schema, RLS, queue, seed | M | in-progress | M (Claude) | phase/P01-schema | |
+| P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
 | P02 | Web shell, auth, demo switcher | J | todo | | | |
 | P03 | Worker core | M | todo | | | |
 | P04 | Vault ingestion & PayWise kit | M | todo | | | |
@@ -31,26 +31,37 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P00 / done (branch `phase/P00-bootstrap`, not yet merged to `main`).
+- **Phase / status:** P01 / done (branch `phase/P01-schema`, stacked on `phase/P00-bootstrap`; neither merged to `main` yet).
 - **What exists now:**
-  - Root: `Makefile` (every CLAUDE.md target; `make help` lists them), pnpm workspace (`pnpm-workspace.yaml`, root `package.json` proxies to make), AGPL-3.0 `LICENSE`, stub `README.md` with the AI-assistance section, `.github/workflows/ci.yml` (`make lint` + `make test-worker test-web` on PRs/pushes to main; pgTAP and eval jobs are commented placeholders), `supabase/config.toml` (`project_id = "brandlens"`, Postgres 17, no migrations yet).
-  - `apps/web`: Next.js 16.4.3 / React 19.3, TS strict, Tailwind v4, ESLint, Prettier (+tailwind plugin), shadcn/ui (`base-nova` style, neutral, Base UI primitives, `cn` helper from shadcn's `cn` package), Vitest (`lib/__tests__/env.test.ts`), Playwright config (`e2e/` empty). `cacheComponents: true` from the template.
-  - Web env: `lib/env-schema.ts` (pure zod schemas + `parseEnv`, value-free `EnvError`) and `lib/env.ts` (`clientEnv` constant with literal `NEXT_PUBLIC_*` refs; `serverEnv()` memoised, throws in the browser). Validated in **both** `instrumentation.ts` (fails `next dev`/`next start` at boot) and `app/layout.tsx` (fails `next build`).
-  - `apps/worker`: uv project on Python 3.12 (`.python-version`), all P00 deps, `brandlens_worker/settings.py` (pydantic-settings; `get_settings()` cached, `load_settings(**overrides)` raises a value-free `SettingsError` naming each bad var; secrets are `SecretStr`), `config.py` (SPEC §14 constants, `RISK_WEIGHTS` from §10), `main.py` (`create_app(settings=None)` factory with `GET /healthz` → `{status, env, provider}`). 9 pytest tests (settings, healthz, config).
-  - `.env.example` for both apps, names matching CLAUDE.md.
-- **Stubbed or deferred:** `make eval` (P14), `make seed-demo` (P01), `make e2e` (no-op until a spec exists, P10), `make test-db` (no-op until `supabase/tests/*.sql` exist, P01). No structured JSON logging yet (just `basicConfig`; P03). `/checkpoint` command referenced in CLAUDE.md does not exist in `.claude/commands/` yet. `docs/plan.pdf` was already in place.
-- **How to run / verify:** `make setup && make check` (verified on a fresh clone with no env files). `make dev` → http://localhost:3000 (default Next page) and http://localhost:8000/healthz (200). Fail-fast: `GROQ_API_KEY= make dev-worker` or `SUPABASE_SECRET_KEY= make dev-web` exits naming the var (a blank process env var overrides the file, so you never need to edit `.env*`).
+  - `supabase/migrations/` holds 15 migrations, one concern each (`20261026100001`…`100015`): extensions, enums, tenancy, vault, content, collaboration, indexes (HNSW + FK B-trees), helpers, RLS, workflow, queues, `match_vault`, storage, realtime, profile-on-signup.
+  - **RLS helpers** (public, security definer): `is_org_member`, `has_org_role`, `is_org_staff` (every role but agency), `can_read_content`, `can_read_version`, `can_edit_content` (owner/admin while `draft`/`needs_revision`), `can_act_on_version` (owner/admin; manager while `in_review`; matching specialist while `specialist_review`), `version_org`, `storage_path_uuid`, `storage_content_in_org`.
+  - **Workflow:** `private.apply_transition` holds the §4 rule table. Entry points:
+    - `transition_content(content, to, reason?, route_to?)` for authenticated users. It refuses `ai_check`. `route_to` is used for manual escalation `in_review → specialist_review`.
+    - `transition_content_system(content, to, reason?, route_to?, risk_score?)`, service role only. `in_review` auto-redirects to `specialist_review` when `route_to ≠ manager`. `ai_check → draft` (with a reason) handles failed runs.
+    - The `contents_guard` trigger rejects writes to `state`, `route_to`, `risk_score`, `current_version_id`, `owner_id`, `org_id` and `campaign_id` unless the txn-local GUC `brandlens.workflow_write='on'` (set only by definer functions).
+    - Every transition writes `audit_events`. approve, request_changes, sign_off, mark_ready and archive also write `decisions`.
+  - **Versions:** `n` is auto-numbered, `created_by` defaults to `auth.uid()`, and inserting one sets `contents.current_version_id` and supersedes open findings on older versions whose quote vanished. They're immutable (trigger plus revoked UPDATE grant).
+  - **Findings:** users may UPDATE only `status`, `dismiss_reason` and `dismiss_note` (column grants). A trigger stamps `resolved_by`/`resolved_at`, clears the dismiss fields when not dismissed, forbids manual `superseded`, and audits every change. CHECKs enforce a citation and that dismissals have a reason.
+  - **Overrides:** `decisions.finding_id` (new column). A manager/specialist/admin inserts an `override` decision (reason required) per open warning; `in_review → approved` is blocked until every open warning on the current version has one.
+  - **Queues:** `review_jobs`, `vault_jobs`. `enqueue_review(version)` checks it's the current version, that intent is complete (§5, `campaign_id` must match), and from `needs_revision` that no blocker on the latest done run is open. It then inserts the queued run, transitions, and sends `{run_id, version_id, org_id}`. `enqueue_vault_job(org, job, payload)` is admin only; jobs are `ingest_guide`, `embed_vault` and `generate_examples`.
+  - **`match_vault`** is service role only and returns `(id, code, kind 'rule'|'fact', dimension, title, content, severity, value, similarity)`. It takes approved non-`never_send` rules plus org-wide or matching-campaign, unexpired, non-`never_send` facts (facts count as dimension `facts`), with top-k from each side merged.
+  - **Storage:** private buckets `guides`, `assets`, `drafts` and `renders`. Paths: `guides|assets/{org}/…`, `drafts/{org}/{content}/{n}/…`, `renders/{org}/{content}/…`. Drafts allow insert and read only.
+  - **Realtime:** `review_runs`, `findings`, `contents`, `comments`.
+  - `supabase/seed.sql` has the PayWise org with fixed UUIDs (org `…00a1`, users `10000000-…-00000000000{1..6}`, campaigns `20000000-…-00{1,2}`), the 6 users (password `PayWise-demo-2026`, in the README), memberships, glossary G-07, facts F-048/F-112/E-19/E-11 and rule cards TV-02/TV-04/CL-03/G-07/VS-02/A-01 (approved, no embeddings).
+  - `scripts/demo_data.py` is the Python copy of the seed. `apps/worker/tests/test_demo_data.py` asserts it matches `seed.sql`.
+  - `scripts/seed_demo.py` (`make seed-demo url=…`) uses the admin API with fixed user ids and insert-if-missing. It refuses unless `--url` equals `SUPABASE_URL` and `--yes` is given. Verified: `db reset --no-seed`, then `seed_demo.py`, then the full pgTAP suite passes; a re-run is a no-op.
+  - pgTAP `supabase/tests/00–03` (69 assertions): RLS on every table, member/non-member/agency/anon access, the full state machine incl. guards, wrong roles and audit, direct-update rejection, `enqueue_review` + queue message, and `match_vault` scoping.
+  - `apps/web/types/database.ts` generated (`make types`); the web typechecks. CI now has a `pgtap` job (`supabase db start` → `test db` → `db lint`).
+- **Stubbed or deferred:** embeddings (P04); `rule_gcs` view (P13, SPEC §11); notifications; no `set_finding_status` RPC (direct column-granted UPDATE works; P08 may wrap it). The "blockers / confidence < 0.6 can't be one-click accepted" rule is UI-side (P08); the DB only requires a dismiss reason.
+- **How to verify:** `make db-start && make db-reset && make check` (`make check` includes pgTAP). Demo login: `creator@paywise.demo` / `PayWise-demo-2026` against the local API (:55321).
 - **Gotchas discovered:**
-  - Worker must run as `uvicorn --factory brandlens_worker.main:create_app`; there is no module-level `app`, so importing `main` in tests/CI never reads env.
-  - Worker tests use the `worker_env` fixture + `load_settings(_env_file=None)`; they never read the real `.env`.
-  - `pnpm typecheck` runs `next typegen` first (needed for the global `LayoutProps`/`PageProps` types).
-  - `apps/worker/.env` has an extra `LANGFUSE_BASE_URL` not in CLAUDE.md; settings use `extra="ignore"`. Decide in P03 whether the Langfuse SDK wants it instead of `LANGFUSE_HOST`.
-  - `LOG_LEVEL` in env is lowercase (`info`); settings upper-case it.
-  - Next 16 writes `apps/web/AGENTS.md` on `next dev`; it's committed so the tree stays clean.
-  - macOS has no `timeout` command; Docker daemon wasn't running this session (not needed for P00, needed for P01 `make db-start`).
-  - pnpm 12 + uv were installed via Homebrew this session (Node is v26 via nvm; CI uses Node 22).
-  - Starlette warns that `httpx` + TestClient is deprecated in favour of `httpx2`; the warning is filtered in `pyproject.toml`. Adding `httpx2` was blocked by the permission classifier, so that's left for a human decision.
-- **Exact next step:** Merge `phase/P00-bootstrap` into `main` (PR, reviewed by Jagpreet). Then `/clear` → `/next` runs **P01** (DB schema, RLS, queue, seed): start Docker, `make db-start`, then `make db-new name=...` per migration.
+  - **Local Supabase ports moved to 553xx** (API 55321, DB 55322, Studio 55323, Inbucket 55324), because another local Supabase project (TurfX) holds 543xx on this machine. The env files point at cloud, so nothing else changed.
+  - RLS with no UPDATE policy silently updates 0 rows. Where a hard error matters (versions, runs, findings, decisions, audit) the table grants are revoked too.
+  - RLS `WITH CHECK` runs after BEFORE triggers, so trigger-filled columns (e.g. `versions.created_by`) satisfy policies.
+  - pgTAP tests impersonate via `set local role authenticated; set local request.jwt.claims to '{"sub":…}'` and carry ids across role switches with `set_config('test.x', …, true)`.
+  - The `audit_events` append-only trigger also blocks the cascade when an org is deleted, so orgs with history can't be hard-deleted (intended).
+  - `make fmt` stops at `ruff check --fix` if any error is unfixable; run `uv run ruff format` directly in that case.
+- **Exact next step:** P03 (worker core: queue consumer, LLM router, embeddings, tracing) for M. P02 (web shell, auth, demo switcher) is unblocked for J. Merge P00 → P01 into `main` via PR when Jagpreet has reviewed.
 
 ## Decisions log (append-only)
 
@@ -70,6 +81,20 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P00 | `make dev` uses `make -j2` rather than a `concurrently` dep | One fewer dependency |
 | 2026-10-26 | P00 | shadcn `base-nova` preset (Base UI primitives, `cn` package) | Current shadcn default; restyled in P02 |
 | 2026-10-26 | P00 | Kept `httpx` for TestClient and filtered the starlette deprecation warning | Adding `httpx2` was blocked by the permission classifier; revisit if needed |
+| 2026-10-26 | P01 | Local Supabase ports 543xx → 553xx | Another local Supabase stack holds the defaults; we don't stop other projects |
+| 2026-10-26 | P01 | Added `decisions.finding_id` (override decisions point at the warning they override) | §4 requires an override per open warning; also feeds GCS ReviewerOverrideRate (§11) |
+| 2026-10-26 | P01 | Rule table lives in `private.apply_transition`; both public entry points and `enqueue_review` call it | One rule table for user and worker transitions (§4) |
+| 2026-10-26 | P01 | `transition_content` takes optional `p_route_to` (manual escalation); `transition_content_system` takes `p_route_to`, `p_risk_score` | Worker computes §10 from config.py weights; SQL applies the redirect |
+| 2026-10-26 | P01 | Added system transition `ai_check → draft` (reason required) | A failed run must not strand content in ai_check |
+| 2026-10-26 | P01 | Workflow-column guard uses a txn-local GUC set only inside definer functions | Blocks direct `state` writes from every client, including manual SQL as non-superuser roles |
+| 2026-10-26 | P01 | Users update findings via column grants (`status`, `dismiss_reason`, `dismiss_note`); trigger stamps resolver and audits | Minimal surface; no free-form edits of worker output |
+| 2026-10-26 | P01 | `match_vault` is service-role only and also returns `content`/`value` | It returns rule bodies, which agencies must not see; the worker needs the snippet text |
+| 2026-10-26 | P01 | At most one `approved` version per rule code (partial unique index) | Retrieval and citations must resolve to exactly one card |
+| 2026-10-26 | P01 | `drafts/` and `renders/` paths carry the content id as segment 2 | Lets storage RLS apply agency "own content only" rules |
+| 2026-10-26 | P01 | Added `enqueue_vault_job()` for `vault_jobs` | Web never touches pgmq directly (CLAUDE.md gotcha) |
+| 2026-10-26 | P01 | E-19 `valid_until` = campaign end (2026-11-15), not event day | Demo must still retrieve E-19 after Oct 28 |
+| 2026-10-26 | P01 | Demo password `PayWise-demo-2026`, fixed UUIDs, cloud users created with the same ids | Local and cloud demo data are identical; documented in README |
+| 2026-10-26 | P01 | Campaigns writable by manager and brand_admin | SPEC §2 is silent; managers run campaigns |
 
 **Dependencies and licences** (append when adding any dependency):
 

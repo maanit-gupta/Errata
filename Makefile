@@ -64,8 +64,8 @@ e2e: ## Playwright core-loop test (needs make dev)
 lint: lint-worker lint-web ## ruff, mypy, ESLint, Prettier, tsc --noEmit
 
 lint-worker:
-	$(UV) ruff check .
-	$(UV) ruff format --check .
+	$(UV) ruff check . ../../scripts
+	$(UV) ruff format --check . ../../scripts
 	$(UV) mypy
 
 lint-web:
@@ -74,8 +74,8 @@ lint-web:
 	cd $(WEB) && pnpm typecheck
 
 fmt: ## Auto-format and auto-fix
-	$(UV) ruff check --fix .
-	$(UV) ruff format .
+	$(UV) ruff check --fix . ../../scripts
+	$(UV) ruff format . ../../scripts
 	cd $(WEB) && pnpm format
 
 check: lint test ## lint + types + test. Must be green to finish a phase.
@@ -84,5 +84,6 @@ check: lint test ## lint + types + test. Must be green to finish a phase.
 eval: ## Golden-set eval (P14)
 	@echo "eval: not implemented until P14"
 
-seed-demo: ## Load the PayWise demo into the current Supabase target (P01/P04)
-	@echo "seed-demo: not implemented until P01"
+seed-demo: ## Load the PayWise demo into the cloud project: make seed-demo url=https://<ref>.supabase.co
+	@test -n "$(url)" || { echo "usage: make seed-demo url=<SUPABASE_URL>  (must match apps/worker/.env; local uses make db-reset)"; exit 1; }
+	$(UV) python ../../scripts/seed_demo.py --url "$(url)" --yes

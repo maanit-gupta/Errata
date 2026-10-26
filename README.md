@@ -16,6 +16,30 @@ make check   # lint + types + tests
 
 Copy `apps/web/.env.example` → `apps/web/.env.local` and `apps/worker/.env.example` → `apps/worker/.env`, then fill them in. Both services refuse to start if a variable is missing and name it.
 
+## Local database and demo accounts
+
+```bash
+make db-start   # local Supabase (Docker). API on :55321, Postgres on :55322, Studio on :55323
+make db-reset   # apply supabase/migrations/* from zero, then supabase/seed.sql
+make test-db    # pgTAP: RLS, state machine, queue, retrieval
+make types      # regenerate apps/web/types/database.ts
+```
+
+Local ports are shifted to the 553xx range so BrandLens can run next to another local Supabase project.
+
+The seed creates the fictional **PayWise** org (SPEC §16). Every demo account uses the password **`PayWise-demo-2026`** (demo only; never reuse it):
+
+| Email | Role |
+|---|---|
+| `admin@paywise.demo` | brand admin |
+| `creator@paywise.demo` | creator |
+| `agency@paywise.demo` | agency creator |
+| `manager@paywise.demo` | manager |
+| `legal@paywise.demo` | specialist (legal) |
+| `a11y@paywise.demo` | specialist (accessibility) |
+
+To load the same data into the cloud project: `make seed-demo url=<SUPABASE_URL>`. The URL must match `apps/worker/.env`. Re-running is safe; existing rows are never overwritten.
+
 ## Changes since Round 1
 
 See the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md). It is mirrored here before submission.
@@ -27,6 +51,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | Phase | AI-assisted work |
 |---|---|
 | P00 | Repo bootstrap: Makefile, web and worker scaffolds, env validation, CI |
+| P01 | Database migrations, RLS policies, workflow SQL functions, pgTAP tests, demo seed scripts |
 
 ## Licence
 
