@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { IdBadge } from "@/components/id-badge";
-import { SeverityBadge, type Severity } from "@/components/severity-badge";
+import { IdBadge } from "@/components/brand/id-badge";
+import { SeverityBadge, type Severity } from "@/components/brand/severity-badge";
 import { Button } from "@/components/ui/button";
 import { DISMISS_REASONS } from "@/lib/drafts/intent";
 import { cn } from "@/lib/utils";
@@ -183,16 +183,7 @@ export function FindingCard({
             {f.citations.map((c) => (
               <li key={c.code} className="bg-muted rounded-md p-2">
                 <p className="flex items-center gap-2 font-medium">
-                  <IdBadge
-                    code={c.code}
-                    kind={
-                      c.kind === "fact"
-                        ? "fact"
-                        : c.kind === "wcag"
-                          ? "WCAG criterion"
-                          : "rule card"
-                    }
-                  />
+                  <IdBadge code={c.code} kind={c.kind} />
                   {c.title}
                 </p>
                 {c.text ? <p className="text-muted-foreground mt-1">{c.text}</p> : null}

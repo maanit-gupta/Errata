@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { BookOpenCheck } from "lucide-react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/brand/empty-state";
 import { createClient } from "@/lib/supabase/server";
 import { RealtimeRefresh } from "./realtime-refresh";
 import { RuleCardList, type RuleRow } from "./rule-card-list";
@@ -75,7 +74,7 @@ export async function RuleCardsTab({
         {rules?.length ? (
           <RuleCardList rules={rules} statusParam={filter} />
         ) : (
-          <EmptyState icon={BookOpenCheck} title="No rule cards here">
+          <EmptyState glyph="id-badge" title="No rule cards here">
             Upload a brand guide on the Guides tab to draft rule cards.
           </EmptyState>
         )}

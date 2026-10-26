@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState, useTransition } from "react";
-import { IdBadge } from "@/components/id-badge";
+import { IdCode } from "@/components/brand/id-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { saveFact } from "@/lib/vault/actions";
@@ -53,7 +53,7 @@ export function FactsTable({ facts, now }: { facts: FactRow[]; now: string }) {
               <Fragment key={f.id}>
                 <tr className="border-border border-b align-top last:border-0">
                   <th scope="row" className="px-3 py-2">
-                    <IdBadge code={f.code} />
+                    <IdCode code={f.code} />
                   </th>
                   <td className="px-3 py-2">
                     {f.campaign ?? <span className="text-muted-foreground">Org-wide</span>}

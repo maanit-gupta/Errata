@@ -1,10 +1,9 @@
-import { FileText } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { NewDraftForm } from "@/components/drafts/new-draft-form";
-import { EmptyState } from "@/components/empty-state";
-import { PageHeader } from "@/components/page-header";
-import { StateBadge } from "@/components/state-badge";
+import { EmptyState } from "@/components/brand/empty-state";
+import { PageHeader } from "@/components/brand/page-header";
+import { StateBadge } from "@/components/brand/state-badge";
 import { requireSession } from "@/lib/auth/session";
 import { CHANNELS } from "@/lib/drafts/intent";
 import { createClient } from "@/lib/supabase/server";
@@ -80,7 +79,7 @@ export default async function DraftsPage() {
             </table>
           </div>
         ) : (
-          <EmptyState icon={FileText} title="No drafts yet">
+          <EmptyState glyph="shield-check" title="No drafts yet">
             Create a draft above. Your drafts will appear here with their state.
           </EmptyState>
         )}

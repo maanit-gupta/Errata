@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { IdBadge } from "@/components/id-badge";
-import { SeverityBadge, type Severity } from "@/components/severity-badge";
+import { IdCode } from "@/components/brand/id-badge";
+import { SeverityBadge, type Severity } from "@/components/brand/severity-badge";
 import { Button } from "@/components/ui/button";
 import { approveRuleCards } from "@/lib/vault/actions";
 import { toastResult } from "./use-action-toast";
@@ -92,7 +92,7 @@ export function RuleCardList({ rules, statusParam }: { rules: RuleRow[]; statusP
                 ) : null}
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <IdBadge code={r.code} />
+                    <IdCode code={r.code} />
                     <span className="text-muted-foreground font-mono text-xs">v{r.version}</span>
                     <SeverityBadge severity={r.severity} />
                     <StatusPill status={r.status} />

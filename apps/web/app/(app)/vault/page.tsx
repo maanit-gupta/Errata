@@ -1,5 +1,5 @@
 import { NoAccess } from "@/components/no-access";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/brand/page-header";
 import { AssetsTab } from "@/components/vault/assets-tab";
 import { CampaignsTab } from "@/components/vault/campaigns-tab";
 import { FactsTab } from "@/components/vault/facts-tab";

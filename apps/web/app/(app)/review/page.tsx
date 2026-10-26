@@ -1,9 +1,8 @@
-import { Inbox } from "lucide-react";
 import Link from "next/link";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/brand/empty-state";
 import { NoAccess } from "@/components/no-access";
-import { PageHeader } from "@/components/page-header";
-import { StateBadge } from "@/components/state-badge";
+import { PageHeader } from "@/components/brand/page-header";
+import { StateBadge } from "@/components/brand/state-badge";
 import { requireSession, type Session } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/workflow/permissions";
@@ -123,7 +122,7 @@ export default async function ReviewPage() {
           </table>
         </div>
       ) : (
-        <EmptyState icon={Inbox} title="Nothing to review">
+        <EmptyState glyph="stamp" title="Nothing to review">
           Drafts that pass the AI check and are routed to you appear here, sorted by risk score.
         </EmptyState>
       )}

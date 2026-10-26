@@ -1,4 +1,4 @@
-import { IdBadge } from "@/components/id-badge";
+import { IdCode } from "@/components/brand/id-badge";
 import { createClient } from "@/lib/supabase/server";
 import { CsvImport } from "./csv-import";
 
@@ -30,7 +30,7 @@ export async function GlossaryTab({ orgId }: { orgId: string }) {
             {(terms ?? []).map((t) => (
               <tr key={t.id} className="border-border border-b align-top last:border-0">
                 <th scope="row" className="px-3 py-2">
-                  <IdBadge code={t.code} />
+                  <IdCode code={t.code} />
                 </th>
                 <td className="px-3 py-2 font-medium">{t.preferred}</td>
                 <td className="px-3 py-2">{t.variants.join(", ") || "—"}</td>

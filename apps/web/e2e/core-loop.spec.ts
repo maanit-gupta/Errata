@@ -1,3 +1,4 @@
+import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // Core loop (storyboard F02→F05). Runs locally with E2E_WORKER=1 (web + worker + seeded DB), or
@@ -70,8 +71,7 @@ test("F04: not in the manager's queue; Legal sees diff and citations and signs o
   await page.goto("/review");
   await expect(page.getByRole("link", { name: TITLE })).toHaveCount(0);
 
-  await page.getByLabel("Switch demo role").selectOption({ label: "Legal" });
-  await page.getByRole("button", { name: "Switch" }).click();
+  await switchDemoRole(page, "Legal");
   await page.waitForURL(/\/review$/);
   await page.getByRole("link", { name: TITLE }).click();
   await expect(page.getByText("Routed CL-03 · F-112 claim → Legal")).toBeVisible();
@@ -95,9 +95,7 @@ test("F05: owner marks publish-ready; audit trail lists every transition", async
   await page.getByRole("button", { name: "Mark publish-ready" }).click();
   await expect(page.getByText("Publish ready").first()).toBeVisible();
 
-  await page.getByLabel("Switch demo role").selectOption({ label: "Manager" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Manager");
+  await switchDemoRole(page, "Manager");
   await page.goto(`/review/${contentId}`);
   const audit = page.locator("#audit");
   for (const step of [

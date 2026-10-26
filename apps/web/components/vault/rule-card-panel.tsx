@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
-import { IdBadge } from "@/components/id-badge";
+import { IdCode } from "@/components/brand/id-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,7 +66,7 @@ export function RuleCardPanel({ rule, closeHref }: { rule: RuleDetail; closeHref
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <IdBadge code={rule.code} />
+            <IdCode code={rule.code} />
             <span className="text-muted-foreground font-mono text-xs">
               v{rule.version} · {rule.status}
             </span>

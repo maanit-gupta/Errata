@@ -1,10 +1,12 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { DEMO_USERS, isDemoUserKey } from "@/lib/auth/demo-users";
 import { clientEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { FLASH_COOKIE } from "@/lib/ui-prefs";
 
 // Demo-only credential for the fictional seeded users (README "Demo accounts"). Used only when
 // NEXT_PUBLIC_DEMO_MODE=true; never sent to the browser.
@@ -62,6 +64,11 @@ export async function signInAsDemo(formData: FormData): Promise<void> {
     password: DEMO_PASSWORD,
   });
   if (error) redirect("/login?error=demo");
+  (await cookies()).set(FLASH_COOKIE, `Now viewing as ${user.label}`, {
+    path: "/",
+    maxAge: 60,
+    httpOnly: false,
+  });
   redirect(user.role === "specialist" ? "/review" : "/drafts");
 }
 

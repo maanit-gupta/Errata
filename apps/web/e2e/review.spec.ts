@@ -1,4 +1,5 @@
 import { execSync } from "node:child_process";
+import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // Local-only review checks (uses docker exec against the local DB): E2E_WORKER=1.
@@ -37,9 +38,7 @@ test("stale or wrong-role decisions are rejected server-side with a friendly err
   );
   await expect(page.getByText("In review", { exact: true })).toBeVisible({ timeout: 60_000 });
 
-  await page.getByLabel("Switch demo role").selectOption({ label: "Manager" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Manager");
+  await switchDemoRole(page, "Manager");
   await page.goto(`/review/${id}`);
   await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
 

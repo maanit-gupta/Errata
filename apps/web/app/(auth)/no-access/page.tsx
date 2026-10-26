@@ -1,4 +1,4 @@
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/brand/empty-state";
 import { signOut } from "@/lib/auth/actions";
 
 export const metadata = { title: "No organisation" };

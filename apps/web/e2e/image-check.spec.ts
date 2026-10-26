@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
+import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // P11 image checks: upload a creative, see bbox overlays synced with findings, fix and re-upload.
@@ -73,9 +74,7 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   // An open visual warning routes to Brand review (SPEC §10), so the creator can't re-upload until
   // the brand admin sends it back.
   await expect(page.getByText("Specialist review", { exact: true })).toBeVisible();
-  await page.getByLabel("Switch demo role").selectOption({ label: "Brand admin" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Brand admin");
+  await switchDemoRole(page, "Brand admin");
   await page.goto(`/review/${contentId}`);
   // The creator marked it fixed, so the reviewer sees it listed as edited, not boxed as open.
   const row = page.getByRole("region", { name: "Findings" }).getByRole("listitem").first();
@@ -85,9 +84,7 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   await page.getByRole("button", { name: "Request changes" }).click();
   await expect(page.getByText("Changes requested", { exact: true }).first()).toBeVisible();
 
-  await page.getByLabel("Switch demo role").selectOption({ label: "Creator" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Creator");
+  await switchDemoRole(page, "Creator");
   await page.goto(draftUrl);
   await page.getByRole("button", { name: "Start revising" }).click();
   // Its toast sits over the submit button and stays while hovered (sonner pauses on hover).

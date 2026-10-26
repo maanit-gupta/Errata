@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Severity } from "@/components/severity-badge";
+import type { Severity } from "@/components/brand/severity-badge";
 import type { PixelBox } from "@/lib/drafts/span";
 import { cn } from "@/lib/utils";
 

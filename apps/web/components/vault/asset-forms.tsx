@@ -90,6 +90,7 @@ export function PaletteEditor({
   const id = useId();
   const [name, setName] = useState(palette?.name ?? "Brand palette");
   const [colours, setColours] = useState<Colour[]>(
+    // eslint-disable-next-line no-restricted-syntax -- palette data default, not a UI colour
     palette?.colours ?? [{ name: "Ink", hex: "#141414" }],
   );
   const [maxDeltaE, setMaxDeltaE] = useState(palette?.max_delta_e ?? 10);

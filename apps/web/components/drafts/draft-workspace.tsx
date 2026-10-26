@@ -5,7 +5,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { StateBadge, type ContentState } from "@/components/state-badge";
+import { StateBadge, type ContentState } from "@/components/brand/state-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";

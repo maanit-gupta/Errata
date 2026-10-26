@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/brand/page-header";
 import { requireSession } from "@/lib/auth/session";
 import { roleLabel } from "@/lib/workflow/permissions";
 

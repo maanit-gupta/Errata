@@ -1,20 +1,42 @@
 import AxeBuilder from "@axe-core/playwright";
+import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // Needs the web app running with NEXT_PUBLIC_DEMO_MODE=true against a seeded DB
 // (`make db-reset && make dev-web-local`).
 
+const WORKSPACE = ["Settings", "Services & AI use"];
 const ROLES = [
   {
     button: "Brand admin",
     pill: "Brand admin",
-    nav: ["Drafts", "Review queue", "Vault", "Insights", "Settings"],
+    nav: [
+      "Drafts",
+      "Review queue",
+      "Rule cards",
+      "Facts",
+      "Glossary",
+      "Campaigns",
+      "Assets",
+      "Guides",
+      "Insights",
+      "Audit log",
+      ...WORKSPACE,
+    ],
   },
-  { button: "Creator", pill: "Creator", nav: ["Drafts", "Settings"] },
-  { button: "Agency", pill: "Agency", nav: ["Drafts", "Settings"] },
-  { button: "Manager", pill: "Manager", nav: ["Drafts", "Review queue", "Insights", "Settings"] },
-  { button: "Legal", pill: "Legal", nav: ["Review queue", "Settings"] },
-  { button: "Accessibility", pill: "Accessibility", nav: ["Review queue", "Settings"] },
+  { button: "Creator", pill: "Creator", nav: ["Drafts", ...WORKSPACE] },
+  { button: "Agency", pill: "Agency", nav: ["Drafts", ...WORKSPACE] },
+  {
+    button: "Manager",
+    pill: "Manager",
+    nav: ["Drafts", "Review queue", "Insights", "Audit log", ...WORKSPACE],
+  },
+  { button: "Legal", pill: "Legal", nav: ["Review queue", "Audit log", ...WORKSPACE] },
+  {
+    button: "Accessibility",
+    pill: "Accessibility",
+    nav: ["Review queue", "Audit log", ...WORKSPACE],
+  },
 ];
 
 async function signInAsDemo(page: Page, label: string) {
@@ -63,7 +85,10 @@ for (const role of ROLES) {
     await signInAsDemo(page, role.button);
     await expect(page.getByTestId("role-pill")).toHaveText(role.pill);
     const nav = page.getByRole("navigation", { name: "Main" }).getByRole("link");
-    await expect(nav).toHaveText(role.nav);
+    // Review queue may carry a waiting count after its label.
+    await expect(nav).toHaveText(
+      role.nav.map((n) => new RegExp(`^${n.replace(/[&]/g, "\\$&")}(\\d+ waiting)?$`)),
+    );
   });
 }
 
@@ -75,13 +100,12 @@ test("signed-in users at /login are redirected to /drafts", async ({ page }) => 
 
 test("demo role switcher changes the signed-in user", async ({ page }) => {
   await signInAsDemo(page, "Creator");
-  await page.getByLabel("Switch demo role").selectOption({ label: "Manager" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Manager");
+  await switchDemoRole(page, "Manager");
 });
 
 test("sign out returns to /login", async ({ page }) => {
   await signInAsDemo(page, "Creator");
+  await page.getByRole("button", { name: /^Workspace/ }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/login$/);
 });
@@ -89,9 +113,7 @@ test("sign out returns to /login", async ({ page }) => {
 test("non-admins can't open admin pages", async ({ page }) => {
   await signInAsDemo(page, "Creator");
   await page.goto("/vault");
-  await expect(
-    page.getByRole("heading", { name: "You don't have access to this page" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "You don't have access to this." })).toBeVisible();
 });
 
 test.describe("accessibility (axe, WCAG 2.2 AA)", () => {

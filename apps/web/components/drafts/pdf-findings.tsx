@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Severity } from "@/components/severity-badge";
+import type { Severity } from "@/components/brand/severity-badge";
 import { Button } from "@/components/ui/button";
 import type { PdfPageView } from "@/lib/drafts/pages";
 import { cn } from "@/lib/utils";

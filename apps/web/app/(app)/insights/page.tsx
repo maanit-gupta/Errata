@@ -1,5 +1,4 @@
-import { ChartNoAxesColumn } from "lucide-react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/brand/empty-state";
 import { IssuesChart, type Issue } from "@/components/insights/issues-chart";
 import {
   Watchlist,
@@ -8,7 +7,7 @@ import {
   type WatchRow,
 } from "@/components/insights/watchlist";
 import { NoAccess } from "@/components/no-access";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/brand/page-header";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -131,7 +130,7 @@ export default async function InsightsPage() {
       />
 
       {!summary.versions_checked && !rows.length ? (
-        <EmptyState icon={ChartNoAxesColumn} title="Not enough reviews yet">
+        <EmptyState glyph="chart-bars" title="Not enough reviews yet">
           Guideline Clarity Scores appear once a rule has at least 10 findings.
         </EmptyState>
       ) : (

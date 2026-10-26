@@ -3,7 +3,7 @@ import type { Citation, FindingView } from "@/components/drafts/finding-card";
 import { DraftWorkspace } from "@/components/drafts/draft-workspace";
 import { signedPages } from "@/lib/drafts/pages";
 import { spanBox, spanPage, spanTarget } from "@/lib/drafts/span";
-import { PageHeader } from "@/components/page-header";
+import { PageHeader } from "@/components/brand/page-header";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import type { Intent } from "@/lib/drafts/intent";

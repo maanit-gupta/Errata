@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
 import { ImageFindings } from "@/components/drafts/image-findings";
 import { PdfFindings } from "@/components/drafts/pdf-findings";
-import { IdBadge } from "@/components/id-badge";
-import { PageHeader } from "@/components/page-header";
+import { IdBadge } from "@/components/brand/id-badge";
+import { PageHeader } from "@/components/brand/page-header";
 import { Comments, type CommentView } from "@/components/review/comments";
 import { DecisionBar } from "@/components/review/decision-bar";
 import { HighlightedText } from "@/components/review/highlighted-text";
 import { VersionDiff } from "@/components/review/version-diff";
-import { SeverityBadge } from "@/components/severity-badge";
-import { StateBadge } from "@/components/state-badge";
+import { SeverityBadge } from "@/components/brand/severity-badge";
+import { StateBadge } from "@/components/brand/state-badge";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import { signedPages } from "@/lib/drafts/pages";

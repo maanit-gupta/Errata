@@ -28,7 +28,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
-| U0 | Design-system foundation (DESIGN.md §12) | J | todo | | | |
+| U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; worktree .claude/worktrees/ui |
 | U1 | Public landing + /ai-use (DESIGN.md §8) | J | todo | | | |
 | U2 | UI polish and audit (DESIGN.md §12) | J | todo | | | |
 
@@ -161,6 +161,18 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P13 | Suggestions drawer is a native `<dialog>` | Focus trap, Esc and inert background for free; axe-clean |
 | 2026-10-27 | P13 | Simulated history is written as archived contents through `private.apply_transition`, with `simulated: true` audit events driving the "Illustrative data" pill | Never bypasses the state machine; the pill appears only when simulator data is in the window |
 | 2026-10-27 | P13 | Activating a finding (overlay click, keyboard focus) pins it in the draft workspace | The scroll the click causes fired mouseleave on the box and cleared the highlight (flaky image e2e under load) |
+| 2026-10-27 | UI | Terminal Noir design system adopted (`docs/DESIGN.md`); supersedes Round 1 light palette and serif | Team design decision; DESIGN.md §0 |
+| 2026-10-27 | U0 | Theme is a `bl_theme` cookie (`dark`/`light`/`system`) read by the root layout into `<html data-theme>`; no choice = OS preference, dark by default | No flash of the wrong theme; works without JS |
+| 2026-10-27 | U0 | DESIGN tokens are the source; shadcn/legacy names (`background`, `primary`, `muted-foreground`…) alias them in `@theme` | Restyles every existing screen at once; feature phases migrate class names as they touch each screen |
+| 2026-10-27 | U0 | Tailwind names: `canvas/elevated/hover/code`, `line/line-strong/control`, `fg/fg-muted/fg-faint`, `accent*`, severity names as in DESIGN | `text-text`, `bg-bg` would be unreadable; mapping is 1:1 with §2 tokens |
+| 2026-10-27 | U0 | Hex literals in `.tsx` are an ESLint error (`no-restricted-syntax`); the PayWise palette default in asset-forms is the one disabled line (data, not UI) | DESIGN §10 |
+| 2026-10-27 | U0 | IdBadge is a Base UI Popover trigger fed by server-loaded `CitationSource`; vault rows use the static `IdCode` | No client fetching or RLS surprises; vault rows already are the source |
+| 2026-10-27 | U0 | Disabled actions use Base UI `focusableWhenDisabled` + `aria-describedby` reason; tooltips (`Hint`) are supplementary only | Disabled buttons aren't focusable, so a tooltip alone hides the reason from keyboard and AT users |
+| 2026-10-27 | U0 | App shell scrolls the document (sticky sidebar and top bar), not an inner `<main>` | An overflow `<main>` failed axe `scrollable-region-focusable` |
+| 2026-10-27 | U0 | Role chip is visible under the org name in the sidebar (`data-testid=role-pill`); the demo switcher is a strip popover of submit buttons | Tests and users need the role at a glance; buttons avoid change-on-select (WCAG 3.2.2) |
+| 2026-10-27 | U0 | Demo switch toast uses a short-lived `bl_flash` cookie set by `signInAsDemo` | Survives the server redirect without polluting the URL |
+| 2026-10-27 | U0 | UI gate = `e2e/ui.spec.ts`: axe (serious/critical) per route × theme; `SCREENS=<phase>` writes `docs/screens/<phase>/` | One reusable gate for every UI phase |
+| 2026-10-27 | U0 | `/`, `/ai-use`, `/dev/*` are open paths in the proxy; `/` honours `bl_skip_landing` | Public landing (U1) and the kitchen sink without sign-in |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -190,7 +202,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | Tesseract OCR (system binary, Docker `tesseract-ocr`) | Apache-2.0 | P11 |
 | paddleocr, paddlepaddle (optional extra `ocr-paddle`, not installed by default) | Apache-2.0 | P11 |
 | recharts | MIT | P13 |
-| 2026-10-27 | UI | Terminal Noir design system adopted (`docs/DESIGN.md`); supersedes Round 1 light palette and serif | Team design decision; DESIGN.md §0 |
+| geist | OFL-1.1 (fonts) / MIT | U0 |
+| motion | MIT | U0 |
+| cmdk | MIT | U0 |
 
 ## Open questions (ask the user; don't guess)
 
