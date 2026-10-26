@@ -16,6 +16,7 @@ Round 2 is judged on five things: end-to-end workflow (30), depth and reliabilit
 | `docs/plan.pdf` | Round 1 plan, used for product intent and judging context. **Do not read it by default** (it's large); consult a specific page only when SPEC is silent. |
 | `docs/SPEC.md` | The **build spec**. It wins over the PDF on any conflict, because it records the deliberate deviations. |
 | `docs/PHASES.md` | Phase-by-phase tasks and acceptance criteria. |
+| `docs/DESIGN.md` | Visual and interaction system ("Terminal Noir") and the UI phases U0–U2 (§12). Wins on look and feel. |
 | `PROGRESS.md` | Live state: phase status, the latest handoff, decisions and open questions. **Read it first, every session.** |
 
 ---
@@ -288,13 +289,9 @@ Violating any of these is a bug, regardless of the phase.
 
 ---
 
-## UI and UX conventions (match the Round 1 visual language)
+## UI and UX conventions
 
-- **Palette:** off-white `#F8F7F4` background, near-black `#141414` text, vermilion `#D63A24` accent for blockers and primary actions, warm greys for rules and borders. Define these as CSS tokens and support dark mode.
-- **Type:** a serif display face for headings (e.g. Fraunces or Newsreader), a clean sans for body (e.g. DM Sans or Inter), and a mono face (JetBrains Mono or IBM Plex Mono) for IDs, labels and badges such as `CL-03 · BLOCKER`.
-- **Rule and fact IDs are first-class UI.** Show them on every finding, clickable to open the rule card or fact.
-- **Severity:** blocker (vermilion fill), warning (outlined), suggestion (muted). Never rely on colour alone; always pair it with a text label.
-- The app UI itself must meet **WCAG 2.2 AA**: keyboard navigation, focus rings, 4.5:1 contrast, labelled controls. Usability is 10 points, and the product checks accessibility, so it must pass its own checks.
+All visual and interaction rules live in `docs/DESIGN.md`. It wins on look and feel; the invariants still win over it.
 
 ---
 

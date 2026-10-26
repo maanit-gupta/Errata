@@ -13,7 +13,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 |---|---|---|---|---|---|---|
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
-| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26 |
+| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) move to U0 |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
@@ -28,6 +28,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
+| U0 | Design-system foundation (DESIGN.md §12) | J | todo | | | |
+| U1 | Public landing + /ai-use (DESIGN.md §8) | J | todo | | | |
+| U2 | UI polish and audit (DESIGN.md §12) | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
 
@@ -187,6 +190,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | Tesseract OCR (system binary, Docker `tesseract-ocr`) | Apache-2.0 | P11 |
 | paddleocr, paddlepaddle (optional extra `ocr-paddle`, not installed by default) | Apache-2.0 | P11 |
 | recharts | MIT | P13 |
+| 2026-10-27 | UI | Terminal Noir design system adopted (`docs/DESIGN.md`); supersedes Round 1 light palette and serif | Team design decision; DESIGN.md §0 |
 
 ## Open questions (ask the user; don't guess)
 
