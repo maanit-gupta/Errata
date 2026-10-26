@@ -12,7 +12,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | ID | Phase | Owner | Status | Owner/Session | Branch | Notes |
 |---|---|---|---|---|---|---|
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
-| P01 | DB schema, RLS, queue, seed | M | todo | | | |
+| P01 | DB schema, RLS, queue, seed | M | in-progress | M (Claude) | phase/P01-schema | |
 | P02 | Web shell, auth, demo switcher | J | todo | | | |
 | P03 | Worker core | M | todo | | | |
 | P04 | Vault ingestion & PayWise kit | M | todo | | | |
