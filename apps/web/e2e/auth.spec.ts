@@ -58,7 +58,7 @@ async function expectNoA11yViolations(page: Page) {
 test("signed-out users are redirected to /login", async ({ page }) => {
   await page.goto("/drafts");
   await expect(page).toHaveURL(/\/login\?next=%2Fdrafts$/);
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
 });
 
 test("wrong password shows an accessible error", async ({ page }) => {
@@ -67,7 +67,7 @@ test("wrong password shows an accessible error", async ({ page }) => {
   await page.getByLabel("Password").fill("not-the-password");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.locator("#login-error")).toHaveAttribute("role", "alert");
-  await expect(page.locator("#login-error")).toContainText("don't match");
+  await expect(page.locator("#login-error")).toContainText("Email or password is incorrect");
 });
 
 test("email and password sign-in honours ?next", async ({ page }) => {

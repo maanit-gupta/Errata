@@ -46,7 +46,7 @@ export async function signIn(_prev: SignInState, formData: FormData): Promise<Si
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
   if (error) {
-    return { email, error: "That email and password don't match an account." };
+    return { email, error: "Email or password is incorrect." };
   }
   redirect(safeNext(formData.get("next")));
 }

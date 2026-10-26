@@ -13,7 +13,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 |---|---|---|---|---|---|---|
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
-| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) move to U0 |
+| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) moved to U0; UI per DESIGN §6.1 on ui/P02 (2026-10-27) |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
@@ -179,6 +179,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | U1 | Carousel has an explicit Pause/Play button besides hover/focus pause, and doesn't rotate under reduced motion | WCAG 2.2.2 needs a pause mechanism for >5s auto-rotation |
 | 2026-10-27 | U1 | `useReducedMotion` is our own `useSyncExternalStore` hook (server snapshot false), not motion's | motion's hook read matchMedia during hydration and caused a mismatch |
 | 2026-10-27 | U1 | Services list corrected: Supabase region Singapore, worker host Render, Langfuse receives ids/counts only (not prompts); one shared `components/ai-use/disclosure.tsx` for `/ai-use` and `/settings/ai-use` | Matches P03/P07/P10 decisions; one source of truth |
+| 2026-10-27 | P02-UI | Demo role cards: the submit button's name is just the role (card made clickable with a stretched `::after`); the capability line is sibling text | Keeps `getByRole('button', {name:'Creator'})` stable and avoids axe label-content-name-mismatch |
+| 2026-10-27 | P02-UI | Wrong-credential copy is "Email or password is incorrect." | DESIGN §6.1; doesn't hint which field was wrong |
 
 **Dependencies and licences** (append when adding any dependency):
 

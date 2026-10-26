@@ -26,10 +26,10 @@ export function LoginForm({ next }: { next?: string }) {
           defaultValue={state.email}
           aria-invalid={emailError ? true : undefined}
           aria-describedby={emailError ? "email-error" : undefined}
-          className="bg-card h-10"
+          className="h-10"
         />
         {emailError ? (
-          <p id="email-error" className="text-accent-text text-sm">
+          <p id="email-error" className="text-danger text-sm">
             {emailError}
           </p>
         ) : null}
@@ -45,25 +45,20 @@ export function LoginForm({ next }: { next?: string }) {
           required
           aria-invalid={passwordError ? true : undefined}
           aria-describedby={passwordError ? "password-error" : undefined}
-          className="bg-card h-10"
+          className="h-10"
         />
         {passwordError ? (
-          <p id="password-error" className="text-accent-text text-sm">
+          <p id="password-error" className="text-danger text-sm">
             {passwordError}
           </p>
         ) : null}
       </div>
 
-      <div
-        id="login-error"
-        role="alert"
-        aria-live="polite"
-        className="text-accent-text min-h-5 text-sm"
-      >
+      <div id="login-error" role="alert" aria-live="polite" className="text-danger min-h-5 text-sm">
         {state.error}
       </div>
 
-      <Button type="submit" size="lg" className="h-10 w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full" disabled={pending} focusableWhenDisabled>
         {pending ? "Signing in…" : "Sign in"}
       </Button>
     </form>
