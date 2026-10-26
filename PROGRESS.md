@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P00 (not started)
+**Current phase:** P00 (in progress)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -11,7 +11,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 | ID | Phase | Owner | Status | Owner/Session | Branch | Notes |
 |---|---|---|---|---|---|---|
-| P00 | Repo bootstrap & tooling | M | todo | | | |
+| P00 | Repo bootstrap & tooling | M | in-progress | M (Claude) | phase/P00-bootstrap | |
 | P01 | DB schema, RLS, queue, seed | M | todo | | | |
 | P02 | Web shell, auth, demo switcher | J | todo | | | |
 | P03 | Worker core | M | todo | | | |
