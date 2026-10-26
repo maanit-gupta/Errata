@@ -42,3 +42,8 @@ next-env.d.ts
 
 # allow the names-only env template
 !.env.example
+
+# playwright
+/test-results/
+/playwright-report/
+/blob-report/

@@ -6,7 +6,7 @@ WEB    := apps/web
 WORKER := apps/worker
 UV     := cd $(WORKER) && uv run
 
-.PHONY: help setup db-start db-stop db-reset db-new types dev dev-web dev-worker \
+.PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
         test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval seed-demo
 
 help: ## List targets
@@ -40,6 +40,12 @@ dev: ## Web on :3000 and worker on :8000
 
 dev-web: ## Web only (:3000)
 	cd $(WEB) && pnpm dev
+
+dev-local: ## Like make dev, but against the local Supabase stack (make db-start)
+	@eval "$$(scripts/local-supabase-env.sh)" && $(MAKE) -j2 --no-print-directory dev-web dev-worker
+
+dev-web-local: ## Web only, against the local Supabase stack
+	@eval "$$(scripts/local-supabase-env.sh)" && $(MAKE) --no-print-directory dev-web
 
 dev-worker: ## Worker only (:8000)
 	$(UV) uvicorn --factory brandlens_worker.main:create_app --reload --reload-dir brandlens_worker --port 8000
