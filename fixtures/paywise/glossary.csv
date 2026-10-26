@@ -1,0 +1,2 @@
+code,preferred,variants,banned,case_sensitive,note
+G-07,PayWise,Paywise|paywise|PAYWISE|Pay Wise|Paywise app|PayWise app,false,true,"Always camel-cased ""PayWise"". Never ""Paywise app"": PayWise is the brand, not just an app."

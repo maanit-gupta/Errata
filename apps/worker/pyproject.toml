@@ -63,4 +63,6 @@ asyncio_mode = "auto"
 filterwarnings = [
     # starlette nudges toward httpx2; httpx is fine for TestClient until we decide otherwise.
     "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+    # PyMuPDF's SWIG bindings on Python 3.12
+    "ignore:builtin type (SwigPyPacked|SwigPyObject|swigvarlink) has no __module__:DeprecationWarning",
 ]

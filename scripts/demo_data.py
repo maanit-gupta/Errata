@@ -188,7 +188,7 @@ RULE_CARDS: list[dict[str, Any]] = [
             _ex("dont", "The BEST investment app EVER!!! Your money will skyrocket!"),
         ],
         "severity": "warning",
-        "source_page": 4,
+        "source_page": 1,
     },
     {
         "code": "TV-04",
@@ -202,7 +202,7 @@ RULE_CARDS: list[dict[str, Any]] = [
         ),
         "examples": [],
         "severity": "suggestion",
-        "source_page": 5,
+        "source_page": 1,
     },
     {
         "code": "CL-03",
@@ -227,7 +227,7 @@ RULE_CARDS: list[dict[str, Any]] = [
             _ex("dont", "Lock in 14.2% assured annual returns!"),
         ],
         "severity": "blocker",
-        "source_page": 9,
+        "source_page": 2,
     },
     {
         "code": "G-07",
@@ -243,7 +243,7 @@ RULE_CARDS: list[dict[str, Any]] = [
             _ex("dont", "Start a SIP on Paywise app."),
         ],
         "severity": "warning",
-        "source_page": 7,
+        "source_page": 2,
     },
     {
         "code": "VS-02",
@@ -257,7 +257,7 @@ RULE_CARDS: list[dict[str, Any]] = [
         ),
         "examples": [],
         "severity": "warning",
-        "source_page": 12,
+        "source_page": 3,
     },
     {
         "code": "A-01",
@@ -271,6 +271,6 @@ RULE_CARDS: list[dict[str, Any]] = [
         ),
         "examples": [],
         "severity": "suggestion",
-        "source_page": 14,
+        "source_page": 3,
     },
 ]

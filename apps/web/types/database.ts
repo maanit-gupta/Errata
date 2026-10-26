@@ -430,6 +430,7 @@ export type Database = {
           code: string
           created_at: string
           embedding: string | null
+          embedding_source_hash: string | null
           id: string
           kind: Database["public"]["Enums"]["fact_kind"]
           never_send: boolean
@@ -445,6 +446,7 @@ export type Database = {
           code: string
           created_at?: string
           embedding?: string | null
+          embedding_source_hash?: string | null
           id?: string
           kind: Database["public"]["Enums"]["fact_kind"]
           never_send?: boolean
@@ -460,6 +462,7 @@ export type Database = {
           code?: string
           created_at?: string
           embedding?: string | null
+          embedding_source_hash?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["fact_kind"]
           never_send?: boolean
@@ -800,6 +803,7 @@ export type Database = {
           created_at: string
           dimension: Database["public"]["Enums"]["dimension"]
           embedding: string | null
+          embedding_source_hash: string | null
           examples: Json
           guide_id: string | null
           id: string
@@ -819,6 +823,7 @@ export type Database = {
           created_at?: string
           dimension: Database["public"]["Enums"]["dimension"]
           embedding?: string | null
+          embedding_source_hash?: string | null
           examples?: Json
           guide_id?: string | null
           id?: string
@@ -838,6 +843,7 @@ export type Database = {
           created_at?: string
           dimension?: Database["public"]["Enums"]["dimension"]
           embedding?: string | null
+          embedding_source_hash?: string | null
           examples?: Json
           guide_id?: string | null
           id?: string

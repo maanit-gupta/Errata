@@ -1,0 +1,5 @@
+code,campaign,kind,statement,value_json,required_disclaimer,valid_until,never_send
+F-048,,fee,1% exit load on redemptions within 365 days,"{""exit_load_pct"": 1, ""window_days"": 365}",,,false
+F-112,Diwali SIP 2026,rate,Flexi-Cap 3-yr historical CAGR is 14.2% as of Q3 2026,"{""scheme"": ""Flexi-Cap"", ""cagr_3y_pct"": 14.2, ""as_of"": ""Q3 2026"", ""historical"": true}","Mutual Fund investments are subject to market risks, read all scheme related documents carefully.",2026-12-31T23:59:59+05:30,false
+E-19,Diwali SIP 2026,event,"Diwali Wealth Webinar: online only, Oct 28, 7:00 PM IST","{""name"": ""Diwali Wealth Webinar"", ""date"": ""2026-10-28"", ""time"": ""19:00"", ""tz"": ""Asia/Kolkata"", ""venue"": ""online""}",,2026-11-15T23:59:59+05:30,false
+E-11,Navratri Savings 2026,event,"Navratri Investor Meet: Oct 18, Hall B, Chandigarh","{""name"": ""Navratri Investor Meet"", ""date"": ""2026-10-18"", ""venue"": ""Hall B, Chandigarh""}",,2026-10-19T00:00:00+05:30,false

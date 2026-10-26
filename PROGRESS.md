@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P03 done → next P04
+**Current phase:** P04 done → next P05
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -15,7 +15,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
 | P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26 |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
-| P04 | Vault ingestion & PayWise kit | M | in-progress | M (Claude) | phase/P04-vault-ingestion | |
+| P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
 | P05 | Vault admin UI | J | todo | | | |
 | P06 | Pipeline stages 1–4 | M | todo | | | |
 | P07 | Stages 5–6: LLM, gate, intent | M | todo | | | |
@@ -31,38 +31,42 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P03 / done (branch `phase/P03-worker-core`, stacked on P02 → P01 → P00; none merged).
-- **⚠ Action for Maanit: update `apps/worker/.env` model IDs.** The configured models are retired. Groq `llama-3.3-70b-versatile` and `meta-llama/llama-4-scout-…` return 404. Gemini `gemini-2.5-flash` says "no longer available to new users". These were verified working on 2026-10-26 and used for the acceptance runs via process overrides:
-  `GROQ_MODEL_TEXT=openai/gpt-oss-120b` · `GROQ_MODEL_VISION=qwen/qwen3.8-27b` (accepts images) · `GEMINI_MODEL_TEXT=gemini-3.5-flash` · `GEMINI_MODEL_VISION=gemini-3.5-flash`.
-- **What exists now (worker):**
-  - `logs.py`: JSON logs to stdout, with `extra={}` fields at top level. httpx/httpcore are quieted.
-  - `db.py`: `create_pool()` (async psycopg pool, autocommit, dict rows, `prepare_threshold=None` for poolers), plus `get_run_status`, `mark_run_running`, `fail_run` (marks failed and `transition_content_system(…,'draft', reason)` if the content is still `ai_check`) and `update_run_timings`.
-  - `queue.py`: `PgmqBackend` (`read_with_poll(q, vt=120, 1, 5)`, `delete`, `archive`), `process_message()`, `consume()` and `Registry`.
-    - Job name = `payload.type`, else `payload.job` (vault jobs), else `review_version` on `review_jobs`.
-    - It skips runs already `done` (deletes the message), archives poison messages after 3 reads, and on a `JobError(code)` or crash marks the run failed and archives.
-    - Read errors back off up to 30 s.
-  - `jobs/__init__.py`: `build_registry()` with a `noop` job. P06/P07 add `review_version`; P04 adds `ingest_guide`/`embed_vault`.
-  - `main.py`: lifespan opens the pool, builds a `Tracer`, and starts consumers for `PGMQ_QUEUE` and `config.VAULT_QUEUE`. Graceful stop waits up to 15 s (verified). `create_app(settings, run_queue=False)` for tests. `POST /dev/llm-smoke[?provider=groq|gemini]` exists only when `ENV` ∈ {development, dev, local}.
-  - `llm/`:
-    - `base.py`: `Meta`, `Image`, `LLMProvider` Protocol, errors `RateLimited`/`TransientError` (retryable) and `ModelUnavailable`/`InvalidOutput`/`ProviderError` (→ fallback), `DegradedError`. `BaseProvider.generate_structured` validates with Pydantic and retries once with the validation errors (never the raw output) appended. `extract_json` strips fences.
-    - `groq_provider.py`: json_schema mode, auto-falling back per model to json_object + schema in the system prompt.
-    - `gemini_provider.py`: `response_json_schema`, falling back to JSON mode on schema 400s. Reads `RetryInfo.retryDelay`.
-    - `router.py`: `LLMRouter.generate(system, user, schema, *, prompt_version, vision_images, temperature)` gives tenacity 3 attempts per provider (1 s, 2 s backoff, or `Retry-After`, capped at 20 s), then the next provider, then `DegradedError`. `build_router(settings)`.
-    - `cache.py`: `LLMCache` (sha256 of provider/model/prompt_version/payload) at `apps/worker/eval/.cache/`. Off unless `enabled` (defaults to `config.LLM_CACHE`).
-  - `embeddings.py`: `Embedder(model, cache_dir).embed(texts)` returns (n, 384) L2-normalised. Also `cosine`, `normalise` and `to_pgvector`. Lazy fastembed singleton. `make models` downloads into `apps/worker/.models` (git-ignored); done on this machine.
-  - `tracing.py`: `Tracer.from_settings()` (Langfuse v5, `base_url=LANGFUSE_HOST`), `trace_run(run_id)` context manager, `generation(...)` (input = metadata only), `current_trace_id()`, `flush()` and `shutdown()`. Everything no-ops on error, and it's disabled when `ENV=test`.
-  - `prompts/__init__.py`: `load_prompt(name)` returns `(text, version)` for the latest `name_vN.md`. It validates that the `PROMPT_VERSION: name@N` header matches the filename. `prompts/smoke_v1.md`.
-  - Tests (55 + 0 skipped now that the model is downloaded; all offline): router fallback, retries, Retry-After, degraded, validation retry, cache, queue (success, failure, poison, idempotent skip, loop, read errors), prompts, tracer no-op, embeddings.
-- **Verified live (2026-10-26):**
-  - `noop` via `select pgmq.send('review_jobs','{"type":"noop"}')` was consumed and deleted about 60 ms later.
-  - `/dev/llm-smoke` returned valid structured output from Groq (`openai/gpt-oss-120b`, 1.6 s) and Gemini (`gemini-3.5-flash` → served `gemini-3.6-flash`, 3.7 s).
-  - Both traces (span + generation) were confirmed in Langfuse Cloud via its API.
-- **How to run locally:** `make db-start`, then `make dev-local` (web + worker against local Supabase via `scripts/local-supabase-env.sh`). Add the model overrides above until `.env` is updated.
+- **Phase / status:** P04 / done (branch `phase/P04-vault-ingestion`, stacked on P03 → … → P00; none merged).
+- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (see Open questions). Every live run below used process overrides: `GROQ_MODEL_TEXT=openai/gpt-oss-120b GROQ_MODEL_VISION=qwen/qwen3.8-27b GEMINI_MODEL_TEXT=gemini-3.5-flash GEMINI_MODEL_VISION=gemini-3.5-flash`.
+- **What exists now:**
+  - **PayWise kit** in `fixtures/paywise/`:
+    - `guide.md` → `guide.pdf` (4 pages, real headings and page numbers). TV-02 and TV-04 are on p1, G-07 and CL-03 on p2, VS-02 and A-01 on p3. TV-04 is deliberately vague.
+    - `facts.csv`, `glossary.csv` and the kit `README.md`.
+    - `logos/` has the primary, reversed and mark variants as SVG plus rendered PNG.
+    - Rebuild with `cd apps/worker && uv run python ../../scripts/build_fixture_pdf.py`.
+    - `seed.sql` and `demo_data.py` `source_page` values now match the PDF.
+  - **Migration `…100016`:** `rule_cards`/`facts.embedding_source_hash`, and `enqueue_vault_job()` now also accepts the service role. `seed.sql` ends with `pgmq.send('vault_jobs', embed_vault for PayWise)`; `seed_demo.py` calls `enqueue_vault_job` via RPC.
+  - **`brandlens_worker/guides.py`** (pure):
+    - Parsing: `parse_pdf` (headings = lines ≥15% larger than body text; header/footer bands skipped; NFKC folds ligatures), `parse_docx` (Title/Heading N styles) and `parse_markdown` (for URLs via trafilatura).
+    - Chunking: `chunk_sections` (≤ `MAX_CHUNK_TOKENS`=700, with `[page N]` markers).
+    - Schema: `RuleCardDraft`/`RuleCardDrafts`.
+    - Post-processing: `clamp_pages` keeps only pages the chunk covers, recovers a code the model put in the title, strips it from the title, and normalises odd hyphens. `dedupe` (cosine > 0.92). `assign_codes`: a guide code that already exists becomes the **next version** of that code (a proposed update); otherwise it gets the next free number per prefix (TV/G/CL/VS/A/FR).
+  - **`vault.py`** (pure): `rule_embed_text` (title + summary + body + examples), `fact_embed_text` (statement + value JSON), and `plan_embeddings` (rows with no embedding or a stale hash).
+  - **Jobs:** `ingest_guide` (payload `{org_id, guide_id}`; status `parsing` → `drafted`/`failed` with `error`=job code; `llm_unavailable` when degraded) and `embed_vault` (payload `{org_id}`; batches of 32). Registered in `jobs/__init__.py`. `jobs/common.py` lazily builds and caches router, embedder, storage and tracer in `ctx.services`.
+  - `storage.py` (supabase-py Storage via `asyncio.to_thread`). `prompts/rule_extract_v1.md`.
+  - **Web CSV import:**
+    - `lib/vault/csv.ts`: RFC 4180 parser plus zod row schemas; errors carry line numbers; campaign names resolve to ids; duplicate codes are rejected.
+    - `POST /api/vault/import` (multipart `kind`=facts|glossary, `file`): brand admin only, all-or-nothing validation (422 with `errors[]`), upsert on `(org_id, code)` via the RLS client, then `enqueue_vault_job('embed_vault')` for facts.
+  - Dev scripts: `scripts/ingest_guide_demo.py` (upload + run `ingest_guide` in-process) and `scripts/check_retrieval.py` (hero-draft `match_vault` check).
+  - Tests: worker 67 (parsing `guide.pdf`, markdown/docx, chunking, fake-router extraction, clamping, dedupe, codes, embedding plan); web vitest 58 (CSV fixtures and errors); e2e `vault-import.spec.ts` (3).
+- **Acceptance results (local, 2026-10-26):**
+  - **Real extraction** of `guide.pdf` produced **14 draft cards**: TV-02 v2, TV-04 v2, G-07 v2, G-08, CL-03 v2, FR-01..03 (fact-accuracy rules), VS-02 v2, VS-03..05 (palette, logo, contrast), A-02 (reading grade) and A-03 (alt text). Dimensions, severities and pages were correct.
+    - Coded rules become v2 *proposals* because seeded v1s exist.
+    - Run-to-run variance is real. Smaller chunks (700 tokens) fixed missed rules, and the prompt now skips process notes.
+    - A-01's code came back as A-02 in that run; the title-code recovery added afterwards addresses it.
+  - **Embeddings:** after `make db-reset` and a running worker, `embed_vault` embedded 6 rules and 4 facts in 2 s; `null` embeddings = 0/6 and 0/4.
+  - **Retrieval:** `check_retrieval.py` hero-draft top-8 = E-19, G-07, TV-02, F-048, F-112, CL-03, TV-04, A-01, with **no E-11**.
+- **Stubbed / deferred:** no admin UI for drafts, approval or upload (P05). Approving a v2 must archive the old approved version first (partial unique index). The P05 approve action should do both in one RPC. No Dockerfile yet (P10 bakes `.models`).
 - **Gotchas:**
-  - Groq vision needs a multimodal model; `gpt-oss-120b` rejects image content.
-  - Groq's `gpt-oss` supports json_schema mode; other models fall back automatically.
-  - `LANGFUSE_BASE_URL` in `.env` equals `LANGFUSE_HOST`; we pass `base_url=` explicitly so either works.
-- **Exact next step:** P04 (brand vault ingestion + PayWise kit): fixtures, guide → rule-card extraction prompt, `embed_vault` job filling `rule_cards.embedding`/`facts.embedding`.
+  - `match_vault` merges top-k rules and top-k facts, then cuts to k overall.
+  - The extraction sees `FR-` rule cards (dimension `facts`). They're about *where* facts come from; the actual values stay CSV-only (SPEC §12).
+  - Glossary imports aren't embedded (they're deterministic).
+- **Exact next step:** P05 (vault admin UI): guide upload → `enqueue_vault_job('ingest_guide')`, draft-card review and approve (archive the old version, then `embed_vault`), the CSV import UI on top of `/api/vault/import`, and facts/glossary/assets lists.
 
 ## Decisions log (append-only)
 
@@ -108,6 +112,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P03 | Validation-retry message lists field errors only, never the model's raw output | Raw output may quote draft text |
 | 2026-10-26 | P03 | Langfuse generations record metadata (ids/counts/versions) as input, not prompts | Invariant 5 / "inputs logged as redacted text only" (stricter) |
 | 2026-10-26 | P03 | Recommended model IDs: Groq `openai/gpt-oss-120b` (text), `qwen/qwen3.8-27b` (vision); Gemini `gemini-3.5-flash` | Configured models retired; these verified working 2026-10-26 |
+| 2026-10-26 | P04 | CSV import = web route handler (`/api/vault/import`), zod-validated, RLS-scoped upsert, all-or-nothing | PHASES recommendation; no worker HTTP surface needed |
+| 2026-10-26 | P04 | Extracted card whose code already exists → draft **version n+1** of that code | Re-ingesting a guide proposes updates instead of colliding on `unique(org_id, code, version)` |
+| 2026-10-26 | P04 | Chunk budget 700 tokens (SPEC cap 1,500) | Real runs missed rules on 1,450-token chunks |
+| 2026-10-26 | P04 | `embedding_source_hash` columns decide re-embedding | Covers in-place edits (e.g. examples appended in P13), not just new rows |
+| 2026-10-26 | P04 | `enqueue_vault_job` allows the service role | `seed_demo.py` and the worker can queue embeddings |
+| 2026-10-26 | P04 | Seed `source_page` values changed to match the generated `guide.pdf` | Citations must open the right page |
 
 **Dependencies and licences** (append when adding any dependency):
 

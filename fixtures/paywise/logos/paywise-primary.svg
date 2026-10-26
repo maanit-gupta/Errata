@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="120" viewBox="0 0 480 120">
+  <title>PayWise</title>
+  <rect x="12" y="12" width="96" height="96" rx="20" fill="#D63A24"/>
+  <polyline points="30,40 45,84 60,54 75,84 90,40" fill="none" stroke="#F8F7F4" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="126" y="82" font-family="Helvetica" font-weight="bold" font-size="62" fill="#141414">PayWise</text>
+</svg>

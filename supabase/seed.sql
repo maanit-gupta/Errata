@@ -98,14 +98,14 @@ values
    'exclamation marks, and no urgency we cannot back up. Confidence comes from facts, not volume.',
    '[{"kind":"do","text":"Start a SIP in two minutes and see exactly what you pay.","source":"guide"},
      {"kind":"dont","text":"The BEST investment app EVER!!! Your money will skyrocket!","source":"guide"}]',
-   'warning', 'approved', 4),
+   'warning', 'approved', 1),
   ('00000000-0000-4000-8000-0000000000a1', 'TV-04', 'tone',
    'Playful, not flippant',
    'A light touch is welcome, but never joke about money, losses or risk.',
    'Festive and playful language is welcome where it fits the moment. Do not be flippant about '
    'money: no jokes about losing savings, gambling metaphors, or treating investing as a game.',
    '[]',
-   'suggestion', 'approved', 5),
+   'suggestion', 'approved', 1),
   ('00000000-0000-4000-8000-0000000000a1', 'CL-03', 'claims',
    'No guaranteed or assured returns on market-linked products',
    'Never promise, guarantee or "assure" returns on mutual funds or other market-linked products.',
@@ -115,7 +115,7 @@ values
    'mutual-fund risk disclaimer.',
    '[{"kind":"do","text":"Flexi-Cap delivered 14.2% CAGR over 3 years (as of Q3 2026). Past performance may not be sustained.","source":"guide"},
      {"kind":"dont","text":"Lock in 14.2% assured annual returns!","source":"guide"}]',
-   'blocker', 'approved', 9),
+   'blocker', 'approved', 2),
   ('00000000-0000-4000-8000-0000000000a1', 'G-07', 'terms',
    'Write "PayWise", camel-cased; never "Paywise app"',
    'The brand name is always "PayWise" with a capital W, and never "Paywise app".',
@@ -123,14 +123,14 @@ values
    'or "PayWise app". PayWise is the company and the product, not only an app.',
    '[{"kind":"do","text":"Start a SIP on PayWise.","source":"guide"},
      {"kind":"dont","text":"Start a SIP on Paywise app.","source":"guide"}]',
-   'warning', 'approved', 7),
+   'warning', 'approved', 2),
   ('00000000-0000-4000-8000-0000000000a1', 'VS-02', 'visual',
    'Warm-neutral image palette; no cold blue casts',
    'Imagery uses warm-neutral tones; avoid cold, blue-tinted photography.',
    'Photography and illustration sit in a warm-neutral palette (off-white, sand, terracotta, '
    'vermilion accents). Avoid cold blue casts and desaturated corporate stock imagery.',
    '[]',
-   'warning', 'approved', 12),
+   'warning', 'approved', 3),
   ('00000000-0000-4000-8000-0000000000a1', 'A-01', 'access',
    'Reading grade 9 or below for retail audiences',
    'Retail-facing copy should read at grade 9 or below.',
@@ -138,5 +138,8 @@ values
    'Prefer short sentences, common words and one idea per sentence. Explain any financial term '
    'the first time it appears.',
    '[]',
-   'suggestion', 'approved', 14)
+   'suggestion', 'approved', 3)
 on conflict (org_id, code, version) do nothing;
+
+-- Embeddings: the worker's embed_vault job fills rule_cards/facts.embedding (P04).
+select pgmq.send('vault_jobs', '{"job":"embed_vault","org_id":"00000000-0000-4000-8000-0000000000a1"}');

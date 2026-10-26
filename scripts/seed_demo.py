@@ -104,6 +104,8 @@ def seed(client: Any) -> None:
         [{**card, "org_id": d.ORG_ID, "status": "approved", "version": 1} for card in d.RULE_CARDS],
         "org_id,code,version",
     )
+    # The worker's embed_vault job fills embeddings for approved cards and facts (P04).
+    client.rpc("enqueue_vault_job", {"p_org": d.ORG_ID, "p_job": "embed_vault"}).execute()
     print(
         f"Seeded PayWise: {created} new user(s), {len(d.CAMPAIGNS)} campaigns, "
         f"{len(d.FACTS)} facts, {len(d.RULE_CARDS)} rule cards (existing rows untouched)."
