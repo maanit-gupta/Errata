@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P04 done → next P05
+**Current phase:** P05 done → next P06
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -16,7 +16,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26 |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
-| P05 | Vault admin UI | J | in-progress | M (Claude, /complete) | phase/P05-vault-ui | |
+| P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
 | P06 | Pipeline stages 1–4 | M | todo | | | |
 | P07 | Stages 5–6: LLM, gate, intent | M | todo | | | |
 | P08 | Editor & findings UI | J | todo | | | |
@@ -31,42 +31,40 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P04 / done (branch `phase/P04-vault-ingestion`, stacked on P03 → … → P00; none merged).
-- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (see Open questions). Every live run below used process overrides: `GROQ_MODEL_TEXT=openai/gpt-oss-120b GROQ_MODEL_VISION=qwen/qwen3.8-27b GEMINI_MODEL_TEXT=gemini-3.5-flash GEMINI_MODEL_VISION=gemini-3.5-flash`.
+- **Phase / status:** P05 / done (branch `phase/P05-vault-ui`, stacked on P04 → … → P00; none merged). Built by Claude for Jagpreet's phase under `/complete`; Jagpreet should review the UX.
+- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (Open questions). Live runs used process overrides.
 - **What exists now:**
-  - **PayWise kit** in `fixtures/paywise/`:
-    - `guide.md` → `guide.pdf` (4 pages, real headings and page numbers). TV-02 and TV-04 are on p1, G-07 and CL-03 on p2, VS-02 and A-01 on p3. TV-04 is deliberately vague.
-    - `facts.csv`, `glossary.csv` and the kit `README.md`.
-    - `logos/` has the primary, reversed and mark variants as SVG plus rendered PNG.
-    - Rebuild with `cd apps/worker && uv run python ../../scripts/build_fixture_pdf.py`.
-    - `seed.sql` and `demo_data.py` `source_page` values now match the PDF.
-  - **Migration `…100016`:** `rule_cards`/`facts.embedding_source_hash`, and `enqueue_vault_job()` now also accepts the service role. `seed.sql` ends with `pgmq.send('vault_jobs', embed_vault for PayWise)`; `seed_demo.py` calls `enqueue_vault_job` via RPC.
-  - **`brandlens_worker/guides.py`** (pure):
-    - Parsing: `parse_pdf` (headings = lines ≥15% larger than body text; header/footer bands skipped; NFKC folds ligatures), `parse_docx` (Title/Heading N styles) and `parse_markdown` (for URLs via trafilatura).
-    - Chunking: `chunk_sections` (≤ `MAX_CHUNK_TOKENS`=700, with `[page N]` markers).
-    - Schema: `RuleCardDraft`/`RuleCardDrafts`.
-    - Post-processing: `clamp_pages` keeps only pages the chunk covers, recovers a code the model put in the title, strips it from the title, and normalises odd hyphens. `dedupe` (cosine > 0.92). `assign_codes`: a guide code that already exists becomes the **next version** of that code (a proposed update); otherwise it gets the next free number per prefix (TV/G/CL/VS/A/FR).
-  - **`vault.py`** (pure): `rule_embed_text` (title + summary + body + examples), `fact_embed_text` (statement + value JSON), and `plan_embeddings` (rows with no embedding or a stale hash).
-  - **Jobs:** `ingest_guide` (payload `{org_id, guide_id}`; status `parsing` → `drafted`/`failed` with `error`=job code; `llm_unavailable` when degraded) and `embed_vault` (payload `{org_id}`; batches of 32). Registered in `jobs/__init__.py`. `jobs/common.py` lazily builds and caches router, embedder, storage and tracer in `ctx.services`.
-  - `storage.py` (supabase-py Storage via `asyncio.to_thread`). `prompts/rule_extract_v1.md`.
-  - **Web CSV import:**
-    - `lib/vault/csv.ts`: RFC 4180 parser plus zod row schemas; errors carry line numbers; campaign names resolve to ids; duplicate codes are rejected.
-    - `POST /api/vault/import` (multipart `kind`=facts|glossary, `file`): brand admin only, all-or-nothing validation (422 with `errors[]`), upsert on `(org_id, code)` via the RLS client, then `enqueue_vault_job('embed_vault')` for facts.
-  - Dev scripts: `scripts/ingest_guide_demo.py` (upload + run `ingest_guide` in-process) and `scripts/check_retrieval.py` (hero-draft `match_vault` check).
-  - Tests: worker 67 (parsing `guide.pdf`, markdown/docx, chunking, fake-router extraction, clamping, dedupe, codes, embedding plan); web vitest 58 (CSV fixtures and errors); e2e `vault-import.spec.ts` (3).
-- **Acceptance results (local, 2026-10-26):**
-  - **Real extraction** of `guide.pdf` produced **14 draft cards**: TV-02 v2, TV-04 v2, G-07 v2, G-08, CL-03 v2, FR-01..03 (fact-accuracy rules), VS-02 v2, VS-03..05 (palette, logo, contrast), A-02 (reading grade) and A-03 (alt text). Dimensions, severities and pages were correct.
-    - Coded rules become v2 *proposals* because seeded v1s exist.
-    - Run-to-run variance is real. Smaller chunks (700 tokens) fixed missed rules, and the prompt now skips process notes.
-    - A-01's code came back as A-02 in that run; the title-code recovery added afterwards addresses it.
-  - **Embeddings:** after `make db-reset` and a running worker, `embed_vault` embedded 6 rules and 4 facts in 2 s; `null` embeddings = 0/6 and 0/4.
-  - **Retrieval:** `check_retrieval.py` hero-draft top-8 = E-19, G-07, TV-02, F-048, F-112, CL-03, TV-04, A-01, with **no E-11**.
-- **Stubbed / deferred:** no admin UI for drafts, approval or upload (P05). Approving a v2 must archive the old approved version first (partial unique index). The P05 approve action should do both in one RPC. No Dockerfile yet (P10 bakes `.models`).
+  - **Migration `…100017`:**
+    - `approve_rule_card(id)`: admin only. It archives any other approved version of the code, approves this one, writes audit, and queues `embed_vault`.
+    - `revise_rule_card(id, title, summary, body, examples, severity, dimension)`: a draft is edited in place; an approved card gets a new approved version n+1 and the old one is archived, plus audit and `embed_vault`.
+    - `brand_guides` and `rule_cards` are added to the Realtime publication.
+    - pgTAP `04_rule_card_admin` (9 assertions).
+  - **`lib/vault/actions.ts`** (server actions; each re-checks `define_vault`): `uploadGuide` (PDF/DOCX to `guides/{org}/{id}/…` or URL, then `brand_guides` row, then `enqueue_vault_job('ingest_guide')`), `approveRuleCards(ids)`, `archiveRuleCard`, `saveRuleCard` (→ `revise_rule_card`), `saveFact` (+ `embed_vault`), `saveCampaign`/`deleteCampaign`, `savePalette`, `uploadAsset` (logo spec fields).
+  - **`/vault?tab=rules|facts|glossary|campaigns|assets|guides`**: URL-driven tabs (links with `aria-current`). Non-admins get `NoAccess`.
+    - Rules: status filter, grouped by dimension, per-row and bulk "Approve all drafts", and an editor panel via `&card=id` (fields, examples, source-page link via a signed guide URL, Save/Approve/Archive).
+    - Facts: table with pretty JSON, an Expired badge and inline edit.
+    - Facts and glossary: `CsvImport` with client-side preview using the same zod parser as the server, line-level errors, then `/api/vault/import`.
+    - Campaigns: CRUD.
+    - Assets: palette editor (swatches, hex, max ΔE) and logo/reference upload with signed-URL thumbnails.
+    - Guides: upload form and status table.
+  - `components/vault/realtime-refresh.tsx` calls `router.refresh()` on `postgres_changes`. **It must `realtime.setAuth(session.access_token)` before subscribing**, otherwise RLS hides every event. There's an optional `pollMs` fallback (the Guides tab polls every 10 s while something is parsing).
+  - E2E `e2e/vault.spec.ts`:
+    - facts CSV errors → preview → import (Expired badge)
+    - glossary import
+    - **keyboard-only** edit and save (creates version n+1)
+    - non-admin denied
+    - `E2E_LLM=1`: **upload `guide.pdf` → drafts appear live (Realtime) → keyboard approve → approve all**
+- **Acceptance (local, 2026-10-26):**
+  - Live flow passed: 14 drafts in about 20 s, then the approve flow. Afterwards the DB had **17 approved, 0 missing embeddings**.
+  - Facts and glossary import with preview and row-level errors.
+  - Non-admins can't mutate: the UI denies them, pgTAP shows RLS ignores a creator's direct UPDATE, `approve_rule_card` raises for a creator, and `/api/vault/import` returns 403.
+  - Keyboard-only edit and approve pass.
+- **Changed:** `make test-db` now runs `supabase db reset` first, because the pgTAP tests assume `seed.sql` state and local e2e runs mutate data.
+- **Stubbed / deferred:** no asset deletion or editing (upload only); no fact create/delete outside CSV; managers can't see the vault read-only (SPEC allows denied).
 - **Gotchas:**
-  - `match_vault` merges top-k rules and top-k facts, then cuts to k overall.
-  - The extraction sees `FR-` rule cards (dimension `facts`). They're about *where* facts come from; the actual values stay CSV-only (SPEC §12).
-  - Glossary imports aren't embedded (they're deterministic).
-- **Exact next step:** P05 (vault admin UI): guide upload → `enqueue_vault_job('ingest_guide')`, draft-card review and approve (archive the old version, then `embed_vault`), the CSV import UI on top of `/api/vault/import`, and facts/glossary/assets lists.
+  - Upload via a server action means files go through Next. Server actions default to a ~1 MB body limit, but `guide.pdf` is small. **Large guides may need `experimental.serverActions.bodySizeLimit`** or a direct signed-upload URL. Not configured yet.
+  - One e2e flake was seen in the parallel demo-login tests on a cold dev server. Re-runs pass.
+- **Exact next step:** P06 (pipeline stages 1–4: ingest, protect/redaction, deterministic filters, retrieve) in the worker.
 
 ## Decisions log (append-only)
 
@@ -118,6 +116,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P04 | `embedding_source_hash` columns decide re-embedding | Covers in-place edits (e.g. examples appended in P13), not just new rows |
 | 2026-10-26 | P04 | `enqueue_vault_job` allows the service role | `seed_demo.py` and the worker can queue embeddings |
 | 2026-10-26 | P04 | Seed `source_page` values changed to match the generated `guide.pdf` | Citations must open the right page |
+| 2026-10-26 | P05 | Approve/revise via SQL RPCs (`approve_rule_card`, `revise_rule_card`) | Archive-old + approve-new must be atomic under the one-approved-per-code index |
+| 2026-10-26 | P05 | Editing an approved card creates version n+1 (old archived), drafts edit in place | Findings keep citing the exact text they were checked against |
+| 2026-10-26 | P05 | Vault tabs and the card editor are URL state (`?tab=`, `&card=`) | Keyboard/back-button friendly, server-rendered, no client tab state |
+| 2026-10-26 | P05 | Realtime client sets the JWT on the socket before subscribing; polling fallback while parsing | SSR client loads the session async; RLS drops events for anon sockets |
+| 2026-10-26 | P05 | Managers/specialists are denied `/vault` (not read-only) | SPEC §2 allows "read-only or denied"; denied is simpler and safer |
+| 2026-10-26 | P05 | `make test-db` resets the local DB first | pgTAP asserts seed state; local e2e mutates it |
 
 **Dependencies and licences** (append when adding any dependency):
 

@@ -62,9 +62,9 @@ test-worker:
 test-web:
 	cd $(WEB) && pnpm test
 
-test-db:
-	@if compgen -G "supabase/tests/*.sql" > /dev/null; then supabase test db; \
-	else echo "test-db: no pgTAP tests yet (added in P01)"; fi
+test-db: ## pgTAP on a freshly reset local DB (tests assume seed.sql state)
+	supabase db reset
+	supabase test db
 
 e2e: ## Playwright core-loop test (needs make dev)
 	@if compgen -G "$(WEB)/e2e/*.spec.ts" > /dev/null; then cd $(WEB) && pnpm e2e; \

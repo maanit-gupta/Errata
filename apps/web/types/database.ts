@@ -972,6 +972,35 @@ export type Database = {
       }
     }
     Functions: {
+      approve_rule_card: {
+        Args: { p_id: string }
+        Returns: {
+          body: string
+          code: string
+          created_at: string
+          dimension: Database["public"]["Enums"]["dimension"]
+          embedding: string | null
+          embedding_source_hash: string | null
+          examples: Json
+          guide_id: string | null
+          id: string
+          never_send: boolean
+          org_id: string
+          severity: Database["public"]["Enums"]["severity"]
+          source_page: number | null
+          status: Database["public"]["Enums"]["rule_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rule_cards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       can_act_on_version: { Args: { p_version_id: string }; Returns: boolean }
       can_edit_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_content: { Args: { p_content_id: string }; Returns: boolean }
@@ -1009,6 +1038,43 @@ export type Database = {
           title: string
           value: Json
         }[]
+      }
+      revise_rule_card: {
+        Args: {
+          p_body: string
+          p_dimension: Database["public"]["Enums"]["dimension"]
+          p_examples: Json
+          p_id: string
+          p_severity: Database["public"]["Enums"]["severity"]
+          p_summary: string
+          p_title: string
+        }
+        Returns: {
+          body: string
+          code: string
+          created_at: string
+          dimension: Database["public"]["Enums"]["dimension"]
+          embedding: string | null
+          embedding_source_hash: string | null
+          examples: Json
+          guide_id: string | null
+          id: string
+          never_send: boolean
+          org_id: string
+          severity: Database["public"]["Enums"]["severity"]
+          source_page: number | null
+          status: Database["public"]["Enums"]["rule_status"]
+          summary: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "rule_cards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       storage_content_in_org: { Args: { p_name: string }; Returns: boolean }
       storage_path_uuid: {
