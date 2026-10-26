@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P05 done → next P06
+**Current phase:** P06 done → next P07
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -17,7 +17,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
-| P06 | Pipeline stages 1–4 | M | in-progress | M (Claude) | phase/P06-pipeline-1-4 | |
+| P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | todo | | | |
 | P08 | Editor & findings UI | J | todo | | | |
 | P09 | Review workflow & notifications | J+M | todo | | | |
@@ -31,40 +31,38 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P05 / done (branch `phase/P05-vault-ui`, stacked on P04 → … → P00; none merged). Built by Claude for Jagpreet's phase under `/complete`; Jagpreet should review the UX.
-- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (Open questions). Live runs used process overrides.
-- **What exists now:**
-  - **Migration `…100017`:**
-    - `approve_rule_card(id)`: admin only. It archives any other approved version of the code, approves this one, writes audit, and queues `embed_vault`.
-    - `revise_rule_card(id, title, summary, body, examples, severity, dimension)`: a draft is edited in place; an approved card gets a new approved version n+1 and the old one is archived, plus audit and `embed_vault`.
-    - `brand_guides` and `rule_cards` are added to the Realtime publication.
-    - pgTAP `04_rule_card_admin` (9 assertions).
-  - **`lib/vault/actions.ts`** (server actions; each re-checks `define_vault`): `uploadGuide` (PDF/DOCX to `guides/{org}/{id}/…` or URL, then `brand_guides` row, then `enqueue_vault_job('ingest_guide')`), `approveRuleCards(ids)`, `archiveRuleCard`, `saveRuleCard` (→ `revise_rule_card`), `saveFact` (+ `embed_vault`), `saveCampaign`/`deleteCampaign`, `savePalette`, `uploadAsset` (logo spec fields).
-  - **`/vault?tab=rules|facts|glossary|campaigns|assets|guides`**: URL-driven tabs (links with `aria-current`). Non-admins get `NoAccess`.
-    - Rules: status filter, grouped by dimension, per-row and bulk "Approve all drafts", and an editor panel via `&card=id` (fields, examples, source-page link via a signed guide URL, Save/Approve/Archive).
-    - Facts: table with pretty JSON, an Expired badge and inline edit.
-    - Facts and glossary: `CsvImport` with client-side preview using the same zod parser as the server, line-level errors, then `/api/vault/import`.
-    - Campaigns: CRUD.
-    - Assets: palette editor (swatches, hex, max ΔE) and logo/reference upload with signed-URL thumbnails.
-    - Guides: upload form and status table.
-  - `components/vault/realtime-refresh.tsx` calls `router.refresh()` on `postgres_changes`. **It must `realtime.setAuth(session.access_token)` before subscribing**, otherwise RLS hides every event. There's an optional `pollMs` fallback (the Guides tab polls every 10 s while something is parsing).
-  - E2E `e2e/vault.spec.ts`:
-    - facts CSV errors → preview → import (Expired badge)
-    - glossary import
-    - **keyboard-only** edit and save (creates version n+1)
-    - non-admin denied
-    - `E2E_LLM=1`: **upload `guide.pdf` → drafts appear live (Realtime) → keyboard approve → approve all**
+- **Phase / status:** P06 / done (branch `phase/P06-pipeline-1-4`, stacked on P05 → … → P00; none merged).
+- **⚠ Still open for Maanit:** update the retired model IDs in `apps/worker/.env` (Open questions). P07 needs them for real.
+- **What exists now (`brandlens_worker/pipeline/`, all pure):**
+  - `types.py`: `Doc` (normalised `text`, `original`, `char_map`, `to_original(start, end)`), `RedactedDoc`, `Redaction`, `Rule`, `Fact`, `GlossaryTerm`, `Vault` (campaign plus approved rules, **all** org facts incl. other campaigns and expired ones, glossary, `now`), `Finding` (spans in `Doc.text`; `codes` primary-first; `cited`).
+  - `ingest.py`: text/markdown as-is, HTML → text, DOCX → paragraphs, PDF/image → `NotImplementedError`. Whitespace normalisation keeps a char map. `IngestError` codes: `too_long` (>`MAX_WORDS`), `empty_version`, `missing_file`, `unsupported_format`.
+  - `protect.py`: detectors for secrets (`sk-`, `AKIA`/`ASIA`, JWT, `gsk_`/`ghp_`/`xox*`, 32+ hex), email, Luhn-valid cards, Aadhaar format, PAN (holder-type check), IFSC, account numbers (after "a/c|account"), IN phones. Overlaps resolve by detector priority then length. `protect(doc)` returns the LLM-bound `⟦REDACTED:kind⟧` copy only.
+  - `filters/`:
+    - `terms.py`: Aho-Corasick, token boundaries, possessive/plural tolerant, longest match wins, cites the rule card with the glossary code.
+    - `entities.py`: dates (Oct 18 / 18 October / 18/10 / ISO), times, %, ₹/Rs, venues (Hall X, Auditorium, Room N, online, city list).
+    - `facts.py`: % and money matched by nearby keywords (derived from value keys such as `exit_load_pct` → "exit load"); event date, time and venue checked against the referenced in-scope event. Cross-campaign matches are **bleed**. Adjacent conflicting entities cluster into one span with a deterministic rewrite. Expired in-scope facts give a warning. `mentioned_facts()` feeds claims.
+    - `claims.py`: lexicon in market-linked context, phrase-extended span, missing `required_disclaimer` **merged** into an overlapping CL finding (`rule_id` + `fact_id`, historical rewrite + disclaimer), otherwise its own blocker.
+    - `tone.py`: phrases quoted in tone-rule bodies are banned (warning); ≥2 "!" and density >1/40 words, or caps >15%, give a suggestion.
+    - `access.py`: FK grade only when ≥60 words; vague link text and bare URLs → `wcag_ref 2.4.4` warning.
+    - `base.py`: `cap_severity` (applies `DIMENSION_MAX_SEVERITY`) and `pick_rule`.
+    - `run_filters` drops anything uncited.
+  - `retrieve.py` (queries = whole draft + ≤24 sentences; merge by max similarity), `routing.py` (§10 `route()`, `has_open_blockers()`), `run.py` (`run_stages_1_to_4(version, vault, embed=, match_vault=, topk=)` records per-stage timings; no LLM parameter).
+  - **Job `review_version`** (registered; default for `review_jobs`):
+    1. Loads version + content + campaign + vault, then runs stages 1–4.
+    2. Persists findings idempotently per run, with spans and quotes in the **original** text and an "Also cites: …" footer for extra codes.
+    3. Sets the run to `done` with `retrieved` and `timings` (+ `total`).
+    4. Calls `transition_content_system`: `needs_revision` on open blockers, else `in_review` with §10 route and risk. `IngestError` maps to `JobError(code)`.
+  - `scripts/sql/hero_review.sql`: creates the hero draft as the creator and submits it via `enqueue_review()`.
 - **Acceptance (local, 2026-10-26):**
-  - Live flow passed: 14 drafts in about 20 s, then the approve flow. Afterwards the DB had **17 approved, 0 missing embeddings**.
-  - Facts and glossary import with preview and row-level errors.
-  - Non-admins can't mutate: the UI denies them, pgTAP shows RLS ignores a creator's direct UPDATE, `approve_rule_card` raises for a creator, and `/api/vault/import` returns 403.
-  - Keyboard-only edit and approve pass.
-- **Changed:** `make test-db` now runs `supabase db reset` first, because the pgTAP tests assume `seed.sql` state and local e2e runs mutate data.
-- **Stubbed / deferred:** no asset deletion or editing (upload only); no fact create/delete outside CSV; managers can't see the vault read-only (SPEC allows denied).
+  - Hero run: `done` in **95 ms** (timings `ingest 0, protect 0, filters 1, retrieve 27, total 33` ms), content → `needs_revision`.
+  - Exactly 4 findings: G-07 warning "Paywise app"; F-048 blocker "0% exit load"; CL-03+F-112 blocker "lock in 14.2% assured annual returns"; E-19 blocker "Oct 18 at Hall B, Chandigarh" (explanation cites E-11 / Navratri).
+  - 5 clean drafts → 0 findings. Unit tests monkeypatch `LLMRouter.generate` to raise, and stages 1–4 pass.
+- **Tests:** worker 99 (pipeline 32 new).
 - **Gotchas:**
-  - Upload via a server action means files go through Next. Server actions default to a ~1 MB body limit, but `guide.pdf` is small. **Large guides may need `experimental.serverActions.bodySizeLimit`** or a direct signed-upload URL. Not configured yet.
-  - One e2e flake was seen in the parallel demo-login tests on a cold dev server. Re-runs pass.
-- **Exact next step:** P06 (pipeline stages 1–4: ingest, protect/redaction, deterministic filters, retrieve) in the worker.
+  - **Typing `\u` + hex in tool input gets turned into the literal character.** Write escapes via `chr(92)` if you need them in files.
+  - Ruff now ignores RUF001–003 (typographic characters are intentional here).
+  - A data-modifying CTE's new row isn't visible to RLS helper functions in the same statement, so insert content and version in separate statements.
+- **Exact next step:** P07. Stage 5 (one LLM call with `prompts/review_v1.md`, intent, retrieved snippets, `<already_found>`, redacted draft) and stage 6 (citation gate per SPEC §8, blocker confirmation sample, confidence, intent verification §9, degraded mode). Plug them into `review_version` between retrieve and persist.
 
 ## Decisions log (append-only)
 
@@ -122,6 +120,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P05 | Realtime client sets the JWT on the socket before subscribing; polling fallback while parsing | SSR client loads the session async; RLS drops events for anon sockets |
 | 2026-10-26 | P05 | Managers/specialists are denied `/vault` (not read-only) | SPEC §2 allows "read-only or denied"; denied is simpler and safer |
 | 2026-10-26 | P05 | `make test-db` resets the local DB first | pgTAP asserts seed state; local e2e mutates it |
+| 2026-10-26 | P06 | F-112 missing-disclaimer check **merged** into the overlapping CL-03 finding (rule_id + fact_id) | One finding per issue; matches SPEC §16's "CL-03+F-112 blocker" |
+| 2026-10-26 | P06 | Adjacent conflicting event entities become one finding; primary citation = this campaign's fact, bleed fact named in the explanation | "Oct 18 at Hall B, Chandigarh" is one mistake with one fix |
+| 2026-10-26 | P06 | Reading grade only on drafts ≥60 words; exclamation check needs ≥2 "!" | Formulas and density are noise on one-line captions |
+| 2026-10-26 | P06 | Tone banned phrasing = short quoted phrases in approved tone-rule bodies | Derives from the vault; no hardcoded list |
+| 2026-10-26 | P06 | `Vault.facts` includes every org fact; scoping happens in the filter | Bleed detection needs the out-of-campaign facts |
+| 2026-10-26 | P06 | Ruff ignores RUF001/002/003 | Brand copy and regexes deliberately use typographic characters |
 
 **Dependencies and licences** (append when adding any dependency):
 
