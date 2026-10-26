@@ -44,7 +44,17 @@ def test_parse_guide_pdf_sections_and_pages() -> None:
     sections = parse_pdf(GUIDE_PDF.read_bytes())
     by_title = {s.title.split(" ")[0]: s for s in sections}
     assert sections[0].title == "PayWise Brand Guide" and sections[0].level == 1
-    expected_pages = {"TV-02": 1, "TV-04": 1, "G-07": 2, "CL-03": 2, "VS-02": 3, "A-01": 3}
+    expected_pages = {
+        "TV-02": 1,
+        "TV-04": 1,
+        "G-07": 2,
+        "CL-03": 2,
+        "VS-01": 3,
+        "VS-02": 3,
+        "VS-03": 3,
+        "A-01": 3,
+        "A-02": 4,
+    }
     for code, page in expected_pages.items():
         assert by_title[code].page == page, code
         assert by_title[code].level == 3

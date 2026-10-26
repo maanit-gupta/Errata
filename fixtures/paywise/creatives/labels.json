@@ -1,0 +1,803 @@
+{
+  "size": 1080,
+  "creatives": [
+    {
+      "file": "01-good.png",
+      "case": "good",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": null,
+      "expected": [
+        {
+          "check": "alt_missing",
+          "code": "A-02"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        }
+      ]
+    },
+    {
+      "file": "02-logo-small.png",
+      "case": "logo too small",
+      "logo_present": true,
+      "logo_box": [
+        940,
+        990,
+        1004,
+        1007
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "logo_small",
+          "code": "VS-03"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        }
+      ]
+    },
+    {
+      "file": "03-logo-cramped.png",
+      "case": "logo cramped",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "logo_clear_space",
+          "code": "VS-03"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        },
+        {
+          "text": "T&Cs apply",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 22,
+          "box": [
+            620,
+            1033,
+            734,
+            1055
+          ]
+        }
+      ]
+    },
+    {
+      "file": "04-missing-logo.png",
+      "case": "missing logo",
+      "logo_present": false,
+      "logo_box": null,
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "logo_missing",
+          "code": "VS-03"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        }
+      ]
+    },
+    {
+      "file": "05-low-contrast.png",
+      "case": "low-contrast text",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "contrast",
+          "code": "A-02",
+          "wcag": "1.4.3"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#97928A",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        },
+        {
+          "text": "No account fees.",
+          "fg": "#97928A",
+          "bg": "#F8F7F4",
+          "size_px": 30,
+          "box": [
+            110,
+            857,
+            335,
+            887
+          ]
+        }
+      ]
+    },
+    {
+      "file": "06-off-palette.png",
+      "case": "off-palette fills",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "off_palette",
+          "code": "VS-01"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        }
+      ]
+    },
+    {
+      "file": "07-cold-blue.png",
+      "case": "cold-blue cast",
+      "logo_present": true,
+      "logo_box": [
+        760,
+        990,
+        1000,
+        1053
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "cold_cast",
+          "code": "VS-02"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Your money, your pace.",
+          "fg": "#141414",
+          "bg": "#F8F7F4",
+          "size_px": 48,
+          "box": [
+            80,
+            864,
+            624,
+            911
+          ]
+        },
+        {
+          "text": "Start a SIP this Diwali.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            80,
+            946,
+            397,
+            977
+          ]
+        }
+      ]
+    },
+    {
+      "file": "08-good-alt.png",
+      "case": "good with alt text",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [],
+      "texts": [
+        {
+          "text": "Save a little, often",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            654,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        }
+      ]
+    },
+    {
+      "file": "09-hidden-text.png",
+      "case": "hidden tiny text",
+      "logo_present": true,
+      "logo_box": [
+        740,
+        940,
+        1000,
+        1008
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [
+        {
+          "check": "hidden_text",
+          "code": "A-02"
+        }
+      ],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        },
+        {
+          "text": "Returns guaranteed for every investor.",
+          "fg": "#D0CBC2",
+          "bg": "#F8F7F4",
+          "size_px": 11,
+          "box": [
+            110,
+            992,
+            298,
+            1002
+          ]
+        }
+      ]
+    },
+    {
+      "file": "10-two-logos.png",
+      "case": "two-logo layout",
+      "logo_present": true,
+      "logo_box": [
+        110,
+        930,
+        330,
+        987
+      ],
+      "alt_text": "PayWise Diwali SIP poster: start a SIP from Rs 500 a month and register now for our free Diwali webinar.",
+      "expected": [],
+      "texts": [
+        {
+          "text": "Start your Diwali SIP",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 64,
+          "box": [
+            110,
+            181,
+            736,
+            244
+          ]
+        },
+        {
+          "text": "Invest from Rs 500 a month.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            273,
+            562,
+            308
+          ]
+        },
+        {
+          "text": "Small steps, steady habits.",
+          "fg": "#141414",
+          "bg": "#E9DFC9",
+          "size_px": 36,
+          "box": [
+            110,
+            373,
+            538,
+            408
+          ]
+        },
+        {
+          "text": "Join our free Diwali webinar online.",
+          "fg": "#5F5B53",
+          "bg": "#F8F7F4",
+          "size_px": 32,
+          "box": [
+            110,
+            616,
+            606,
+            647
+          ]
+        },
+        {
+          "text": "Register now",
+          "fg": "#F8F7F4",
+          "bg": "#D63A24",
+          "size_px": 40,
+          "box": [
+            150,
+            754,
+            401,
+            793
+          ]
+        },
+        {
+          "text": "NORTHFUND",
+          "fg": "#F8F7F4",
+          "bg": "#141414",
+          "size_px": 40,
+          "box": [
+            735,
+            960,
+            988,
+            999
+          ]
+        }
+      ]
+    }
+  ]
+}

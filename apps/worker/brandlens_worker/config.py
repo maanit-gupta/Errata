@@ -42,9 +42,19 @@ RISK_WEIGHTS: Final[dict[str, int]] = {
 READING_GRADE_TARGET: Final = 9
 EXCLAMATION_PER_WORDS: Final = 40
 CAPS_RATIO_MAX: Final = 0.15
-LOGO_MIN_GOOD_MATCHES: Final = 12  # tuned in P11 on fixtures
-CLEAR_SPACE_VARIANCE_MAX: Final[float | None] = None  # tuned in P11
-DELTA_E_MAX_DEFAULT: Final = 10
+# Vision (P11), tuned on fixtures/paywise/creatives; numbers in apps/worker/eval/vision_report.md.
+LOGO_MIN_GOOD_MATCHES: Final = 12  # ORB RANSAC inliers (fixtures: 58-216 when present)
+CLEAR_SPACE_VARIANCE_MAX: Final = (
+    150.0  # grey variance in the clear-space ring (clean 0, cramped 7311)
+)
+DELTA_E_MAX_DEFAULT: Final = 10  # when the palette asset doesn't set max_delta_e
+LOGO_MIN_WIDTH_DEFAULT: Final = 80  # px, when the logo asset doesn't set min_width_px
+CLEAR_SPACE_RATIO_DEFAULT: Final = 0.25  # × logo height, when the asset doesn't set it
+LARGE_TEXT_PX: Final = 24  # OCR word height at which WCAG "large text" (3:1) applies
+TINY_TEXT_PX: Final = 12  # text shorter than this is hidden fine print (A-02)
+FAINT_TEXT_RATIO: Final = 1.5  # contrast below this is hidden (near-invisible) text
+WARMTH_COOL_B: Final = -4.0  # mean CIELAB b* below this pre-filters an image as cold (VS-02)
+VISION_MAX_SIDE: Final = 1024  # the LLM-bound copy of an image is downscaled to this
 LLM_CACHE: Final = False  # True in eval/tests
 
 # Queues (SQL migration 20261026100011). Review jobs use PGMQ_QUEUE from env.

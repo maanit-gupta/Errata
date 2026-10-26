@@ -19,6 +19,7 @@ import {
 } from "@/lib/editor/findings-extension";
 import { docToText, spanToRange, textToDocJSON } from "@/lib/editor/offsets";
 import { FindingCard, type FindingView } from "./finding-card";
+import { ImageFindings, type ImageMarker } from "./image-findings";
 
 const SEVERITY_ORDER = { blocker: 0, warning: 1, suggestion: 2 } as const;
 
@@ -34,6 +35,8 @@ type Props = {
   } | null;
   run: { id: string; status: string; degraded: boolean; error_code: string | null } | null;
   findings: FindingView[];
+  /** Signed URL of the current version's image (image versions only). */
+  imageUrl: string | null;
   canEdit: boolean;
   canAct: boolean;
 };
@@ -44,6 +47,7 @@ export function DraftWorkspace({
   version,
   run,
   findings,
+  imageUrl,
   canEdit,
   canAct,
 }: Props) {
@@ -118,6 +122,20 @@ export function DraftWorkspace({
     editor.view.dispatch(editor.state.tr.setMeta(findingsKey, { ranges }));
   }, [editor, version?.body, run, visible]);
 
+  const imageVersion = version?.format === "image" && !!imageUrl;
+  const markers: ImageMarker[] = imageVersion
+    ? visible
+        .filter((f) => f.box && f.status === "open")
+        .map((f) => ({
+          id: f.id,
+          severity: f.severity,
+          codes: f.citations.map((c) => c.code).join(" · "),
+          label: f.quote,
+          box: f.box!,
+        }))
+    : [];
+  const markerNumber = new Map(markers.map((m, i) => [m.id, i + 1]));
+
   const focus = (fid: string | null, scroll = false) => {
     setActive(fid);
     if (!editor) return;
@@ -136,6 +154,21 @@ export function DraftWorkspace({
   };
 
   const apply = async (f: FindingView, text: string, status: "accepted" | "edited") => {
+    if (version?.format === "image") {
+      // Nothing to patch in place: alt text lives in the intent; everything else is fixed in the
+      // design and verified when the corrected image is uploaded.
+      if (f.target === "alt_text") setIntent((s) => ({ ...s, alt_text: text }));
+      const r = await resolveFinding({ id: f.id, status });
+      if (!r.ok) toast.error(r.error);
+      else
+        toast.success(
+          f.target === "alt_text"
+            ? "Alt text updated. Resubmit to check it."
+            : "Marked fixed. Upload the corrected image to resubmit.",
+        );
+      router.refresh();
+      return;
+    }
     if (!editor) return;
     const range = currentRange(editor.state, f.id);
     if (!range) {
@@ -180,6 +213,7 @@ export function DraftWorkspace({
         ? "pdf"
         : "docx"
     : null;
+  const showAlt = fileKind === "image" || (!file && version?.format === "image");
 
   const submit = () => {
     const parsed = intentSchema.safeParse(intent);
@@ -243,17 +277,31 @@ export function DraftWorkspace({
         >
           <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
             <h2 id={`${id}-editor`} className="font-sans text-sm font-medium">
-              Draft {version ? `· version ${version.n}` : ""}
+              {imageVersion ? "Image" : "Draft"} {version ? `· version ${version.n}` : ""}
             </h2>
             <StateBadge state={content.state} />
           </div>
-          <div className="draft-editor px-4 py-3">
-            <EditorContent editor={editor} />
-          </div>
+          {imageVersion ? (
+            <div className="px-4 py-3">
+              <ImageFindings
+                src={imageUrl!}
+                alt={intent.alt_text || `${content.title} (uploaded image, version ${version!.n})`}
+                markers={checking ? [] : markers}
+                active={active}
+                onFocus={focus}
+              />
+            </div>
+          ) : (
+            <div className="draft-editor px-4 py-3">
+              <EditorContent editor={editor} />
+            </div>
+          )}
           {canEdit ? (
             <div className="border-border border-t px-4 py-3 text-sm">
               <label htmlFor={`${id}-file`} className="font-medium">
-                Or upload a file (DOCX, PDF or image)
+                {imageVersion
+                  ? "Upload the corrected image (PNG, JPEG or WebP)"
+                  : "Or upload a file (DOCX, PDF or image)"}
               </label>
               <input
                 id={`${id}-file`}
@@ -262,10 +310,15 @@ export function DraftWorkspace({
                 className="mt-1 block"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               />
-              {fileKind === "image" || fileKind === "pdf" ? (
+              {fileKind === "pdf" ? (
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Visual and PDF checks arrive in a later release; text checks run on DOCX and typed
+                  PDF checks arrive in a later release; text checks run on DOCX, images and typed
                   drafts today.
+                </p>
+              ) : fileKind === "image" ? (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Images are checked for logo use, palette, text contrast, hidden fine print, alt
+                  text and image style, plus every text rule on the words in the picture.
                 </p>
               ) : null}
             </div>
@@ -306,6 +359,8 @@ export function DraftWorkspace({
                   finding={f}
                   active={active === f.id}
                   canAct={canAct}
+                  imageMode={version?.format === "image"}
+                  marker={markerNumber.get(f.id)}
                   onFocus={focus}
                   onApply={apply}
                   onResolve={resolve}
@@ -371,6 +426,26 @@ export function DraftWorkspace({
               Facts are checked against this campaign.
             </p>
           </div>
+          {showAlt ? (
+            <div className="space-y-1">
+              <label htmlFor={`${id}-alt`} className="text-sm font-medium">
+                Alt text
+              </label>
+              <textarea
+                id={`${id}-alt`}
+                rows={3}
+                value={intent.alt_text ?? ""}
+                disabled={!canEdit}
+                aria-describedby={`${id}-alt-help`}
+                onChange={(e) => setIntent((s) => ({ ...s, alt_text: e.target.value }))}
+                className="border-input bg-card w-full rounded-md border px-2 py-1.5 text-sm"
+              />
+              <p id={`${id}-alt-help`} className="text-muted-foreground text-xs">
+                What the image says, including its call to action. Missing alt text fails WCAG
+                1.1.1.
+              </p>
+            </div>
+          ) : null}
         </section>
 
         {canEdit ? (
@@ -392,7 +467,9 @@ export function DraftWorkspace({
                 ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} still open: accept, edit, dismiss with a reason, or route each one.`
                 : checking
                   ? "A check is running."
-                  : "Saves a new version and checks it. Nothing is ever published automatically."}
+                  : imageVersion && !file
+                    ? "Upload the corrected image above, then resubmit. Nothing is ever published automatically."
+                    : "Saves a new version and checks it. Nothing is ever published automatically."}
             </p>
           </div>
         ) : canAct && content.state === "changes_requested" ? (

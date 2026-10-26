@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Citation, FindingView } from "@/components/drafts/finding-card";
 import { DraftWorkspace } from "@/components/drafts/draft-workspace";
+import { spanBox, spanTarget } from "@/lib/drafts/span";
 import { PageHeader } from "@/components/page-header";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
@@ -26,7 +27,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
     content.current_version_id
       ? supabase
           .from("versions")
-          .select("id, n, body, intent, format")
+          .select("id, n, body, intent, format, storage_path")
           .eq("id", content.current_version_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -99,9 +100,18 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
     return {
       ...r,
       span: { start: span?.start ?? 0, end: span?.end ?? 0 },
+      target: spanTarget(r.span),
+      box: spanBox(r.span),
       citations,
     } as FindingView;
   });
+
+  // Image versions render from a short-lived signed URL (private bucket, SPEC §3).
+  const imageUrl =
+    version?.format === "image" && version.storage_path
+      ? ((await supabase.storage.from("drafts").createSignedUrl(version.storage_path, 3600)).data
+          ?.signedUrl ?? null)
+      : null;
 
   const isOwner = content.owner_id === session.userId || session.role === "brand_admin";
   const canEdit = isOwner && (content.state === "draft" || content.state === "needs_revision");
@@ -126,6 +136,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
             : null
         }
         findings={findings}
+        imageUrl={imageUrl}
         canEdit={canEdit}
         canAct={isOwner}
       />

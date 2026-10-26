@@ -33,11 +33,33 @@ class LLMReviewOutput(BaseModel):
     findings: list[LLMFinding] = Field(default_factory=list, max_length=20)
 
 
+class VisionFinding(BaseModel):
+    """A finding from the vision pass (prompts/vision_v*.md). `target` says what it points at."""
+
+    target: Literal["text", "image", "alt_text"]
+    dimension: Literal["tone", "terms", "facts", "claims", "visual", "access"]
+    cites: list[str] = Field(min_length=1, max_length=4)
+    quote: str | None = Field(default=None, max_length=300)
+    severity: Literal["blocker", "warning", "suggestion"]
+    explanation: str = Field(min_length=1, max_length=600)
+    rewrite: str | None = Field(default=None, max_length=600)
+    self_confidence: float = Field(default=0.5, ge=0, le=1)
+
+    def as_text_finding(self) -> LLMFinding | None:
+        if self.target != "text" or not self.quote:
+            return None
+        return LLMFinding.model_validate(self.model_dump(exclude={"target"}))
+
+
+class VisionReviewOutput(BaseModel):
+    findings: list[VisionFinding] = Field(default_factory=list, max_length=20)
+
+
 @dataclass
 class LLMPassResult:
-    findings: list[LLMFinding]
+    findings: list[Any]  # LLMFinding (text) or VisionFinding (images)
     meta: Meta
-    confirmation: list[LLMFinding] | None
+    confirmation: list[Any] | None
     confirmation_meta: Meta | None
     prompt_version: str
 
@@ -93,20 +115,56 @@ def build_user_message(
     )
 
 
-async def run_llm_pass(router: Any, system: str, prompt_version: str, user: str) -> LLMPassResult:
+def build_vision_message(
+    redacted: RedactedDoc,
+    intent: dict[str, Any],
+    vault: Vault,
+    retrieved: list[dict[str, Any]],
+    already: list[Finding],
+    doc: Doc,
+    *,
+    alt_text: str | None,
+    signals: dict[str, Any],
+) -> str:
+    """The review message plus the alt text and the deterministic image signals."""
+    base = build_user_message(redacted, intent, vault, retrieved, already, doc)
+    found_image = [
+        f"{f.dimension} | {f.quote!r} | {', '.join(f.codes)}" for f in already if f.target != "text"
+    ]
+    if found_image:
+        base = base.replace("</already_found>", "\n".join([*found_image, "</already_found>"]))
+    return "\n".join(
+        [
+            base,
+            f"<alt_text>{alt_text.strip() if alt_text else ''}</alt_text>",
+            f"<image_signals>{json.dumps(signals, sort_keys=True)}</image_signals>",
+        ]
+    )
+
+
+async def run_llm_pass(
+    router: Any,
+    system: str,
+    prompt_version: str,
+    user: str,
+    *,
+    schema: type[BaseModel] = LLMReviewOutput,
+    images: list[Any] | None = None,
+) -> LLMPassResult:
     """Main sample at 0.2; a confirmation sample at 0.7 only if a blocker was returned (SPEC §7)."""
     out, meta = await router.generate(
-        system, user, LLMReviewOutput, prompt_version=prompt_version, temperature=0.2
+        system, user, schema, prompt_version=prompt_version, temperature=0.2, vision_images=images
     )
-    confirmation: list[LLMFinding] | None = None
+    confirmation: list[Any] | None = None
     confirmation_meta: Meta | None = None
     if any(f.severity == "blocker" for f in out.findings):
         second, confirmation_meta = await router.generate(
             system,
             user,
-            LLMReviewOutput,
+            schema,
             prompt_version=prompt_version,
             temperature=CONFIRM_TEMPERATURE,
+            vision_images=images,
         )
         confirmation = second.findings
     return LLMPassResult(out.findings, meta, confirmation, confirmation_meta, prompt_version)

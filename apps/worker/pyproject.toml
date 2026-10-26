@@ -12,17 +12,26 @@ dependencies = [
     "httpx>=0.28.1",
     "langfuse>=5.0.4",
     "numpy>=2.5.4",
+    "opencv-python-headless>=5.0.0.93",
     "psycopg[binary,pool]>=3.3.6",
     "pyahocorasick>=2.3.1",
     "pydantic>=2.14.1",
     "pydantic-settings>=2.16.1",
     "pymupdf>=2.0",
+    "pytesseract>=0.3.13",
     "python-docx>=1.2.0",
+    "scikit-image>=0.26.0",
     "supabase>=2.33.0",
     "tenacity>=9.1.4",
     "textstat>=0.7.13",
     "trafilatura>=2.3.1",
     "uvicorn[standard]>=0.54.0",
+]
+
+[project.optional-dependencies]
+ocr-paddle = [
+    "paddleocr>=2.10.0",
+    "paddlepaddle>=3.3.1",
 ]
 
 [dependency-groups]
@@ -61,8 +70,15 @@ plugins = ["pydantic.mypy"]
 packages = ["brandlens_worker"]
 
 [[tool.mypy.overrides]]
-module = ["fastembed.*", "ahocorasick", "textstat", "trafilatura", "fitz", "pymupdf", "docx"]
+module = ["fastembed.*", "ahocorasick", "textstat", "trafilatura", "fitz", "pymupdf", "docx", "paddleocr"]
 ignore_missing_imports = true
+
+# OpenCV's bundled stubs and scikit-image's partial hints reject valid calls (e.g. ORB_create,
+# kmeans on float32 arrays); treat both as Any, like the untyped libraries above.
+[[tool.mypy.overrides]]
+module = ["cv2", "cv2.*", "skimage", "skimage.*"]
+follow_imports = "skip"
+follow_untyped_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

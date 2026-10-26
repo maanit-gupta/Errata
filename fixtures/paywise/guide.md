@@ -75,9 +75,9 @@ Event names, dates, times and venues must match the Fact Vault entry for the cur
 
 ## 4. Visual identity
 
-### Palette
+### VS-01 Approved palette
 
-Our palette is warm and grounded. Use these colours and their exact values:
+Our palette is warm and grounded. Flat fills, shapes and backgrounds in a creative use these colours and their exact values:
 
 - PayWise Vermilion #D63A24, for primary actions and highlights only
 - Ink #141414, for text
@@ -88,15 +88,19 @@ Our palette is warm and grounded. Use these colours and their exact values:
 
 Colours in an image may differ from these by a colour difference (CIEDE2000) of at most 10 before they are considered off-palette.
 
+Severity: warning.
+
 ### VS-02 Image warmth
 
 Photography and illustration sit in a warm-neutral palette: off-white, sand, terracotta and vermilion accents, with natural light. Avoid cold blue casts and desaturated corporate stock imagery.
 
 Severity: warning.
 
-### Logo
+### VS-03 Logo usage
 
-Use the PayWise wordmark on Paper or Ink backgrounds only. Keep clear space around the logo of at least 0.25 times the logo's height on every side, and never display it narrower than 80 pixels. Do not stretch, recolour, rotate or add effects to the logo.
+Every marketing creative carries the PayWise wordmark. Use it on Paper or Ink backgrounds only. Keep clear space around the logo of at least 0.25 times the logo's height on every side, and never display it narrower than 80 pixels. Do not stretch, recolour, rotate or add effects to the logo.
+
+Severity: warning.
 
 ## 5. Accessibility
 
@@ -106,9 +110,11 @@ Copy for retail investors must score at or below grade 9 on standard readability
 
 Severity: suggestion.
 
-### Contrast and alternatives
+### A-02 Text in images is readable and described
 
-Text must have a contrast ratio of at least 4.5:1 against its background (WCAG 1.4.3), and large text at least 3:1. Every informative image needs alternative text. Never rely on colour alone to convey meaning.
+Text must have a contrast ratio of at least 4.5:1 against its background (WCAG 1.4.3), and large text at least 3:1. Every informative image needs alternative text that says what the image communicates, including its call to action (WCAG 1.1.1). Never hide fine print in tiny or faint text, and never rely on colour alone to convey meaning.
+
+Severity: warning.
 
 ## Contacts
 

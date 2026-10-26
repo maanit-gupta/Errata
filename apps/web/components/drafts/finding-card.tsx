@@ -22,6 +22,9 @@ export type FindingView = {
   source: "deterministic" | "llm";
   quote: string;
   span: { start: number; end: number };
+  /** What the finding points at: draft text, a region of an uploaded image, or its alt text. */
+  target: "text" | "image" | "alt_text";
+  box: { x0: number; y0: number; x1: number; y1: number } | null;
   explanation: string;
   rewrite: string | null;
   status: "open" | "accepted" | "edited" | "dismissed" | "routed" | "superseded";
@@ -35,6 +38,10 @@ type Props = {
   finding: FindingView;
   active: boolean;
   canAct: boolean;
+  /** Image versions: fixes happen in the design file, so "Mark fixed" replaces accept/edit. */
+  imageMode?: boolean;
+  /** The finding's number on the image overlay. */
+  marker?: number;
   onFocus: (id: string | null, scroll?: boolean) => void;
   onApply: (finding: FindingView, text: string, status: "accepted" | "edited") => Promise<void>;
   onResolve: (
@@ -54,7 +61,16 @@ const STATUS_TEXT: Record<FindingView["status"], string> = {
   superseded: "No longer in the draft",
 };
 
-export function FindingCard({ finding: f, active, canAct, onFocus, onApply, onResolve }: Props) {
+export function FindingCard({
+  finding: f,
+  active,
+  canAct,
+  imageMode = false,
+  marker,
+  onFocus,
+  onApply,
+  onResolve,
+}: Props) {
   const id = useId();
   const [open, setOpen] = useState(f.severity === "blocker" && f.status === "open");
   const [mode, setMode] = useState<"view" | "edit" | "dismiss">("view");
@@ -71,6 +87,9 @@ export function FindingCard({ finding: f, active, canAct, onFocus, onApply, onRe
       ? "Needs human review: confidence is below 0.6, so it can't be accepted in one click."
       : "";
   const resolved = f.status !== "open";
+  // In an image, only an alt-text suggestion can be applied here; anything else is fixed in the
+  // design and re-checked when the new file is uploaded.
+  const fixInDesign = imageMode && f.target !== "alt_text";
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -84,6 +103,7 @@ export function FindingCard({ finding: f, active, canAct, onFocus, onApply, onRe
 
   return (
     <li
+      id={`finding-${f.id}`}
       className={cn(
         "bg-card rounded-lg border transition-shadow",
         active ? "border-ring shadow-md" : "border-border",
@@ -103,6 +123,12 @@ export function FindingCard({ finding: f, active, canAct, onFocus, onApply, onRe
           onClick={() => setOpen((o) => !o)}
           className="flex w-full flex-wrap items-center gap-2 rounded-lg p-3 text-left font-sans text-sm"
         >
+          {marker ? (
+            <span className="bg-foreground text-background rounded-sm px-1.5 py-0.5 font-mono text-xs">
+              <span className="sr-only">Image marker </span>
+              {marker}
+            </span>
+          ) : null}
           <SeverityBadge severity={f.severity} />
           {f.citations.map((c) => (
             <span
@@ -243,7 +269,41 @@ export function FindingCard({ finding: f, active, canAct, onFocus, onApply, onRe
             </fieldset>
           ) : null}
 
-          {canAct && !resolved && mode === "view" ? (
+          {canAct && !resolved && mode === "view" && fixInDesign ? (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                disabled={busy}
+                aria-describedby={`${id}-design`}
+                onClick={() => run(() => onApply(f, "", "edited"))}
+              >
+                Mark fixed in the image
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setMode("dismiss")}
+              >
+                Dismiss
+              </Button>
+              {f.dimension === "claims" && f.severity === "blocker" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => run(() => onResolve(f, { status: "routed" }))}
+                >
+                  Route to Legal
+                </Button>
+              ) : null}
+              <p id={`${id}-design`} className="text-muted-foreground basis-full text-xs">
+                Fix it in the design file, then upload the new image: the next check verifies it.
+              </p>
+            </div>
+          ) : null}
+
+          {canAct && !resolved && mode === "view" && !fixInDesign ? (
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"

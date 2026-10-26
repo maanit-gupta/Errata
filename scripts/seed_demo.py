@@ -83,6 +83,24 @@ def insert_missing(client: Any, table: str, rows: list[dict[str, Any]], on_confl
     client.table(table).upsert(rows, on_conflict=on_conflict, ignore_duplicates=True).execute()
 
 
+LOGO_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "paywise" / "logos"
+
+
+def upload_logos(client: Any) -> int:
+    """Upload the logo assets' files to Storage if they aren't there yet."""
+    bucket = client.storage.from_("assets")
+    existing = {o["name"] for o in bucket.list(f"{d.ORG_ID}/logos")}
+    uploaded = 0
+    for asset in d.ASSETS:
+        path = asset["storage_path"]
+        if not path or path.rsplit("/", 1)[1] in existing:
+            continue
+        data = (LOGO_DIR / path.rsplit("/", 1)[1]).read_bytes()
+        bucket.upload(path, data, {"content-type": "image/png"})
+        uploaded += 1
+    return uploaded
+
+
 def seed(client: Any) -> None:
     created = ensure_users(client)
     insert_missing(client, "organisations", [d.ORGANISATION], "id")
@@ -104,11 +122,14 @@ def seed(client: Any) -> None:
         [{**card, "org_id": d.ORG_ID, "status": "approved", "version": 1} for card in d.RULE_CARDS],
         "org_id,code,version",
     )
+    insert_missing(client, "assets", [{**a, "org_id": d.ORG_ID} for a in d.ASSETS], "id")
+    uploaded = upload_logos(client)
     # The worker's embed_vault job fills embeddings for approved cards and facts (P04).
     client.rpc("enqueue_vault_job", {"p_org": d.ORG_ID, "p_job": "embed_vault"}).execute()
     print(
         f"Seeded PayWise: {created} new user(s), {len(d.CAMPAIGNS)} campaigns, "
-        f"{len(d.FACTS)} facts, {len(d.RULE_CARDS)} rule cards (existing rows untouched)."
+        f"{len(d.FACTS)} facts, {len(d.RULE_CARDS)} rule cards, {uploaded} logo file(s) uploaded "
+        "(existing rows and files untouched)."
     )
 
 
@@ -118,6 +139,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--url", required=True, help="Must equal SUPABASE_URL in apps/worker/.env")
     parser.add_argument("--yes", action="store_true", help="Confirm seeding this project")
+    parser.add_argument(
+        "--logos-only", action="store_true", help="Only upload logo files (local after db-reset)"
+    )
     args = parser.parse_args(argv)
 
     settings = SeedSettings()  # type: ignore[call-arg]
@@ -129,7 +153,10 @@ def main(argv: list[str] | None = None) -> int:
     from supabase import create_client
 
     client = create_client(settings.supabase_url, settings.supabase_secret_key.get_secret_value())
-    seed(client)
+    if args.logos_only:
+        print(f"{upload_logos(client)} logo file(s) uploaded.")
+    else:
+        seed(client)
     return 0
 
 

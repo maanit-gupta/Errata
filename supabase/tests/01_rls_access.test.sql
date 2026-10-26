@@ -1,7 +1,7 @@
 -- RLS: members read their org, non-members read nothing, agencies see summaries and own content.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(17);
+select plan(19);
 
 -- Fixtures (as postgres): an outsider in another org, plus one content per creator.
 insert into auth.users (instance_id, id, aud, role, email)
@@ -24,11 +24,12 @@ values
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}';
 
-select is((select count(*)::int from public.rule_cards), 6, 'creator reads the 6 PayWise rule cards');
+select is((select count(*)::int from public.rule_cards), 9, 'creator reads the 9 PayWise rule cards');
 select is((select count(*)::int from public.rule_cards where org_id = '90000000-0000-4000-8000-0000000000a2'), 0,
           'creator reads no other-org rule cards');
 select is((select count(*)::int from public.contents), 2, 'creator sees all org content');
 select is((select count(*)::int from public.facts), 4, 'creator reads the 4 facts');
+select is((select count(*)::int from public.assets), 3, 'creator reads the palette and 2 logo assets');
 select throws_ok(
   $$ insert into public.rule_cards (org_id, code, dimension, title, summary, body, severity)
      values ('00000000-0000-4000-8000-0000000000a1', 'X-1', 'tone', 't', 's', 'b', 'warning') $$,
@@ -42,6 +43,8 @@ select is((select count(*)::int from public.rule_cards where org_id = '00000000-
 select is((select count(*)::int from public.facts where org_id = '00000000-0000-4000-8000-0000000000a1'), 0,
           'non-member reads no PayWise facts');
 select is((select count(*)::int from public.contents), 0, 'non-member reads no PayWise content');
+select is((select count(*)::int from public.assets where org_id = '00000000-0000-4000-8000-0000000000a1'), 0,
+          'non-member reads no PayWise assets');
 select is((select array_agg(name) from public.organisations), array['Other Org'], 'non-member sees only their own org');
 select is((select count(*)::int from public.rule_cards_public where org_id = '00000000-0000-4000-8000-0000000000a1'), 0,
           'non-member reads nothing through rule_cards_public');
@@ -49,7 +52,7 @@ select is((select count(*)::int from public.rule_cards_public where org_id = '00
 -- Agency
 set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000003","role":"authenticated"}';
 select is((select count(*)::int from public.rule_cards), 0, 'agency cannot read rule_cards (bodies)');
-select is((select count(*)::int from public.rule_cards_public), 6, 'agency reads 6 rule summaries via rule_cards_public');
+select is((select count(*)::int from public.rule_cards_public), 9, 'agency reads 9 rule summaries via rule_cards_public');
 select is((select summary from public.rule_cards_public where code = 'CL-03'),
           'Never promise, guarantee or "assure" returns on mutual funds or other market-linked products.',
           'agency sees the CL-03 summary');

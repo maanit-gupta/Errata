@@ -55,8 +55,28 @@ def test_rule_cards_match_seed_sql(card: dict[str, Any]) -> None:
 
 
 def test_spec_codes_present() -> None:
-    assert {c["code"] for c in d.RULE_CARDS} == {"TV-02", "TV-04", "CL-03", "G-07", "VS-02", "A-01"}
+    assert {c["code"] for c in d.RULE_CARDS} == {
+        "TV-02",
+        "TV-04",
+        "CL-03",
+        "G-07",
+        "VS-01",
+        "VS-02",
+        "VS-03",
+        "A-01",
+        "A-02",
+    }
     assert {f["code"] for f in d.FACTS} == {"F-048", "F-112", "E-19", "E-11"}
+
+
+@pytest.mark.parametrize("asset", d.ASSETS, ids=lambda a: a["name"])
+def test_assets_match_seed_sql(asset: dict[str, Any]) -> None:
+    assert f"'{asset['id']}'" in SEED_SQL and f"'{asset['name']}'" in SEED_SQL
+    if asset["storage_path"]:
+        assert f"'{asset['storage_path']}'" in SEED_SQL
+        assert (seed_demo.LOGO_DIR / asset["storage_path"].rsplit("/", 1)[1]).exists()
+    for colour in asset["spec"].get("colours", []):
+        assert colour["hex"] in SEED_SQL
 
 
 def test_check_target_refuses_wrong_url() -> None:

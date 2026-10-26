@@ -12,7 +12,7 @@ update public.rule_cards set status = 'draft' where code = 'A-01';
 select set_eq(
   $$ select code from public.match_vault('00000000-0000-4000-8000-0000000000a1',
        '20000000-0000-4000-8000-000000000001', array_fill(0.1::real, array[384])::extensions.vector, 50) $$,
-  array['TV-02', 'TV-04', 'CL-03', 'G-07', 'F-048', 'F-112', 'E-19'],
+  array['TV-02', 'TV-04', 'CL-03', 'G-07', 'VS-01', 'VS-03', 'A-02', 'F-048', 'F-112', 'E-19'],
   'Diwali retrieval: approved, sendable rules + org-wide and Diwali facts; no Navratri bleed'
 );
 select set_eq(

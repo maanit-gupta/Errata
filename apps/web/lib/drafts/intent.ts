@@ -8,6 +8,8 @@ export const intentSchema = z.object({
   channel: z.string().trim().min(1, "Pick a channel."),
   campaign_id: z.uuid("Pick a campaign."),
   notes: z.string().trim().max(500).optional(),
+  // Images only (P11): checked for presence (WCAG 1.1.1) and judged for quality by the vision pass.
+  alt_text: z.string().trim().max(500).optional(),
 });
 export type Intent = z.infer<typeof intentSchema>;
 

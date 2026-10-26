@@ -1,6 +1,7 @@
 """Job `review_version` (review_jobs): run the pipeline on one version and route the content.
 
 P06: stages 1–4 (ingest, protect, deterministic filters, retrieve). P07 adds the LLM pass + gate.
+P11: images (OCR, logo, contrast, palette, alt text; one vision call).
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ from brandlens_worker.embeddings import to_pgvector
 from brandlens_worker.jobs.common import get_embedder, get_router, get_storage, get_tracer
 from brandlens_worker.llm.base import DegradedError
 from brandlens_worker.notify import notify_needs_review
+from brandlens_worker.pipeline.image import VisualKit
 from brandlens_worker.pipeline.ingest import IngestError
 from brandlens_worker.pipeline.routing import RoutingFinding, has_open_blockers, route
 from brandlens_worker.pipeline.run import (
@@ -69,9 +71,66 @@ async def load_vault(conn: Any, org_id: UUID, campaign_id: str, campaign_name: s
     return Vault(campaign_id, campaign_name, rules, facts, glossary, now)
 
 
+async def load_kit(conn: Any, org_id: UUID, storage: Any, cache: dict[str, Any]) -> VisualKit:
+    """The org's logo templates and palette (SPEC §3 `assets`). Logo files are cached per process
+    by storage path; a logo that can't be downloaded or decoded is skipped, never fatal."""
+    from brandlens_worker.vision.colour import PaletteColour
+    from brandlens_worker.vision.logo import load_template
+
+    cur = await conn.execute(
+        "select kind::text as kind, name, storage_path, spec from public.assets "
+        "where org_id = %s and kind in ('logo', 'palette') order by created_at, name",
+        (org_id,),
+    )
+    logos, palette = [], []
+    max_de, min_width, ratio = (
+        float(config.DELTA_E_MAX_DEFAULT),
+        config.LOGO_MIN_WIDTH_DEFAULT,
+        config.CLEAR_SPACE_RATIO_DEFAULT,
+    )
+    for a in await cur.fetchall():
+        spec = a["spec"] or {}
+        if a["kind"] == "palette":
+            palette += [
+                PaletteColour(str(c.get("name", c["hex"])), str(c["hex"]))
+                for c in spec.get("colours", [])
+                if isinstance(c, dict) and c.get("hex")
+            ]
+            max_de = float(spec.get("max_delta_e", max_de))
+            continue
+        path = a["storage_path"]
+        if not path:
+            continue
+        try:
+            if path not in cache:
+                cache[path] = load_template(a["name"], await storage.download("assets", path))
+            logos.append(cache[path])
+            min_width = int(spec.get("min_width_px", min_width))
+            ratio = float(spec.get("min_clear_space_ratio", ratio))
+        except Exception as exc:
+            log.warning("logo asset unavailable", extra={"path": path, "error": type(exc).__name__})
+    return VisualKit(logos, palette, max_de, min_width, ratio)
+
+
 def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
-    """Map a pipeline finding to a `findings` row: spans and quote in the ORIGINAL text."""
-    start, end = doc.to_original(f.start, f.end)
+    """Map a pipeline finding to a `findings` row: spans and quote in the ORIGINAL text.
+
+    Image findings: `{"x0","y0","x1","y1"}` pixel boxes (SPEC §3); text read from an image keeps
+    its text offsets and adds the box; alt-text findings index the alt text.
+    """
+    span: dict[str, Any]
+    if f.target == "image":
+        assert f.bbox is not None
+        x0, y0, x1, y1 = f.bbox
+        span, quote = {"x0": x0, "y0": y0, "x1": x1, "y1": y1}, f.quote or ""
+    elif f.target == "alt_text":
+        span, quote = {"target": "alt_text", "start": f.start, "end": f.end}, f.quote or ""
+    else:
+        start, end = doc.to_original(f.start, f.end)
+        span, quote = {"start": start, "end": end}, f.quote or doc.original[start:end]
+        box = f.bbox or doc.bbox_for(f.start, f.end)
+        if box:
+            span |= {"x0": box[0], "y0": box[1], "x1": box[2], "y1": box[3]}
     primary = {codes_by_id.get(x) for x in (f.rule_id, f.fact_id) if x} | {
         f.wcag_ref and f"WCAG {f.wcag_ref}"
     }
@@ -82,8 +141,8 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         "rule_id": f.rule_id,
         "fact_id": f.fact_id,
         "wcag_ref": f.wcag_ref,
-        "quote": doc.original[start:end],
-        "span": {"start": start, "end": end},
+        "quote": quote,
+        "span": span,
         "severity": f.severity,
         "confidence": f.confidence,
         "source": f.source,
@@ -131,8 +190,16 @@ async def review_version(ctx: JobContext) -> None:
         vault = await load_vault(conn, p.org_id, row["campaign_id"], row["campaign_name"])
 
     data = None
-    if row["format"] == "docx" and row["storage_path"]:
+    if row["format"] in ("docx", "image") and row["storage_path"]:
         data = await get_storage(ctx).download("drafts", row["storage_path"])
+    kit = None
+    if row["format"] == "image":
+        async with ctx.pool.connection() as conn:
+            kit = await load_kit(
+                conn, p.org_id, get_storage(ctx), ctx.services.setdefault("logo_cache", {})
+            )
+    settings = ctx.services.get("settings")
+    ocr_engine = getattr(settings, "ocr_engine", "tesseract")
 
     embedder = get_embedder(ctx)
 
@@ -157,7 +224,12 @@ async def review_version(ctx: JobContext) -> None:
             with tracer.trace_run(str(p.run_id), name="stages_1_4"):
                 result = await run_stages_1_to_4(
                     VersionInput(
-                        format=row["format"], body=row["body"], data=data, intent=row["intent"]
+                        format=row["format"],
+                        body=row["body"],
+                        data=data,
+                        intent=row["intent"] or {},
+                        kit=kit,
+                        ocr_engine=ocr_engine,
                     ),
                     vault,
                     embed=embed,
@@ -181,6 +253,15 @@ async def review_version(ctx: JobContext) -> None:
                 )
             for g in llm.generations:
                 meta = g["meta"]
+                image_meta = (
+                    {
+                        "ocr_engine": result.image.ocr_engine,
+                        "logo": result.image.logo.method if result.image.logo else None,
+                        "style_check": result.image.warmth.cool,
+                    }
+                    if result.image
+                    else {}
+                )
                 tracer.generation(
                     g["name"],
                     prompt_version=llm.prompt_version,
@@ -191,6 +272,7 @@ async def review_version(ctx: JobContext) -> None:
                         "already_found": len(result.findings),
                         "redactions": len(result.redacted.redactions),
                         "words": result.doc.word_count,
+                        **image_meta,
                     },
                     output={"findings": g["findings"]},
                     usage={"input": meta.input_tokens or 0, "output": meta.output_tokens or 0},

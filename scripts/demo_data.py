@@ -273,4 +273,82 @@ RULE_CARDS: list[dict[str, Any]] = [
         "severity": "suggestion",
         "source_page": 3,
     },
+    {
+        "code": "VS-01",
+        "dimension": "visual",
+        "title": "Flat fills use the approved palette",
+        "summary": "Backgrounds, shapes and fills stay within ΔE 10 of a PayWise palette colour.",
+        "body": (
+            "Flat fills, shapes and backgrounds in a creative use the PayWise palette: Vermilion "
+            "#D63A24, Ink #141414, Paper #F8F7F4, Sand #E9DFC9, Terracotta #B5562F and Leaf "
+            "#2F6B3A. A colour more than 10 CIEDE2000 units from every palette colour is "
+            "off-palette."
+        ),
+        "examples": [],
+        "severity": "warning",
+        "source_page": 3,
+    },
+    {
+        "code": "VS-03",
+        "dimension": "visual",
+        "title": "Logo present, at least 80 px wide, with clear space",
+        "summary": "Every creative carries the wordmark, at least 80 px wide, with 0.25x clear space.",
+        "body": (
+            "Every marketing creative carries the PayWise wordmark on a Paper or Ink background. "
+            "Keep clear space of at least 0.25 times the logo's height on every side and never "
+            "display it narrower than 80 pixels. Do not stretch, recolour, rotate or add effects."
+        ),
+        "examples": [],
+        "severity": "warning",
+        "source_page": 3,
+    },
+    {
+        "code": "A-02",
+        "dimension": "access",
+        "title": "Text in images is readable and described",
+        "summary": "4.5:1 contrast (3:1 large), meaningful alt text, and no tiny or faint fine print.",
+        "body": (
+            "Text in images needs a contrast ratio of at least 4.5:1 against its background, or "
+            "3:1 for large text (WCAG 1.4.3). Every informative image needs alternative text that "
+            "says what it communicates, including its call to action (WCAG 1.1.1). Never hide "
+            "fine print in tiny or faint text."
+        ),
+        "examples": [],
+        "severity": "warning",
+        "source_page": 4,
+    },
+]
+
+# Brand assets (SPEC §3). Logo files live in Storage at assets/{org}/logos/*.png; seed_demo.py
+# uploads them from fixtures/paywise/logos.
+LOGO_SPEC: dict[str, Any] = {"min_clear_space_ratio": 0.25, "min_width_px": 80}
+PALETTE: list[dict[str, str]] = [
+    {"name": "Vermilion", "hex": "#D63A24"},
+    {"name": "Ink", "hex": "#141414"},
+    {"name": "Paper", "hex": "#F8F7F4"},
+    {"name": "Sand", "hex": "#E9DFC9"},
+    {"name": "Terracotta", "hex": "#B5562F"},
+    {"name": "Leaf", "hex": "#2F6B3A"},
+]
+ASSETS: list[dict[str, Any]] = [
+    {
+        "id": "30000000-0000-4000-8000-000000000001",
+        "kind": "palette",
+        "name": "PayWise palette",
+        "storage_path": None,
+        "spec": {"colours": PALETTE, "max_delta_e": 10},
+    },
+    *(
+        {
+            "id": f"30000000-0000-4000-8000-00000000000{i}",
+            "kind": "logo",
+            "name": name,
+            "storage_path": f"{ORG_ID}/logos/{file}",
+            "spec": LOGO_SPEC,
+        }
+        for i, name, file in (
+            (2, "PayWise wordmark", "paywise-primary.png"),
+            (3, "PayWise wordmark (reversed)", "paywise-reversed.png"),
+        )
+    ),
 ]

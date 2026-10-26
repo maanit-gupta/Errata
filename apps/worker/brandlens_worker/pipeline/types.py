@@ -29,6 +29,18 @@ class Doc:
     segments: list[Segment] = field(default_factory=list)
     images: list[bytes] = field(default_factory=list)
 
+    def bbox_for(self, start: int, end: int) -> tuple[int, int, int, int] | None:
+        """Pixel box covering [start, end) in `text`, for docs built from an image (OCR)."""
+        boxes = [s.bbox for s in self.segments if s.bbox and s.start < end and s.end > start]
+        if not boxes:
+            return None
+        return (
+            int(min(b[0] for b in boxes)),
+            int(min(b[1] for b in boxes)),
+            int(max(b[2] for b in boxes)),
+            int(max(b[3] for b in boxes)),
+        )
+
     def to_original(self, start: int, end: int) -> tuple[int, int]:
         """Map a [start, end) span in `text` back to `original`."""
         if start >= end:
@@ -111,9 +123,16 @@ class Vault:
         return fact.campaign_id is None or fact.campaign_id == self.campaign_id
 
 
+Target = Literal["text", "image", "alt_text"]
+
+
 @dataclass
 class Finding:
-    """A finding before persistence. Spans are in `Doc.text`; the job maps them to the original."""
+    """A finding before persistence. Spans are in `Doc.text`; the job maps them to the original.
+
+    Image findings: `target="image"` findings point at a pixel `bbox` and carry their own `quote`
+    (a short label such as "Logo, 64 px wide"); `target="alt_text"` spans index the alt text.
+    """
 
     dimension: Dimension
     start: int
@@ -127,6 +146,9 @@ class Finding:
     rewrite: str | None = None
     source: Literal["deterministic", "llm"] = "deterministic"
     confidence: float = 1.0
+    target: Target = "text"
+    bbox: tuple[int, int, int, int] | None = None
+    quote: str | None = None  # overrides the text slice (image and alt-text targets)
 
     @property
     def cited(self) -> bool:

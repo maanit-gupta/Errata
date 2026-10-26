@@ -64,7 +64,9 @@ The seed creates the fictional **PayWise** org (SPEC §16). Every demo account u
 | `legal@paywise.demo` | specialist (legal) |
 | `a11y@paywise.demo` | specialist (accessibility) |
 
-To load the same data into the cloud project: `make seed-demo url=<SUPABASE_URL>`. The URL must match `apps/worker/.env`. Re-running is safe; existing rows are never overwritten.
+To load the same data into the cloud project: `make seed-demo url=<SUPABASE_URL>`. The URL must match `apps/worker/.env`. Re-running is safe; existing rows are never overwritten. It also uploads the PayWise logo files that the image checks match against; locally, run `make seed-assets-local` after every `make db-reset`.
+
+Image checks need the Tesseract binary (`brew install tesseract`, or `apt-get install tesseract-ocr`; the worker Docker image includes it). `make eval-vision` re-measures them on the 10 labelled creatives in `fixtures/paywise/creatives/` and writes `apps/worker/eval/vision_report.md`.
 
 ## Changes since Round 1
 
@@ -87,6 +89,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P08 | Draft editor (TipTap) with live finding highlights, intent capture, findings panel with accept/edit/dismiss/route, offsets util and tests |
 | P09 | Review queue and reviewer view, decisions via transition_content, version diff, comments, audit trail, Discord/email notifications |
 | P10 | Worker Dockerfile, Render Blueprint, cloud migrations and seed, core-loop e2e (local and cloud), keep-alive |
+| P11 | Image checks: OCR (Tesseract, optional Paddle), logo detection (ORB + template), WCAG contrast, palette ΔE, warmth pre-filter, vision LLM pass and gate, labelled test creatives and vision eval, image viewer with bbox overlays |
 
 ## Licence
 

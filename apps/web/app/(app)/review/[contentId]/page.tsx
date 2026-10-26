@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { ImageFindings } from "@/components/drafts/image-findings";
 import { IdBadge } from "@/components/id-badge";
 import { PageHeader } from "@/components/page-header";
 import { Comments, type CommentView } from "@/components/review/comments";
@@ -9,6 +10,7 @@ import { SeverityBadge } from "@/components/severity-badge";
 import { StateBadge } from "@/components/state-badge";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
+import { spanBox } from "@/lib/drafts/span";
 import { createClient } from "@/lib/supabase/server";
 import { can as canDo } from "@/lib/workflow/permissions";
 
@@ -74,7 +76,7 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
 
   const { data: versions } = await supabase
     .from("versions")
-    .select("id, n, body, format, created_at")
+    .select("id, n, body, format, storage_path, intent, created_at")
     .eq("content_id", contentId)
     .order("n", { ascending: false });
   const current = versions?.find((v) => v.id === content.current_version_id) ?? versions?.[0];
@@ -152,6 +154,20 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
       (a, b) =>
         SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.span.start - b.span.start,
     );
+  // Image versions render from a short-lived signed URL (private bucket, SPEC §3).
+  const imageUrl =
+    current?.format === "image" && current.storage_path
+      ? ((await supabase.storage.from("drafts").createSignedUrl(current.storage_path, 3600)).data
+          ?.signedUrl ?? null)
+      : null;
+  const altText = (current?.intent as { alt_text?: string } | null)?.alt_text;
+  const markers = findings.flatMap((f) => {
+    const box = spanBox(f.span);
+    return box && (f.status === "open" || f.status === "routed")
+      ? [{ id: f.id, severity: f.severity, codes: f.codes, label: f.quote, box }]
+      : [];
+  });
+
   const resolvedByChange = (findingRows ?? [])
     .filter(
       (f) =>
@@ -240,6 +256,12 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
                     label: `${f.severity} ${f.codes}`,
                   }))}
               />
+            ) : imageUrl ? (
+              <ImageFindings
+                src={imageUrl}
+                alt={altText || `${content.title} (uploaded image, version ${current?.n})`}
+                markers={markers}
+              />
             ) : (
               <p className="text-muted-foreground text-sm">
                 This version is a {current?.format} file.
@@ -253,7 +275,11 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
             </h2>
             <ul className="space-y-2">
               {findings.map((f) => (
-                <li key={f.id} className="border-border bg-card rounded-lg border p-3 text-sm">
+                <li
+                  key={f.id}
+                  id={`finding-${f.id}`}
+                  className="border-border bg-card scroll-mt-4 rounded-lg border p-3 text-sm"
+                >
                   <p className="flex flex-wrap items-center gap-2">
                     <SeverityBadge severity={f.severity} />
                     {f.codes.split(" · ").map((c) => (

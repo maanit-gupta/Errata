@@ -11,9 +11,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /usr/local/bin/uv
 
-# onnxruntime (fastembed) needs libgomp.
+# onnxruntime (fastembed) needs libgomp; image OCR (P11) uses the Tesseract binary + English data.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends libgomp1 \
+ && apt-get install -y --no-install-recommends libgomp1 tesseract-ocr tesseract-ocr-eng \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

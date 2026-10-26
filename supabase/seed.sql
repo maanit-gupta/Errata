@@ -138,8 +138,48 @@ values
    'Prefer short sentences, common words and one idea per sentence. Explain any financial term '
    'the first time it appears.',
    '[]',
-   'suggestion', 'approved', 3)
+   'suggestion', 'approved', 3),
+  ('00000000-0000-4000-8000-0000000000a1', 'VS-01', 'visual',
+   'Flat fills use the approved palette',
+   'Backgrounds, shapes and fills stay within ΔE 10 of a PayWise palette colour.',
+   'Flat fills, shapes and backgrounds in a creative use the PayWise palette: Vermilion '
+   '#D63A24, Ink #141414, Paper #F8F7F4, Sand #E9DFC9, Terracotta #B5562F and Leaf '
+   '#2F6B3A. A colour more than 10 CIEDE2000 units from every palette colour is '
+   'off-palette.',
+   '[]',
+   'warning', 'approved', 3),
+  ('00000000-0000-4000-8000-0000000000a1', 'VS-03', 'visual',
+   'Logo present, at least 80 px wide, with clear space',
+   'Every creative carries the wordmark, at least 80 px wide, with 0.25x clear space.',
+   'Every marketing creative carries the PayWise wordmark on a Paper or Ink background. '
+   'Keep clear space of at least 0.25 times the logo''s height on every side and never '
+   'display it narrower than 80 pixels. Do not stretch, recolour, rotate or add effects.',
+   '[]',
+   'warning', 'approved', 3),
+  ('00000000-0000-4000-8000-0000000000a1', 'A-02', 'access',
+   'Text in images is readable and described',
+   '4.5:1 contrast (3:1 large), meaningful alt text, and no tiny or faint fine print.',
+   'Text in images needs a contrast ratio of at least 4.5:1 against its background, or '
+   '3:1 for large text (WCAG 1.4.3). Every informative image needs alternative text that '
+   'says what it communicates, including its call to action (WCAG 1.1.1). Never hide '
+   'fine print in tiny or faint text.',
+   '[]',
+   'warning', 'approved', 4)
 on conflict (org_id, code, version) do nothing;
+
+-- Brand assets (logo files: run `make seed-assets-local` after db-reset to upload them) --------
+insert into public.assets (id, org_id, kind, name, storage_path, spec)
+values
+  ('30000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-0000000000a1', 'palette',
+   'PayWise palette', null,
+   '{"colours": [{"name": "Vermilion", "hex": "#D63A24"}, {"name": "Ink", "hex": "#141414"}, {"name": "Paper", "hex": "#F8F7F4"}, {"name": "Sand", "hex": "#E9DFC9"}, {"name": "Terracotta", "hex": "#B5562F"}, {"name": "Leaf", "hex": "#2F6B3A"}], "max_delta_e": 10}'),
+  ('30000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-0000000000a1', 'logo',
+   'PayWise wordmark', '00000000-0000-4000-8000-0000000000a1/logos/paywise-primary.png',
+   '{"min_clear_space_ratio": 0.25, "min_width_px": 80}'),
+  ('30000000-0000-4000-8000-000000000003', '00000000-0000-4000-8000-0000000000a1', 'logo',
+   'PayWise wordmark (reversed)', '00000000-0000-4000-8000-0000000000a1/logos/paywise-reversed.png',
+   '{"min_clear_space_ratio": 0.25, "min_width_px": 80}')
+on conflict (id) do nothing;
 
 -- Embeddings: the worker's embed_vault job fills rule_cards/facts.embedding (P04).
 select pgmq.send('vault_jobs', '{"job":"embed_vault","org_id":"00000000-0000-4000-8000-0000000000a1"}');

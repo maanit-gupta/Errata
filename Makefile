@@ -7,7 +7,7 @@ WORKER := apps/worker
 UV     := cd $(WORKER) && uv run
 
 .PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
-        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval seed-demo
+        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision seed-demo seed-assets-local
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -91,8 +91,14 @@ check: lint test ## lint + types + test. Must be green to finish a phase.
 
 # --- Later phases ------------------------------------------------------------
 eval: ## Golden-set eval (P14)
-	@echo "eval: not implemented until P14"
+	@echo "eval: not implemented until P14 (vision: make eval-vision)"
+
+eval-vision: ## P11 vision eval on the labelled creatives → apps/worker/eval/vision_report.md
+	$(UV) python eval/vision_eval.py
 
 seed-demo: ## Load the PayWise demo into the cloud project: make seed-demo url=https://<ref>.supabase.co
 	@test -n "$(url)" || { echo "usage: make seed-demo url=<SUPABASE_URL>  (must match apps/worker/.env; local uses make db-reset)"; exit 1; }
 	$(UV) python ../../scripts/seed_demo.py --url "$(url)" --yes
+
+seed-assets-local: ## Upload the PayWise logo files to the LOCAL stack's Storage (after db-reset)
+	@eval "$$(scripts/local-supabase-env.sh)" && $(UV) python ../../scripts/seed_demo.py --url "$$SUPABASE_URL" --yes --logos-only
