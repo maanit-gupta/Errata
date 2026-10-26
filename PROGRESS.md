@@ -17,7 +17,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
-| P06 | Pipeline stages 1–4 | M | todo | | | |
+| P06 | Pipeline stages 1–4 | M | in-progress | M (Claude) | phase/P06-pipeline-1-4 | |
 | P07 | Stages 5–6: LLM, gate, intent | M | todo | | | |
 | P08 | Editor & findings UI | J | todo | | | |
 | P09 | Review workflow & notifications | J+M | todo | | | |
