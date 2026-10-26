@@ -137,6 +137,8 @@ export async function archiveRuleCard(id: string): Promise<ActionResult> {
 const exampleSchema = z.object({
   kind: z.enum(["do", "dont"]),
   text: z.string().trim().min(1).max(400),
+  // Generated examples (P13) keep their tag through edits.
+  source: z.enum(["guide", "generated"]).optional(),
 });
 const ruleEdit = z.object({
   id: z.uuid(),
@@ -156,7 +158,7 @@ export async function saveRuleCard(input: RuleEdit): Promise<ActionResult & { id
     if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
     const d = parsed.data;
     const supabase = await createClient();
-    const examples = d.examples.map((e) => ({ ...e, source: "guide" }));
+    const examples = d.examples.map((e) => ({ ...e, source: e.source ?? "guide" }));
     const { data, error } = await supabase.rpc("revise_rule_card", {
       p_id: d.id,
       p_title: d.title,
@@ -173,6 +175,28 @@ export async function saveRuleCard(input: RuleEdit): Promise<ActionResult & { id
       ok: true,
       id: data?.id,
       message: bumped ? `Saved as version ${data.version}.` : "Saved.",
+    };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+/** Never send to AI (invariant 5): checked locally only, excluded from LLM context. */
+export async function setRuleNeverSend(id: string, neverSend: boolean): Promise<ActionResult> {
+  try {
+    await admin();
+    const parsed = z.object({ id: z.uuid(), neverSend: z.boolean() }).safeParse({ id, neverSend });
+    if (!parsed.success) return { ok: false, error: "Invalid rule card." };
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("rule_cards")
+      .update({ never_send: parsed.data.neverSend })
+      .eq("id", parsed.data.id);
+    if (error) return { ok: false, error: error.message };
+    revalidatePath("/vault");
+    return {
+      ok: true,
+      message: neverSend ? "Never sent to AI. Checked locally only." : "Can be sent to AI again.",
     };
   } catch (e) {
     return fail(e);

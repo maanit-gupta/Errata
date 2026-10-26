@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/brand/data-table";
+import { Drawer } from "@/components/brand/drawer";
+import { IdCode } from "@/components/brand/id-badge";
 import { RiskMeter } from "@/components/brand/risk-meter";
 import { SegmentedTabs } from "@/components/brand/segmented-tabs";
 import { StateBadge, type ContentState } from "@/components/brand/state-badge";
@@ -122,5 +124,27 @@ export function ToastDemo() {
         Error toast
       </Button>
     </div>
+  );
+}
+
+export function DrawerDemo() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
+        Open drawer
+      </Button>
+      <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        eyebrow={<IdCode code="CL-03" />}
+        title="Edit rule card"
+        footer={<Button onClick={() => setOpen(false)}>Save</Button>}
+      >
+        <p className="text-fg-muted text-sm">
+          560px right-side drawer. Esc closes; focus returns to the trigger.
+        </p>
+      </Drawer>
+    </>
   );
 }

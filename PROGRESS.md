@@ -16,7 +16,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) moved to U0; UI per DESIGN §6.1 on ui/P02 (2026-10-27) |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
-| P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26 |
+| P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26; Terminal Noir UI per DESIGN §6.6 on ui/P05 (2026-10-27) |
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
@@ -181,6 +181,11 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | U1 | Services list corrected: Supabase region Singapore, worker host Render, Langfuse receives ids/counts only (not prompts); one shared `components/ai-use/disclosure.tsx` for `/ai-use` and `/settings/ai-use` | Matches P03/P07/P10 decisions; one source of truth |
 | 2026-10-27 | P02-UI | Demo role cards: the submit button's name is just the role (card made clickable with a stretched `::after`); the capability line is sibling text | Keeps `getByRole('button', {name:'Creator'})` stable and avoids axe label-content-name-mismatch |
 | 2026-10-27 | P02-UI | Wrong-credential copy is "Email or password is incorrect." | DESIGN §6.1; doesn't hint which field was wrong |
+| 2026-10-27 | P05-UI | Rule card and fact editors are a 560px `Drawer` (Base UI Dialog); rule drawer stays URL-driven (`&card=`) | DESIGN §6.6; keeps back-button and deep links |
+| 2026-10-27 | P05-UI | `Never send to AI` toggle on rule cards writes `rule_cards.never_send` directly via the admin RLS policy (`setRuleNeverSend`) | `revise_rule_card` has no never_send arg; toggling isn't a content change, so no new version |
+| 2026-10-27 | P05-UI | Saving a rule card keeps each example's `source` (`guide`/`generated`) | It reset every example to `guide`, erasing the P13 GENERATED tag |
+| 2026-10-27 | P05-UI | CSV import is a 3-step dialog (Upload → Preview → Import) but stays all-or-nothing; invalid rows block the import and can be downloaded as an error report | DESIGN says "only valid rows import"; the P04 all-or-nothing decision wins on behaviour (logged deviation) |
+| 2026-10-27 | P05-UI | Bulk bar label is `Approve n rule cards` (selected, or all drafts when none selected) | Storyboard F01 copy; one button instead of two |
 
 **Dependencies and licences** (append when adding any dependency):
 

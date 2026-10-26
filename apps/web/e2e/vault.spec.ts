@@ -23,6 +23,7 @@ const toast = (page: Page, text: string | RegExp) =>
 test("facts CSV: bad rows show line errors; good file previews and imports", async ({ page }) => {
   await signInAs(page, "Brand admin");
   await page.goto("/vault?tab=facts");
+  await page.getByRole("button", { name: "Import facts CSV" }).click();
   const fileInput = page.getByLabel("CSV file");
 
   await fileInput.setInputFiles({
@@ -33,8 +34,8 @@ test("facts CSV: bad rows show line errors; good file previews and imports", asy
     ),
   });
   const alert = page.getByRole("alert").filter({ hasText: "can't be imported" });
-  await expect(alert).toContainText("Line 2");
-  await expect(alert).toContainText("Line 3");
+  await expect(alert).toContainText("row 2");
+  await expect(alert).toContainText("row 3");
   await expect(page.getByRole("button", { name: /^Import/ })).toBeDisabled();
 
   await fileInput.setInputFiles(join(KIT, "facts.csv"));
@@ -48,6 +49,7 @@ test("facts CSV: bad rows show line errors; good file previews and imports", asy
 test("glossary CSV imports with a preview", async ({ page }) => {
   await signInAs(page, "Brand admin");
   await page.goto("/vault?tab=glossary");
+  await page.getByRole("button", { name: "Import glossary CSV" }).click();
   await page.getByLabel("CSV file").setInputFiles(join(KIT, "glossary.csv"));
   await expect(page.getByText("Preview: 1 valid row")).toBeVisible();
   await page.getByRole("button", { name: "Import 1 row" }).click();
@@ -63,22 +65,20 @@ test("keyboard only: open, edit and save an approved rule (creates a new version
   await page.keyboard.press("Enter");
   await expect(page.getByRole("heading", { name: "Edit rule card" })).toBeVisible();
 
-  const summary = page.getByLabel("Summary (agencies see only this)");
+  const summary = page.getByLabel("Summary", { exact: true });
   await summary.focus();
   await page.keyboard.press("End");
   await page.keyboard.type(" Keep jokes away from money.");
   await page.getByRole("button", { name: "Save", exact: true }).focus();
   await page.keyboard.press("Enter");
   await toast(page, /Saved as version \d+/);
-  await expect(page.getByText(/^v\d+ · approved$/)).toBeVisible();
+  await expect(page.getByRole("dialog").getByText(/^v\d+$/)).toBeVisible();
 });
 
 test("non-admins are denied the vault", async ({ page }) => {
   await signInAs(page, "Manager");
   await page.goto("/vault?tab=rules");
-  await expect(
-    page.getByRole("heading", { name: "You don't have access to this page" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "You don't have access to this." })).toBeVisible();
 });
 
 test("upload guide.pdf → drafts appear live → approve by keyboard → approve all", async ({
@@ -101,7 +101,7 @@ test("upload guide.pdf → drafts appear live → approve by keyboard → approv
     .getByRole("row")
     .filter({ has: page.getByRole("rowheader", { name: "guide", exact: true }) })
     .first();
-  await expect(row).toContainText("Drafts ready", { timeout: 180_000 });
+  await expect(row).toContainText(/DRAFTED \d+ card/i, { timeout: 180_000 });
   await row.getByRole("link", { name: /\d+ drafts?/ }).click();
   await expect(page).toHaveURL(/status=draft/);
 
@@ -110,7 +110,7 @@ test("upload guide.pdf → drafts appear live → approve by keyboard → approv
   await page.keyboard.press("Enter");
   await toast(page, "Rule approved.");
 
-  await page.getByRole("button", { name: "Approve all drafts" }).click();
+  await page.getByRole("button", { name: /^Approve \d+ rule cards?$/ }).click();
   await toast(page, /rules? approved/);
   await expect(page.getByText(/draft rules? need review/)).toHaveCount(0);
 });

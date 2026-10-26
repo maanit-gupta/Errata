@@ -24,7 +24,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
-import { TableDemo, TabsDemo, ToastDemo } from "./interactive";
+import { DrawerDemo, TableDemo, TabsDemo, ToastDemo } from "./interactive";
 
 export const metadata = { title: "Kitchen sink" };
 
@@ -292,8 +292,9 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
         <DegradedBanner />
       </Section>
 
-      <Section title="Toasts">
+      <Section title="Toasts and drawer">
         <ToastDemo />
+        <DrawerDemo />
       </Section>
     </div>
   );
