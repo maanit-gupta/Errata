@@ -42,6 +42,8 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   await page.getByLabel("Title").fill(TITLE);
   await page.getByRole("button", { name: "New draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
+  const draftUrl = page.url();
+  const contentId = draftUrl.split("/").pop()!;
   await page.getByLabel("Goal").fill("webinar sign-ups");
   await page.getByLabel("Audience").fill("first-time investors");
   await page.getByLabel("Call to action").fill("Register now");
@@ -68,6 +70,31 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   await vs03.getByRole("button", { name: "Mark fixed in the image" }).click();
   await expect(vs03).toContainText("Edited fix applied");
 
+  // An open visual warning routes to Brand review (SPEC §10), so the creator can't re-upload until
+  // the brand admin sends it back.
+  await expect(page.getByText("Specialist review", { exact: true })).toBeVisible();
+  await page.getByLabel("Switch demo role").selectOption({ label: "Brand admin" });
+  await page.getByRole("button", { name: "Switch" }).click();
+  await expect(page.getByTestId("role-pill")).toHaveText("Brand admin");
+  await page.goto(`/review/${contentId}`);
+  // The creator marked it fixed, so the reviewer sees it listed as edited, not boxed as open.
+  const row = page.getByRole("region", { name: "Findings" }).getByRole("listitem").first();
+  await expect(row).toContainText("VS-03");
+  await expect(row).toContainText("edited by");
+  await page.getByLabel("What needs to change (required)").fill("Give the logo its clear space.");
+  await page.getByRole("button", { name: "Request changes" }).click();
+  await expect(page.getByText("Changes requested", { exact: true }).first()).toBeVisible();
+
+  await page.getByLabel("Switch demo role").selectOption({ label: "Creator" });
+  await page.getByRole("button", { name: "Switch" }).click();
+  await expect(page.getByTestId("role-pill")).toHaveText("Creator");
+  await page.goto(draftUrl);
+  await page.getByRole("button", { name: "Start revising" }).click();
+  // Its toast sits over the submit button and stays while hovered (sonner pauses on hover).
+  await page.mouse.move(0, 0);
+  await expect(page.getByText("Back in draft. Edit and resubmit when ready.")).toHaveCount(0, {
+    timeout: 15_000,
+  });
   await submitImage(page, "08-good-alt.png", /Upload the corrected image/);
   await expect(page.getByRole("heading", { name: /Image · version 2/ })).toBeVisible({
     timeout: 90_000,

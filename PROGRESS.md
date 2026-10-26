@@ -42,18 +42,21 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - **Verified locally against the real pipeline** (local DB + Storage + real Groq vision, driven through `enqueue_review` as the creator): 03 → VS-03 clear space; 07 → VS-02 by the vision LLM (whole image, conf 0.85); 09 → **CL-03 blocker** on the hidden "Returns guaranteed…" fine print + A-02 hidden text → `needs_revision`; 05 → 2× contrast 2.89:1 → a11y; 01 → 1.1.1; 06 → VS-01 #1E8C93 ΔE 25.2; 08 → clean → manager.
   - Docker image installs `tesseract-ocr` + `tesseract-ocr-eng`; built locally and verified (`tesseract 5.5.0`, cv2 5.0.0, skimage 0.26.0 import inside the image).
 - **Stubbed or deferred:**
-  - **Browser e2e `apps/web/e2e/image-check.spec.ts` is written but NOT yet run.** Your own `make dev` (cloud) held :3000/:8000 and Next refuses a second dev server in the same dir. The overlay UI is typechecked and linted but not seen in a browser.
-  - **Cloud data not updated:** VS-01/VS-03/A-02, assets and logo files aren't in cloud Supabase yet (`make seed-demo url=…` inserts them and uploads the logos; needs your go-ahead). Until then, cloud image reviews run without logo/palette checks and can't cite those rules. No cloud image review has run yet.
+  - **Post-merge verification (2026-10-26, user-approved):** `make seed-demo url=<cloud>` added VS-01/VS-03/A-02 (embedded by Render's `embed_vault` job), the 3 `assets` rows and both logo files. Browser e2e `e2e/image-check.spec.ts` is **green on production** (`E2E_BASE_URL=https://brandlens-app.vercel.app`, 1.4 min, Render worker and real Groq vision) **and locally** (`E2E_WORKER=1`, 22 s). It covers: upload 03 → VS-03 overlay box synced with its card → axe clean → "Mark fixed" → Specialist review (brand) → Brand admin requests changes → creator "Start revising" → uploads 08 → v2 has no VS-03 and no WCAG 1.1.1.
+  - The spec originally assumed the creator could re-upload straight after a warning; an open visual warning routes to Brand review (SPEC §10), so the spec now walks the real workflow.
+  - **A11y fix:** axe caught sonner's light `richColors` toasts below 4.5:1 (success 4.29, error 4.36, info 4.35, warning 3.07). `app/globals.css` now darkens the four text colours to ≥ 4.8:1. Production had passed only because the toast had faded before axe ran.
   - Paddle path is untested (optional extra, not installed). PDFs → P12.
-- **How to run / verify:** `make check` (green: 154 pytest, 73 Vitest, pgTAP pass); `make eval-vision`; local UI: `make db-reset && make seed-assets-local && make dev-local`, then `cd apps/web && E2E_WORKER=1 pnpm exec playwright test e2e/image-check.spec.ts`.
+- **How to run / verify:** `make check` (green: 154 pytest, 73 Vitest, pgTAP pass); `make eval-vision`; local UI: `make db-reset && make seed-assets-local && make dev-local`, then `cd apps/web && E2E_WORKER=1 pnpm exec playwright test e2e/image-check.spec.ts`; deployed: `E2E_BASE_URL=https://brandlens-app.vercel.app pnpm exec playwright test e2e/image-check.spec.ts`.
 - **Gotchas discovered:**
-  - Your running `make dev` worker (cloud DB, `--reload`) hot-reloaded this branch's code at 21:51 and is consuming the **cloud** queue with P11 code.
+  - Only Render consumes the cloud queue now (the local cloud-pointed `make dev` was stopped). Don't run `make dev` against cloud while Render is up, or the two workers race for jobs.
+  - Sonner toasts sit bottom-right over the intent panel's submit button and **pause while hovered**, so a click that lands where the toast is waits forever. The e2e moves the mouse away and waits for the toast to clear (see Known issues).
+  - Turbopack dev sometimes serves stale `globals.css` after an edit; restart `make dev-local` if a CSS change doesn't show.
   - Installing then removing the `ocr-paddle` extra deletes `cv2` (paddle pulls opencv-contrib into the same package dir). Fix: `uv sync --reinstall-package opencv-python-headless`.
   - A vision call is ~0.7 s, but 4+ images in a minute hit Groq free-tier 429s; the router's backoff made runs take ~30 s, close to the 30 s provider timeout.
   - OpenCV's bundled stubs reject valid calls, so mypy treats `cv2`/`skimage` as Any (pyproject override).
   - `make db-reset`/`make test-db` wipe Storage object rows: rerun `make seed-assets-local`.
   - Tesseract alone misses light-on-dark text and faint fine print; that's why there are 3 OCR passes. A CLAHE pass produced junk words on photos, so it was removed.
-- **Exact next step:** run the image e2e locally (above). Then, with your approval, `make seed-demo url=<cloud>` and a cloud image smoke test. After that, **P12 (PDF decks & bbox overlays)**: create `phase/P12-pdf-decks`, read the P12 section of `docs/PHASES.md`, and reuse `ImageFindings` per page (spans add `page`).
+- **Exact next step:** **P12 (PDF decks & bbox overlays)** on branch `phase/P12-pdf-decks` (created): `/clear` then `/next`. Claim the P12 row, read the P12 section of `docs/PHASES.md`, and reuse `ImageFindings` per page (spans add `page`).
 
 ## Decisions log (append-only)
 
@@ -151,6 +154,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P11 | Pixel thresholds are in raw image pixels (no normalisation) | The guide states pixel minimums; fixtures are 1080 px |
 | 2026-10-26 | P11 | `main` fast-forwarded to P11 (1ba6481) without PR review (user decision) | Same deploy-from-main flow as P10; Jagpreet can review after the fact |
 | 2026-10-26 | P11 | mypy treats `cv2`/`skimage` as Any | Bundled stubs reject valid calls (e.g. `ORB_create`, `kmeans` on float32) |
+| 2026-10-26 | P11 | Cloud seeded with the P11 kit (user approved) | Cloud image reviews need VS-01/VS-03/A-02, assets and logo files |
+| 2026-10-26 | P11 | Override sonner's light rich-colour toast text in `globals.css` (success/error/info/warning ≥ 4.8:1) | Defaults fail WCAG 1.4.3 (3.07–4.36); the app must pass its own checks |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -187,13 +192,14 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 - [x] Cloud Supabase: user approved pushing migrations + demo seed (2026-10-26).
 - [ ] Is Resend email wanted, or Discord only?
 - [x] Merge P11 to `main` (user, 2026-10-26).
-- [ ] Approve `make seed-demo url=<cloud>` for P11 (adds VS-01/VS-03/A-02, assets, logo files)?
+- [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
 - [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
 
 - Worker Docker image is ~4 GB unpacked: the `chown -R app:app /app` layer (P10) duplicates the venv (943 MB). Use `COPY --chown` / run `uv sync` as the app user (P15). P11 adds ~240 MB (scipy, OpenCV, scikit-image) and Tesseract (~100 MB apt layer, shared with libgomp).
 - Contrast on JPEG uploads is an estimate (4:2:0 chroma smears thin coloured strokes; 7/20 within ±0.1 at q85); the finding says so. PNG is exact.
+- Toasts (bottom-right) cover the intent panel's submit button and stay while hovered. Consider `position="top-center"` or offsetting the toaster (Jagpreet, UX).
 - Groq free-tier 429 backoff can push one image review to ~30 s when several run within a minute (P95 target 15 s); revisit in P15 load testing.
 
 ## Round 2 feedback (paste judges' feedback here when received)

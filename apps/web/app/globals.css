@@ -264,3 +264,12 @@
 .draft-editor .ProseMirror p {
   margin: 0 0 0.75rem;
 }
+
+/* sonner's light rich colours miss 4.5:1 (3.1–4.4); darken the text to ≥ 4.8:1 on the same
+   tints. `html` outranks the stylesheet sonner injects at runtime. */
+html [data-sonner-toaster][data-sonner-theme="light"] {
+  --success-text: hsl(140, 100%, 25%);
+  --error-text: hsl(360, 100%, 42%);
+  --info-text: hsl(210, 92%, 42%);
+  --warning-text: hsl(31, 92%, 34%);
+}
