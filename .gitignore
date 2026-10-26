@@ -1,0 +1,33 @@
+# Secrets: never commit env files. Only the .env.example templates are tracked.
+.env
+.env.*
+!.env.example
+
+# Dependencies and virtualenvs
+node_modules/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Build output and tool caches
+.next/
+out/
+dist/
+coverage/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+
+# Model caches (never commit)
+model_cache/
+fastembed_cache/
+
+# Local tooling state
+.vercel/
+supabase/.temp/
+.claude/settings.local.json
+
+# macOS
+.DS_Store
