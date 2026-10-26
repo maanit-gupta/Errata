@@ -34,7 +34,14 @@ import type { PdfPageView } from "@/lib/drafts/pages";
 const SEVERITY_ORDER = { blocker: 0, warning: 1, suggestion: 2 } as const;
 
 type Props = {
-  content: { id: string; title: string; state: ContentState; channel: string; campaignId: string };
+  content: {
+    id: string;
+    title: string;
+    state: ContentState;
+    routeTo?: string | null;
+    channel: string;
+    campaignId: string;
+  };
   campaigns: { id: string; name: string; status?: string }[];
   version: {
     id: string;
@@ -531,7 +538,7 @@ export function DraftWorkspace({
           <p className="mono-label text-fg-faint">{campaign?.name ?? "Draft"}</p>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[1.75rem] leading-tight tracking-[-0.015em]">{content.title}</h1>
-            <StateBadge state={content.state} />
+            <StateBadge state={content.state} routeTo={content.routeTo} />
             {version ? <span className="mono-id text-fg-faint">v{version.n}</span> : null}
           </div>
         </div>

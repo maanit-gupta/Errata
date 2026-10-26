@@ -62,7 +62,7 @@ export function StateBadge({
       ) : null}
       {state === "changes_requested" ? <span aria-hidden>↩</span> : null}
       {state === "publish_ready" ? <span aria-hidden>✓</span> : null}
-      {label.toUpperCase()}
+      <span>{label}</span>
     </span>
   );
 }

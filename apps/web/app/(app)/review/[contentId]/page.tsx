@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
+import type { Citation, FindingView } from "@/components/drafts/finding-card";
+import { ReviewFindings } from "@/components/review/review-findings";
+import { ReviewTabs } from "@/components/review/review-tabs";
+import { RiskMeter } from "@/components/brand/risk-meter";
+import { SetCrumb } from "@/components/shell/crumbs";
+import { spanTarget } from "@/lib/drafts/span";
 import { ImageFindings } from "@/components/drafts/image-findings";
 import { PdfFindings } from "@/components/drafts/pdf-findings";
-import { IdBadge } from "@/components/brand/id-badge";
-import { PageHeader } from "@/components/brand/page-header";
 import { Comments, type CommentView } from "@/components/review/comments";
 import { DecisionBar } from "@/components/review/decision-bar";
 import { HighlightedText } from "@/components/review/highlighted-text";
 import { VersionDiff } from "@/components/review/version-diff";
-import { SeverityBadge } from "@/components/brand/severity-badge";
 import { StateBadge } from "@/components/brand/state-badge";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
@@ -62,6 +65,18 @@ function routingReason(route: string | null, findings: Finding[]): string {
   return "No specialist issues → Manager";
 }
 
+type RuleSrc = {
+  id: string | null;
+  code: string | null;
+  title: string | null;
+  summary: string | null;
+  body?: string | null;
+  version?: number | null;
+  source_page?: number | null;
+  dimension?: string | null;
+  never_send?: boolean | null;
+};
+
 export default async function ReviewContentPage({ params }: PageProps<"/review/[contentId]">) {
   const { contentId } = await params;
   const session = await requireSession();
@@ -92,7 +107,7 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
         ? supabase
             .from("findings")
             .select(
-              "id, version_id, run_id, dimension, severity, status, quote, span, explanation, source, confidence, resolved_by, dismiss_reason, rule_id, fact_id, wcag_ref, created_at",
+              "id, version_id, run_id, dimension, severity, status, quote, span, explanation, source, confidence, resolved_by, resolved_at, dismiss_reason, rule_id, fact_id, wcag_ref, rewrite, model_version, prompt_version, created_at",
             )
             .in("version_id", versionIds)
             .order("created_at", { ascending: false })
@@ -122,13 +137,58 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
   const [{ data: rules }, { data: facts }] = await Promise.all([
     ruleIds.length
       ? session.role === "agency_creator"
-        ? supabase.from("rule_cards_public").select("id, code").in("id", ruleIds)
-        : supabase.from("rule_cards").select("id, code").in("id", ruleIds)
-      : Promise.resolve({ data: [] as { id: string | null; code: string | null }[] }),
+        ? supabase.from("rule_cards_public").select("id, code, title, summary").in("id", ruleIds)
+        : supabase
+            .from("rule_cards")
+            .select("id, code, title, summary, body, version, source_page, dimension, never_send")
+            .in("id", ruleIds)
+      : Promise.resolve({ data: [] as RuleSrc[] }),
     factIds.length
-      ? supabase.from("facts").select("id, code").in("id", factIds)
-      : Promise.resolve({ data: [] as { id: string; code: string }[] }),
+      ? supabase.from("facts").select("id, code, statement, never_send").in("id", factIds)
+      : Promise.resolve({
+          data: [] as { id: string; code: string; statement: string; never_send: boolean }[],
+        }),
   ]);
+  const ruleById = new Map(((rules ?? []) as RuleSrc[]).map((r) => [r.id ?? "", r]));
+  const factById = new Map((facts ?? []).map((f) => [f.id, f]));
+  const isAgency = session.role === "agency_creator";
+  const admin = session.role === "brand_admin";
+  const citationsFor = (f: NonNullable<typeof findingRows>[number]): Citation[] => {
+    const out: Citation[] = [];
+    const r = f.rule_id ? ruleById.get(f.rule_id) : undefined;
+    if (r?.code)
+      out.push({
+        code: r.code,
+        kind: "rule",
+        title: r.title ?? undefined,
+        text: r.summary ?? undefined,
+        source: {
+          title: r.title ?? undefined,
+          summary: r.summary ?? undefined,
+          body: r.body ?? undefined,
+          version: r.version ?? undefined,
+          sourcePage: r.source_page,
+          dimension: r.dimension ?? undefined,
+          neverSend: r.never_send ?? undefined,
+          summaryView: isAgency,
+          href: admin && r.id ? `/vault?tab=rules&card=${r.id}` : undefined,
+        },
+      });
+    const fa = f.fact_id ? factById.get(f.fact_id) : undefined;
+    if (fa)
+      out.push({
+        code: fa.code,
+        kind: "fact",
+        text: fa.statement,
+        source: {
+          summary: fa.statement,
+          neverSend: fa.never_send,
+          href: admin ? "/vault?tab=facts" : undefined,
+        },
+      });
+    if (f.wcag_ref) out.push({ code: `WCAG ${f.wcag_ref}`, kind: "wcag" });
+    return out;
+  };
   const code = new Map<string, string>([
     ...(rules ?? []).map((r) => [r.id ?? "", r.code ?? ""] as [string, string]),
     ...(facts ?? []).map((f) => [f.id, f.code] as [string, string]),
@@ -155,6 +215,35 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
     .sort(
       (a, b) =>
         SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.span.start - b.span.start,
+    );
+  const views: FindingView[] = currentRows
+    .filter((f) => f.run_id === latestRun)
+    .map((f) => ({
+      id: f.id,
+      dimension: f.dimension,
+      severity: f.severity,
+      confidence: f.confidence,
+      source: f.source,
+      quote: f.quote,
+      span: f.span as { start: number; end: number },
+      target: spanTarget(f.span),
+      box: spanBox(f.span),
+      page: spanPage(f.span),
+      explanation: f.explanation,
+      rewrite: f.rewrite,
+      status: f.status,
+      dismiss_reason: f.dismiss_reason,
+      model_version: f.model_version,
+      prompt_version: f.prompt_version,
+      resolved_at: f.resolved_at,
+      citations: citationsFor(f),
+    }))
+    .filter((f) => f.citations.length)
+    .sort(
+      (a, b) =>
+        Number(a.status !== "open") - Number(b.status !== "open") ||
+        SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] ||
+        a.span.start - b.span.start,
     );
   // Image versions render from a short-lived signed URL (private bucket, SPEC §3).
   const imageUrl =
@@ -236,26 +325,137 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
     };
   });
 
+  const openCount = findings.filter((f) => f.status === "open").length;
+  const auditPanel = audit ? (
+    <ol id="audit" className="border-line relative space-y-0 border-l pl-4">
+      {trail.map((a) => {
+        const e = a.event as Record<string, string | null>;
+        return (
+          <li key={a.id} className="relative pb-4">
+            <span
+              aria-hidden
+              className="bg-line-strong absolute top-1.5 -left-[1.3rem] size-2 rounded-full"
+            />
+            <p className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-fg">
+                {a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "BrandLens"}
+              </span>
+              <span className="mono-id text-accent-soft">
+                {e.type === "transition"
+                  ? `${e.from} → ${e.to}`
+                  : e.type === "finding_status"
+                    ? `finding ${e.from} → ${e.to}`
+                    : String(e.type)}
+              </span>
+            </p>
+            <time className="mono-id text-fg-faint block text-xs" dateTime={a.at}>
+              {new Date(a.at).toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "medium",
+                timeZone: "Asia/Kolkata",
+              })}{" "}
+              IST
+            </time>
+            {e.reason ? <p className="text-fg-muted mt-1 text-sm">“{e.reason}”</p> : null}
+          </li>
+        );
+      })}
+      {trail.length ? null : <li className="text-fg-muted text-sm">No events yet.</li>}
+    </ol>
+  ) : null;
+
+  const panels = [
+    {
+      value: "findings",
+      label: "Findings",
+      count: openCount,
+      content: <ReviewFindings findings={views} summaryView={isAgency} />,
+    },
+    ...(previous?.body && current?.body
+      ? [
+          {
+            value: "diff",
+            label: `Diff v${previous.n}→v${current.n}`,
+            content: (
+              <section aria-labelledby="diff-h">
+                <h2 id="diff-h" className="sr-only">
+                  What changed
+                </h2>
+                <VersionDiff
+                  previous={previous.body}
+                  current={current.body}
+                  resolved={resolvedByChange}
+                  previousN={previous.n}
+                  currentN={current.n}
+                />
+              </section>
+            ),
+          },
+        ]
+      : []),
+    {
+      value: "comments",
+      label: "Comments",
+      count: comments.length,
+      content: current ? (
+        <Comments
+          contentId={content.id}
+          versionId={current.id}
+          comments={comments}
+          members={(profiles ?? []).map((p) => p.display_name).filter((n): n is string => !!n)}
+          findings={findings.map((f) => ({
+            id: f.id,
+            label: `${f.codes} “${f.quote.slice(0, 40)}”`,
+          }))}
+        />
+      ) : null,
+    },
+    ...(auditPanel ? [{ value: "audit", label: "Audit", content: auditPanel }] : []),
+  ];
+
   return (
     <>
       <RealtimeRefresh
         orgId={content.org_id}
         tables={["contents", "findings", "comments", "review_runs"]}
       />
-      <PageHeader
-        eyebrow={`${content.campaigns?.name ?? "Review"} · version ${current?.n ?? "–"}`}
-        title={content.title}
-        actions={<StateBadge state={content.state} />}
-      />
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0 space-y-8">
-          <section
-            aria-labelledby="version-h"
-            className="border-border bg-card rounded-lg border p-5"
-          >
-            <h2 id="version-h" className="font-heading mb-3 text-xl">
-              Draft
+      <SetCrumb label={content.title} />
+      <header className="mb-6 space-y-2">
+        <p className="mono-label text-fg-faint">{content.campaigns?.name ?? "Review"}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-[1.75rem] leading-tight tracking-[-0.015em]">{content.title}</h1>
+          <StateBadge state={content.state} routeTo={content.route_to} />
+          <RiskMeter
+            score={content.risk_score}
+            blocker={findings.some((f) => f.severity === "blocker" && f.status === "routed")}
+          />
+          <span className="mono-label bg-accent-deep text-accent-soft rounded-sm px-1.5 py-0.5">
+            → {ROUTE_LABEL[content.route_to ?? "manager"]}
+          </span>
+          <span className="mono-id text-fg-faint">v{current?.n ?? "–"}</span>
+        </div>
+        <p className="text-fg-muted text-sm">
+          By {name.get(content.owner_id) ?? "Someone"} ·{" "}
+          <span className="font-mono text-xs">{routingReason(content.route_to, findings)}</span>
+        </p>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <section
+          aria-labelledby="version-h"
+          className="border-line bg-code min-w-0 self-start rounded-md border lg:sticky lg:top-20"
+        >
+          <div className="border-line flex items-center gap-2 border-b px-3 py-2">
+            <span aria-hidden className="flex gap-1">
+              <span className="bg-blocker size-2" />
+              <span className="bg-line-strong size-2" />
+              <span className="bg-line-strong size-2" />
+            </span>
+            <h2 id="version-h" className="mono-label text-fg-muted">
+              Draft · version {current?.n ?? "–"} · read-only
             </h2>
+          </div>
+          <div className="p-5">
             {current?.body ? (
               <HighlightedText
                 text={current.body}
@@ -278,140 +478,19 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
                 markers={markers}
               />
             ) : (
-              <p className="text-muted-foreground text-sm">
-                This version is a {current?.format} file.
-              </p>
+              <p className="text-fg-muted text-sm">This version is a {current?.format} file.</p>
             )}
-          </section>
+          </div>
+        </section>
 
-          <section aria-labelledby="findings-h">
-            <h2 id="findings-h" className="font-heading mb-3 text-xl">
-              Findings
+        <div className="min-w-0 space-y-6">
+          <section
+            aria-labelledby="decision-h"
+            className="border-line bg-elevated rounded-md border p-4"
+          >
+            <h2 id="decision-h" className="mono-label text-fg-faint mb-3">
+              Decision
             </h2>
-            <ul className="space-y-2">
-              {findings.map((f) => (
-                <li
-                  key={f.id}
-                  id={`finding-${f.id}`}
-                  className="border-border bg-card scroll-mt-4 rounded-lg border p-3 text-sm"
-                >
-                  <p className="flex flex-wrap items-center gap-2">
-                    <SeverityBadge severity={f.severity} />
-                    {f.codes.split(" · ").map((c) => (
-                      <IdBadge key={c} code={c} />
-                    ))}
-                    <span className="text-muted-foreground">{f.dimension}</span>
-                    {f.source === "llm" ? (
-                      <span className="border-border rounded-full border px-2 text-xs">
-                        AI-assisted
-                      </span>
-                    ) : null}
-                    <span className="ml-auto text-xs font-medium">
-                      {f.status}
-                      {f.resolved_by ? ` by ${name.get(f.resolved_by) ?? "someone"}` : ""}
-                      {f.dismiss_reason ? ` (${f.dismiss_reason.replace("_", " ")})` : ""}
-                    </span>
-                  </p>
-                  <p className="mt-1">“{f.quote}”</p>
-                  <p className="text-muted-foreground mt-1">{f.explanation}</p>
-                  {pdfPages.length && pageOf.get(f.id) ? (
-                    <p className="mt-1">
-                      <a href={`#show-${f.id}`} className="text-sm underline underline-offset-2">
-                        Show on page {pageOf.get(f.id)}
-                      </a>
-                    </p>
-                  ) : null}
-                </li>
-              ))}
-              {findings.length ? null : (
-                <li className="text-muted-foreground text-sm">No findings on this version.</li>
-              )}
-            </ul>
-          </section>
-
-          {previous?.body && current?.body ? (
-            <section aria-labelledby="diff-h">
-              <h2 id="diff-h" className="font-heading mb-3 text-xl">
-                What changed
-              </h2>
-              <VersionDiff
-                previous={previous.body}
-                current={current.body}
-                resolved={resolvedByChange}
-                previousN={previous.n}
-                currentN={current.n}
-              />
-            </section>
-          ) : null}
-
-          <section aria-labelledby="comments-h">
-            <h2 id="comments-h" className="font-heading mb-3 text-xl">
-              Comments
-            </h2>
-            {current ? (
-              <Comments
-                contentId={content.id}
-                versionId={current.id}
-                comments={comments}
-                members={(profiles ?? [])
-                  .map((p) => p.display_name)
-                  .filter((n): n is string => !!n)}
-                findings={findings.map((f) => ({
-                  id: f.id,
-                  label: `${f.codes} “${f.quote.slice(0, 40)}”`,
-                }))}
-              />
-            ) : null}
-          </section>
-
-          {audit ? (
-            <section aria-labelledby="audit" id="audit">
-              <h2 id="audit-h" className="font-heading mb-3 text-xl">
-                Audit trail
-              </h2>
-              <ol className="space-y-1 text-sm">
-                {trail.map((a) => {
-                  const e = a.event as Record<string, string | null>;
-                  return (
-                    <li key={a.id} className="border-border flex flex-wrap gap-x-2 border-b py-1.5">
-                      <time className="text-muted-foreground font-mono text-xs" dateTime={a.at}>
-                        {new Date(a.at).toLocaleString("en-IN", {
-                          dateStyle: "short",
-                          timeStyle: "medium",
-                        })}
-                      </time>
-                      <span className="font-medium">
-                        {a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "BrandLens"}
-                      </span>
-                      <span>
-                        {e.type === "transition"
-                          ? `${e.from} → ${e.to}`
-                          : e.type === "finding_status"
-                            ? `finding ${e.from} → ${e.to}`
-                            : String(e.type)}
-                      </span>
-                      {e.reason ? (
-                        <span className="text-muted-foreground">“{e.reason}”</span>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ol>
-            </section>
-          ) : null}
-        </div>
-
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start" aria-label="Decision">
-          <section className="border-border bg-card space-y-2 rounded-lg border p-4 text-sm">
-            <h2 className="font-heading text-lg">Routing</h2>
-            <p>
-              <span className="font-medium">{ROUTE_LABEL[content.route_to ?? "manager"]}</span> ·
-              risk <span className="font-mono">{content.risk_score ?? "–"}</span>
-            </p>
-            <p className="text-muted-foreground">{routingReason(content.route_to, findings)}</p>
-          </section>
-          <section className="border-border bg-card rounded-lg border p-4">
-            <h2 className="font-heading mb-3 text-lg">Decision</h2>
             <DecisionBar
               contentId={content.id}
               state={content.state}
@@ -419,7 +498,13 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
               openWarnings={openWarnings}
             />
           </section>
-        </aside>
+          <section aria-labelledby="findings-h">
+            <h2 id="findings-h" className="sr-only">
+              Findings
+            </h2>
+            <ReviewTabs panels={panels} />
+          </section>
+        </div>
       </div>
     </>
   );

@@ -27,9 +27,9 @@ function worst(markers: PdfMarker[], page: number): Severity | null {
 }
 
 const DOT: Record<Severity, string> = {
-  blocker: "bg-blocker text-blocker-foreground",
-  warning: "bg-warning-surface text-warning border-warning border",
-  suggestion: "bg-suggestion-surface text-suggestion",
+  blocker: "bg-blocker text-blocker-fg",
+  warning: "bg-warning-bg text-warning border-warning border",
+  suggestion: "bg-hover text-suggestion",
 };
 
 /**
@@ -98,7 +98,7 @@ export function PdfFindings({
                   onClick={() => setPage(p.n)}
                   className={cn(
                     "focus-visible:outline-ring block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-full",
-                    p.n === page ? "border-foreground" : "hover:border-border border-transparent",
+                    p.n === page ? "border-line-strong" : "hover:border-line border-transparent",
                   )}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- signed, short-lived Storage URL */}
@@ -108,7 +108,7 @@ export function PdfFindings({
                     loading="lazy"
                     width={p.width}
                     height={p.height}
-                    className="border-border block h-auto w-full rounded-sm border"
+                    className="border-line block h-auto w-full rounded-sm border"
                   />
                   <span className="mt-1 flex items-center justify-between gap-1 font-mono text-xs">
                     <span>p. {p.n}</span>
@@ -135,7 +135,7 @@ export function PdfFindings({
         <div className="mb-2 flex items-center justify-between gap-2 text-sm">
           <p aria-live="polite" className="m-0">
             Page {current.n} of {pages.length}{" "}
-            <span className="text-muted-foreground">· {pageSummary(markers, current.n)}</span>
+            <span className="text-fg-muted">· {pageSummary(markers, current.n)}</span>
           </p>
           <div className="flex gap-1">
             <Button

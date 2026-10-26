@@ -75,7 +75,7 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
 
   // An open visual warning routes to Brand review (SPEC §10), so the creator can't re-upload until
   // the brand admin sends it back.
-  await expect(page.getByText("Specialist review", { exact: true })).toBeVisible();
+  await expect(page.getByText("Brand review", { exact: true })).toBeVisible();
   await switchDemoRole(page, "Brand admin");
   await page.goto(`/review/${contentId}`);
   // The creator marked it fixed, so the reviewer sees it listed as edited, not boxed as open.

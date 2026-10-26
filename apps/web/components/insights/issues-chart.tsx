@@ -30,10 +30,10 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
             content={({ active, payload }) => {
               const p = active && payload?.[0] ? (payload[0].payload as Issue) : null;
               return p ? (
-                <div className="border-border bg-popover text-popover-foreground rounded-md border px-2 py-1 text-xs shadow-sm">
+                <div className="border-line bg-popover text-popover-foreground rounded-md border px-2 py-1 text-xs shadow-sm">
                   <p className="font-mono font-medium">{p.code}</p>
                   <p className="max-w-56">{p.label}</p>
-                  <p className="text-muted-foreground">
+                  <p className="text-fg-muted">
                     {p.n} finding{p.n === 1 ? "" : "s"} · {p.dimension}
                   </p>
                 </div>

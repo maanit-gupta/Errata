@@ -26,7 +26,7 @@ function withMentions(body: string, names: string[]) {
   for (const m of body.matchAll(re)) {
     out.push(body.slice(last, m.index));
     out.push(
-      <span key={m.index} className="bg-muted rounded-full px-1.5 py-0.5 text-xs font-medium">
+      <span key={m.index} className="bg-hover rounded-full px-1.5 py-0.5 text-xs font-medium">
         @{m[1]}
       </span>,
     );
@@ -58,9 +58,9 @@ export function Comments({
     <div className="space-y-4">
       <ul className="space-y-3" aria-live="polite">
         {comments.map((c) => (
-          <li key={c.id} className="border-border bg-card rounded-md border p-3 text-sm">
-            <p className="text-muted-foreground mb-1 text-xs">
-              <span className="text-foreground font-medium">{c.author}</span> ·{" "}
+          <li key={c.id} className="border-line bg-elevated rounded-md border p-3 text-sm">
+            <p className="text-fg-muted mb-1 text-xs">
+              <span className="text-fg font-medium">{c.author}</span> ·{" "}
               {new Date(c.at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
               {c.findingLabel ? (
                 <>
@@ -72,9 +72,7 @@ export function Comments({
             <p className="whitespace-pre-wrap">{withMentions(c.body, members)}</p>
           </li>
         ))}
-        {comments.length ? null : (
-          <li className="text-muted-foreground text-sm">No comments yet.</li>
-        )}
+        {comments.length ? null : <li className="text-fg-muted text-sm">No comments yet.</li>}
       </ul>
       <form
         className="space-y-2"
@@ -104,7 +102,7 @@ export function Comments({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Use @Name to mention a teammate"
-          className="border-input bg-card w-full rounded-md border px-3 py-2 text-sm"
+          className="border-control bg-elevated w-full rounded-md border px-3 py-2 text-sm"
         />
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor={`${id}-anchor`} className="text-sm">
@@ -114,7 +112,7 @@ export function Comments({
             id={`${id}-anchor`}
             value={findingId}
             onChange={(e) => setFindingId(e.target.value)}
-            className="border-input bg-card h-8 rounded-md border px-2 text-sm"
+            className="border-control bg-elevated h-8 rounded-md border px-2 text-sm"
           >
             <option value="">The whole version</option>
             {findings.map((f) => (

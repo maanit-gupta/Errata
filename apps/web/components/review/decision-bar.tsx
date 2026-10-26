@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { StateBadge } from "@/components/brand/state-badge";
 import { Button } from "@/components/ui/button";
+import { fieldClass } from "@/components/ui/input";
 import {
   approve,
   archive,
@@ -21,7 +23,7 @@ type Props = {
   openWarnings: { id: string; label: string }[];
 };
 
-const area = "w-full rounded-md border border-input bg-card px-3 py-2 text-sm";
+const area = "w-full rounded-md border border-control bg-elevated px-3 py-2 text-sm";
 
 export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
   const id = useId();
@@ -50,23 +52,32 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
 
   if (state === "publish_ready") {
     return (
-      <p className="border-success rounded-md border p-3 text-sm">
-        <span className="bg-success text-background mr-2 rounded-full px-2 py-0.5 text-xs font-semibold">
-          Publish ready
-        </span>
-        Approved and ready. BrandLens never publishes; see the{" "}
-        <a href="#audit" className="underline">
-          audit trail
-        </a>
-        .
-      </p>
+      <div className="space-y-2 text-sm">
+        <p className="flex flex-wrap items-center gap-3">
+          <StateBadge state="publish_ready" className="h-7 px-2.5" />
+          <button
+            type="button"
+            onClick={() =>
+              document
+                .querySelector<HTMLElement>('[role="tab"][id$="audit"], [role="tab"]:last-child')
+                ?.click()
+            }
+            className="text-accent-soft underline-offset-4 hover:underline"
+          >
+            Audit trail ↗
+          </button>
+        </p>
+        <p className="text-fg-muted">
+          Approved and ready. BrandLens never publishes: post it in your own channel.
+        </p>
+      </div>
     );
   }
 
   const anything = can.review || can.specialist || can.markReady || can.archive;
   if (!anything) {
     return (
-      <p className="bg-muted rounded-md p-3 text-sm">
+      <p className="bg-hover rounded-md p-3 text-sm">
         No decision is waiting on you for this content.
       </p>
     );
@@ -75,10 +86,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
   return (
     <div className="space-y-5">
       {error ? (
-        <p
-          role="alert"
-          className="border-accent-text text-accent-text rounded-md border p-3 text-sm"
-        >
+        <p role="alert" className="border-danger text-danger rounded-md border p-3 text-sm">
           {error}
         </p>
       ) : null}
@@ -86,11 +94,11 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
       {can.review ? (
         <>
           <section aria-labelledby={`${id}-approve`} className="space-y-2">
-            <h3 id={`${id}-approve`} className="font-sans text-sm font-semibold">
+            <h3 id={`${id}-approve`} className="mono-label text-fg-faint">
               Approve
             </h3>
             {openWarnings.length ? (
-              <p className="text-muted-foreground text-xs">
+              <p className="text-fg-muted text-xs">
                 Each open warning needs an override reason before approval.
               </p>
             ) : null}
@@ -128,7 +136,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
             </Button>
           </section>
           <section aria-labelledby={`${id}-esc`} className="space-y-2">
-            <h3 id={`${id}-esc`} className="font-sans text-sm font-semibold">
+            <h3 id={`${id}-esc`} className="mono-label text-fg-faint">
               Send to a specialist
             </h3>
             <label htmlFor={`${id}-route`} className="sr-only">
@@ -138,7 +146,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
               id={`${id}-route`}
               value={route}
               onChange={(e) => setRoute(e.target.value)}
-              className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
+              className={fieldClass}
             >
               <option value="legal">Legal</option>
               <option value="a11y">Accessibility</option>
@@ -167,7 +175,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
 
       {can.specialist ? (
         <section aria-labelledby={`${id}-sign`} className="space-y-2">
-          <h3 id={`${id}-sign`} className="font-sans text-sm font-semibold">
+          <h3 id={`${id}-sign`} className="mono-label text-fg-faint">
             Sign off
           </h3>
           <label htmlFor={`${id}-signwhy`} className="text-xs font-medium">
@@ -191,7 +199,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
 
       {can.review || can.specialist ? (
         <section aria-labelledby={`${id}-changes`} className="space-y-2">
-          <h3 id={`${id}-changes`} className="font-sans text-sm font-semibold">
+          <h3 id={`${id}-changes`} className="mono-label text-fg-faint">
             Request changes
           </h3>
           <label htmlFor={`${id}-changeswhy`} className="text-xs font-medium">
@@ -222,7 +230,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
 
       {can.archive ? (
         <details className="text-sm">
-          <summary className="text-muted-foreground cursor-pointer">Archive</summary>
+          <summary className="text-fg-muted cursor-pointer">Archive</summary>
           <div className="mt-2 space-y-2">
             <label htmlFor={`${id}-arch`} className="text-xs font-medium">
               Reason

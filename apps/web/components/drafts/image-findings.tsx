@@ -20,9 +20,9 @@ const BOX: Record<Severity, string> = {
   suggestion: "border-suggestion border-dotted",
 };
 const TAG: Record<Severity, string> = {
-  blocker: "bg-blocker text-blocker-foreground",
-  warning: "bg-warning-surface text-warning border-warning border",
-  suggestion: "bg-suggestion-surface text-suggestion",
+  blocker: "bg-blocker text-blocker-fg",
+  warning: "bg-warning-bg text-warning border-warning border",
+  suggestion: "bg-hover text-suggestion",
 };
 
 /** Share of the image a box covers; findings about the whole image aren't drawn as boxes. */
@@ -121,13 +121,13 @@ export function ImageFindings({
       </div>
       {whole.length ? (
         <figcaption className="mt-2 text-sm">
-          <span className="text-muted-foreground">Applies to the whole image: </span>
+          <span className="text-fg-muted">Applies to the whole image: </span>
           {whole.map((m, i) => (
             <span key={m.id}>
               {i ? ", " : ""}
               <button
                 type="button"
-                className="hover:text-foreground focus-visible:outline-ring font-mono text-xs underline underline-offset-2"
+                className="hover:text-fg focus-visible:outline-ring font-mono text-xs underline underline-offset-2"
                 onMouseEnter={() => focus(m.id)}
                 onMouseLeave={() => focus(null)}
                 onClick={() => reveal(m.id)}

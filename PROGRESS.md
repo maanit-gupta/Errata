@@ -20,7 +20,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26; Terminal Noir UI per DESIGN §6.2–6.3 on ui/P08 (2026-10-27) |
-| P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
+| P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26; Terminal Noir UI per DESIGN §6.4–6.5, §6.8–6.9 on ui/P09 (2026-10-27) |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
@@ -196,6 +196,13 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P08-UI | `j/k/a/e/x` act on finding cards via the `bl-finding-key` event from the global shortcut handler | DESIGN §7.4; single-key shortcuts can be switched off (WCAG 2.1.4) |
 | 2026-10-27 | P08-UI | App-wide `(app)/loading.tsx` (Spinner) and `(app)/error.tsx` (ErrorPanel with digest) | DESIGN §11 loading/error states for every route |
 | 2026-10-27 | P08-UI | E2E: specs wait for `networkidle` after `goto('/drafts/new')`; axe tests emulate reduced motion | Typing before hydration was reset by the Base UI input; axe flagged mid-fade frames |
+| 2026-10-27 | P09-UI | Review queue tabs: admin `For me · Legal · Accessibility · Brand · All`, manager `For me · All`, specialist `For me`; the routing reason is a mono line under each title instead of an expandable row | DESIGN §6.4; always visible beats hover-only for keyboard users |
+| 2026-10-27 | P09-UI | Review page = read-only render (left, sticky) + Decision panel and `Findings · Diff · Comments · Audit` tabs (right); findings reuse FindingCard read-only | DESIGN §6.5 |
+| 2026-10-27 | P09-UI | DecisionBar stays a panel above the tabs, not a sticky bottom bar with per-action dialogs | Its override/sign-off/request-changes fields are e2e-covered; moving them into dialogs is a P15/U2 follow-up (deviation) |
+| 2026-10-27 | P09-UI | New global `/audit` (manager, specialist, admin): filters by content/actor/event type, IST times, CSV export, links to the review page | DESIGN §6.8; route was missing |
+| 2026-10-27 | P09-UI | Settings: Profile, Appearance (theme radio cards, landing-page toggle undoing `bl_skip_landing`, single-key shortcut toggle), Notifications (Discord status + admin "Send test message", Resend status), Organisation members (admin), Demo reset as disabled button with the script name | DESIGN §6.9; webhook URL never shown |
+| 2026-10-27 | P09-UI | StateBadge keeps sentence-case DOM text (`<span>{label}</span>`) and uppercases with CSS; specialist state reads `Legal/A11y/Brand review` from `route_to` | Tests and screen readers get words, not shouting; DESIGN §2.4 labels |
+| 2026-10-27 | P09-UI | In-text links are underlined by default | axe `link-in-text-block` (WCAG 1.4.1) |
 
 **Dependencies and licences** (append when adding any dependency):
 

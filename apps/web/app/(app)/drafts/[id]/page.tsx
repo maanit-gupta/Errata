@@ -18,7 +18,9 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
 
   const { data: content } = await supabase
     .from("contents")
-    .select("id, title, channel, state, owner_id, campaign_id, current_version_id, campaigns(name)")
+    .select(
+      "id, title, channel, state, route_to, owner_id, campaign_id, current_version_id, campaigns(name)",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!content) notFound();
@@ -176,6 +178,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
           id: content.id,
           title: content.title,
           state: content.state,
+          routeTo: content.route_to,
           channel: content.channel,
           campaignId: content.campaign_id,
         }}
