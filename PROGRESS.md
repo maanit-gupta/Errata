@@ -21,7 +21,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
 | P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
-| P10 | Deploy & core-loop E2E 🎯 D7 | Both | todo | | | |
+| P10 | Deploy & core-loop E2E 🎯 D7 | Both | in-progress | M (Claude, /complete) | phase/P10-deploy | |
 | P11 | Image checks | M | todo | | | |
 | P12 | PDF decks & overlays | M+J | todo | | | |
 | P13 | GCS & insights 🎯 D11 | J+M | todo | | | |
@@ -169,8 +169,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 ## Open questions (ask the user; don't guess)
 
 - [ ] Build window Day-1 date?
-- [ ] Worker host: Railway or Fly? (Needed by P10.)
-- [ ] Does the Supabase cloud project already exist (Mumbai)? Is its URL in the env files?
+- [x] Worker host: **Render** (Dockerfile + `render.yaml` Blueprint, free tier), user decision 2026-10-26.
+- [x] Cloud Supabase: user approved pushing migrations + demo seed (2026-10-26).
 - [ ] Is Resend email wanted, or Discord only?
 - [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
