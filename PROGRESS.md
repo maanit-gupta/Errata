@@ -31,7 +31,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P11 / **done** (2026-10-26) on `phase/P11-image-checks` (branched from `phase/P10-deploy` @ 46c19dd, because `main` lacked that last P10 commit). **Not merged to `main`, not deployed.**
+- **Phase / status:** P11 / **done** (2026-10-26). Fast-forwarded to `main` @ 1ba6481 (user decision) and deployed: Render `dep-dbfo7gou01pc73cbiopg` live, clean startup on 512 MB; Vercel `dpl_FF21V9Zg2or1VQiQqAcJ3ECDc4ns` READY.
 - **What exists now:**
   - **Worker `vision/`** (pure functions): `ocr.py` (Tesseract in 3 passes: plain grey, inverted flat-dark regions for light-on-dark buttons/panels, polarity-agnostic binarised page for faint fine print; Paddle lazy and optional, falling back to Tesseract), `logo.py` (ORB + RANSAC homography; multi-scale `matchTemplate` fallback and confirmation; clear-space ring variance), `contrast.py` (WCAG ratio; glyph = RGB-furthest pixels, bg = ring median), `colour.py` (k-means over *flat* pixels only, CIEDE2000 to palette; warmth = mean CIELAB b*).
   - **Pipeline:** `pipeline/image.py` builds the image `Doc` from OCR (every text filter runs on words in the picture; segments carry word boxes, `Doc.bbox_for`) and runs `check_image`: VS-03 (missing / < 80 px / clear space), A-02 + WCAG 1.4.3 (contrast; tiny or faint lines are "hidden fine print"), VS-01 (off-palette fill), A-02 + WCAG 1.1.1 (missing alt text). `pipeline/vision_gate.py` handles the **one** vision call per image (`prompts/vision_v1.md`, `VisionFinding` with `target` text|image|alt_text). Image-target findings are allowed only when the warmth pre-filter fires, and never for logo/palette rules (deterministic domain). The call is skipped when there's no text, no alt text and no cool signal. LLM-bound image: redacted OCR boxes blacked out, ≤ 1024 px.
@@ -43,7 +43,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - Docker image installs `tesseract-ocr` + `tesseract-ocr-eng`; built locally and verified (`tesseract 5.5.0`, cv2 5.0.0, skimage 0.26.0 import inside the image).
 - **Stubbed or deferred:**
   - **Browser e2e `apps/web/e2e/image-check.spec.ts` is written but NOT yet run.** Your own `make dev` (cloud) held :3000/:8000 and Next refuses a second dev server in the same dir. The overlay UI is typechecked and linted but not seen in a browser.
-  - **Cloud not updated:** VS-01/VS-03/A-02, assets and logo files aren't in cloud Supabase yet (`make seed-demo url=…` inserts them and uploads the logos; needs your go-ahead), and Render runs the old image until this branch reaches `main`. Until then, cloud image reviews run without logo/palette checks.
+  - **Cloud data not updated:** VS-01/VS-03/A-02, assets and logo files aren't in cloud Supabase yet (`make seed-demo url=…` inserts them and uploads the logos; needs your go-ahead). Until then, cloud image reviews run without logo/palette checks and can't cite those rules. No cloud image review has run yet.
   - Paddle path is untested (optional extra, not installed). PDFs → P12.
 - **How to run / verify:** `make check` (green: 154 pytest, 73 Vitest, pgTAP pass); `make eval-vision`; local UI: `make db-reset && make seed-assets-local && make dev-local`, then `cd apps/web && E2E_WORKER=1 pnpm exec playwright test e2e/image-check.spec.ts`.
 - **Gotchas discovered:**
@@ -53,7 +53,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - OpenCV's bundled stubs reject valid calls, so mypy treats `cv2`/`skimage` as Any (pyproject override).
   - `make db-reset`/`make test-db` wipe Storage object rows: rerun `make seed-assets-local`.
   - Tesseract alone misses light-on-dark text and faint fine print; that's why there are 3 OCR passes. A CLAHE pass produced junk words on photos, so it was removed.
-- **Exact next step:** run the image e2e locally (above). Then, with your approval, merge to `main` (redeploys Render with Tesseract) and `make seed-demo url=<cloud>`. After that, **P12 (PDF decks & bbox overlays)**: create `phase/P12-pdf-decks`, read the P12 section of `docs/PHASES.md`, and reuse `ImageFindings` per page (spans add `page`).
+- **Exact next step:** run the image e2e locally (above). Then, with your approval, `make seed-demo url=<cloud>` and a cloud image smoke test. After that, **P12 (PDF decks & bbox overlays)**: create `phase/P12-pdf-decks`, read the P12 section of `docs/PHASES.md`, and reuse `ImageFindings` per page (spans add `page`).
 
 ## Decisions log (append-only)
 
@@ -149,6 +149,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P11 | Thresholds: `CLEAR_SPACE_VARIANCE_MAX=150`, `WARMTH_COOL_B=-4`, `LARGE_TEXT_PX=24`, `TINY_TEXT_PX=12`, `FAINT_TEXT_RATIO=1.5`, `VISION_MAX_SIDE=1024`; `LOGO_MIN_GOOD_MATCHES` stays 12 | Tuned on the creatives (clean ring 0 vs cramped 7311; b* +5..+7 vs −16.7); see eval/vision_report.md |
 | 2026-10-26 | P11 | Image findings resolve via "Mark fixed in the image" (status `edited`, any severity); the next upload is re-checked | Fixes happen in the design file; nothing is one-click-accepted from an AI rewrite (invariant 6) |
 | 2026-10-26 | P11 | Pixel thresholds are in raw image pixels (no normalisation) | The guide states pixel minimums; fixtures are 1080 px |
+| 2026-10-26 | P11 | `main` fast-forwarded to P11 (1ba6481) without PR review (user decision) | Same deploy-from-main flow as P10; Jagpreet can review after the fact |
 | 2026-10-26 | P11 | mypy treats `cv2`/`skimage` as Any | Bundled stubs reject valid calls (e.g. `ORB_create`, `kmeans` on float32) |
 
 **Dependencies and licences** (append when adding any dependency):
@@ -185,7 +186,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 - [x] Worker host: **Render** (Dockerfile + `render.yaml` Blueprint, free tier), user decision 2026-10-26.
 - [x] Cloud Supabase: user approved pushing migrations + demo seed (2026-10-26).
 - [ ] Is Resend email wanted, or Discord only?
-- [ ] Approve P11 cloud rollout: merge `phase/P11-image-checks` → `main` (Render redeploy with Tesseract) and `make seed-demo url=<cloud>` (adds VS-01/VS-03/A-02, assets, logo files)?
+- [x] Merge P11 to `main` (user, 2026-10-26).
+- [ ] Approve `make seed-demo url=<cloud>` for P11 (adds VS-01/VS-03/A-02, assets, logo files)?
 - [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
