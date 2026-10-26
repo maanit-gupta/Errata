@@ -46,3 +46,6 @@ LOGO_MIN_GOOD_MATCHES: Final = 12  # tuned in P11 on fixtures
 CLEAR_SPACE_VARIANCE_MAX: Final[float | None] = None  # tuned in P11
 DELTA_E_MAX_DEFAULT: Final = 10
 LLM_CACHE: Final = False  # True in eval/tests
+
+# Queues (SQL migration 20261026100011). Review jobs use PGMQ_QUEUE from env.
+VAULT_QUEUE: Final = "vault_jobs"

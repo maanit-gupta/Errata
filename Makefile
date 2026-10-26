@@ -7,7 +7,7 @@ WORKER := apps/worker
 UV     := cd $(WORKER) && uv run
 
 .PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
-        test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval seed-demo
+        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval seed-demo
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -49,6 +49,9 @@ dev-web-local: ## Web only, against the local Supabase stack
 
 dev-worker: ## Worker only (:8000)
 	$(UV) uvicorn --factory brandlens_worker.main:create_app --reload --reload-dir brandlens_worker --port 8000
+
+models: ## Download the embedding model into apps/worker/.models (baked into the Docker image)
+	$(UV) python -c "from brandlens_worker.embeddings import Embedder; print(Embedder('BAAI/bge-small-en-v1.5', '.models').embed(['warm-up']).shape)"
 
 # --- Quality -----------------------------------------------------------------
 test: test-worker test-web test-db ## pytest + Vitest + pgTAP
