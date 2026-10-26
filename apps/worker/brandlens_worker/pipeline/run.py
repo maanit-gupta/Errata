@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import time
+from collections import Counter
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import Any
@@ -23,9 +24,16 @@ from brandlens_worker.pipeline.image import (
     palette_rule,
 )
 from brandlens_worker.pipeline.ingest import IngestError, ingest
+from brandlens_worker.pipeline.pdf import (
+    PdfResult,
+    apply_hidden,
+    check_contrast,
+    check_links,
+    ingest_pdf,
+)
 from brandlens_worker.pipeline.protect import protect
 from brandlens_worker.pipeline.retrieve import build_queries, merge, to_retrieved
-from brandlens_worker.pipeline.types import Doc, Finding, RedactedDoc, Vault
+from brandlens_worker.pipeline.types import Doc, Finding, RedactedDoc, Redaction, Vault
 
 Embed = Callable[[list[str]], Awaitable[npt.NDArray[np.float32]]]
 MatchVault = Callable[[npt.NDArray[np.float32]], Awaitable[list[dict[str, Any]]]]
@@ -65,6 +73,7 @@ class StagesResult:
     image: ImageAnalysis | None = None
     kit: VisualKit | None = None
     alt_text: str | None = None
+    pdf: PdfResult | None = None
 
 
 def _ms(start: float) -> int:
@@ -77,6 +86,7 @@ async def run_stages_1_to_4(
     timings: dict[str, int] = {}
 
     image: ImageAnalysis | None = None
+    pdf: PdfResult | None = None
     kit = version.kit or VisualKit()
 
     t = time.perf_counter()
@@ -92,31 +102,56 @@ async def run_stages_1_to_4(
         doc = image_doc(image, version.data)
         if doc.word_count > config.MAX_WORDS:
             raise IngestError("too_long")
+    elif version.format == "pdf":
+        if not version.data:
+            raise IngestError("missing_file")
+        pdf = await asyncio.to_thread(
+            ingest_pdf, version.data, kit, vault, ocr_engine=version.ocr_engine
+        )
+        doc = pdf.doc
     else:
         doc = ingest(version.format, body=version.body, data=version.data)
     timings["ingest"] = _ms(t)
 
     t = time.perf_counter()
-    redacted = protect(doc)
+    # Hidden PDF text never reaches the LLM (possible prompt injection; SPEC §6 stage 2).
+    redacted = protect(doc, pdf.hidden_redactions if pdf else None)
     timings["protect"] = _ms(t)
 
     t = time.perf_counter()
     findings = run_filters(doc, vault) if doc.text.strip() else []
     if image is not None:
         findings += await asyncio.to_thread(check_image, image, doc, kit, vault, version.alt_text)
+    if pdf is not None:
+        findings = (
+            apply_hidden(findings, pdf, vault)
+            + check_contrast(pdf, vault)
+            + check_links(pdf)
+            + pdf.visual
+        )
     timings["filters"] = _ms(t)
 
     t = time.perf_counter()
     queries = build_queries(doc.text) if doc.text.strip() else []
     if image is not None:
         queries += [q for q in (version.alt_text, *IMAGE_QUERIES) if q]
+    if pdf is not None:
+        queries += list(IMAGE_QUERIES)
     vectors = await embed(queries)
     results = [await match_vault(vec) for vec in vectors]
     retrieved = to_retrieved(merge(results, limit=topk * 2))
     timings["retrieve"] = _ms(t)
 
     return StagesResult(
-        doc, redacted, findings, retrieved, timings, image, kit if image else None, version.alt_text
+        doc,
+        redacted,
+        findings,
+        retrieved,
+        timings,
+        image,
+        kit if image else None,
+        version.alt_text,
+        pdf,
     )
 
 
@@ -143,6 +178,8 @@ async def run_stages_5_6(
     """LLM pass + citation gate + intent verification. Raises DegradedError if no provider works."""
     if stages.image is not None:
         return await _run_vision_5_6(stages, vault, intent, router=router, embed_sync=embed_sync)
+    if stages.pdf is not None:
+        return await _run_pdf_5_6(stages, vault, intent, router=router, embed_sync=embed_sync)
 
     from brandlens_worker.pipeline.gate import gate
     from brandlens_worker.pipeline.intent import verify_all
@@ -303,6 +340,102 @@ async def _run_vision_5_6(
         rewrite_failures=dict(failures),
         provider=llm.meta.provider,
         model_version=llm.meta.model,
+        prompt_version=prompt_version,
+        timings=timings,
+        generations=generations,
+    )
+
+
+async def _run_pdf_5_6(
+    stages: StagesResult,
+    vault: Vault,
+    intent: dict[str, Any],
+    *,
+    router: Any,
+    embed_sync: Callable[[list[str]], npt.NDArray[np.float32]] | None,
+) -> LLMStageResult:
+    """One LLM call per page chunk (the documented PDF exception to one call per draft; PHASES
+    P12). Each chunk is gated against its own text, so a quote repeated on another page can't
+    land there, then shifted back to whole-deck offsets."""
+    from brandlens_worker.pipeline.gate import gate
+    from brandlens_worker.pipeline.intent import verify_all
+    from brandlens_worker.pipeline.llm_pass import build_user_message, run_llm_pass
+    from brandlens_worker.pipeline.pdf import page_chunks, shift, sub_doc
+    from brandlens_worker.prompts import load_prompt
+
+    assert stages.pdf is not None
+    system, prompt_version = load_prompt("review")
+    timings = {"llm": 0, "gate": 0}
+    accepted: list[Finding] = []
+    drops: Counter[str] = Counter()
+    generations: list[dict[str, Any]] = []
+    meta = None
+    hidden = stages.pdf.hidden_redactions
+
+    for chunk in page_chunks(stages.pdf.pages):
+        doc = sub_doc(stages.doc, chunk.start, chunk.end)
+        mine = [
+            shift(f, -chunk.start)
+            for f in stages.findings
+            if f.target == "text" and chunk.start <= f.start and f.end <= chunk.end
+        ]
+        redacted = protect(
+            doc,
+            [
+                Redaction(r.kind, r.start - chunk.start, r.end - chunk.start)
+                for r in hidden
+                if chunk.start <= r.start and r.end <= chunk.end
+            ],
+        )
+        user = build_user_message(redacted, intent, vault, stages.retrieved, mine, doc)
+        t = time.perf_counter()
+        llm = await run_llm_pass(router, system, prompt_version, user)
+        timings["llm"] += _ms(t)
+        meta = meta or llm.meta
+
+        t = time.perf_counter()
+        gated = gate(
+            llm.findings,
+            doc=doc,
+            retrieved=stages.retrieved,
+            vault=vault,
+            deterministic=mine,
+            confirmation=llm.confirmation,
+        )
+        accepted += [shift(f, chunk.start) for f in gated.accepted]
+        drops.update(gated.drops)
+        if gated.unknown_codes:
+            drops["unknown_codes"] += gated.unknown_codes
+        timings["gate"] += _ms(t)
+        label = f"review_p{chunk.pages[0]}-{chunk.pages[1]}"
+        generations.append({"name": label, "meta": llm.meta, "findings": len(llm.findings)})
+        if llm.confirmation_meta is not None:
+            generations.append(
+                {
+                    "name": f"{label}_confirm",
+                    "meta": llm.confirmation_meta,
+                    "findings": len(llm.confirmation or []),
+                }
+            )
+
+    t = time.perf_counter()
+    failures = await asyncio.to_thread(
+        verify_all,
+        accepted,
+        stages.doc,
+        vault,
+        intent,
+        embed=embed_sync,
+        baseline=[f for f in stages.findings if f.target == "text"],
+    )
+    timings["gate"] += _ms(t)
+    timings["llm_calls"] = len(generations)
+    return LLMStageResult(
+        findings=accepted,
+        drops=dict(drops),
+        rewrite_failures=dict(failures),
+        provider=meta.provider if meta else None,
+        model_version=meta.model if meta else None,
         prompt_version=prompt_version,
         timings=timings,
         generations=generations,

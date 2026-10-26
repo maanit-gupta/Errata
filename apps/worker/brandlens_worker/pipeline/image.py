@@ -53,9 +53,23 @@ class ImageAnalysis:
 
 
 def analyse_image(data: bytes, kit: VisualKit, *, ocr_engine: str = "tesseract") -> ImageAnalysis:
-    rgb = decode_image(data)
+    return analyse_rgb(
+        decode_image(data), kit, ocr_engine=ocr_engine, lossy=data[:3] == b"\xff\xd8\xff"
+    )
+
+
+def analyse_rgb(
+    rgb: RGB,
+    kit: VisualKit,
+    *,
+    ocr_engine: str = "tesseract",
+    find_logo: bool = True,
+    lossy: bool = False,
+) -> ImageAnalysis:
     logo = (
-        detect_logo(rgb, kit.logos, min_inliers=config.LOGO_MIN_GOOD_MATCHES) if kit.logos else None
+        detect_logo(rgb, kit.logos, min_inliers=config.LOGO_MIN_GOOD_MATCHES)
+        if kit.logos and find_logo
+        else None
     )
     all_lines, engine = ocr(rgb, ocr_engine)
     # The logo's own lettering is approved artwork, not copy.
@@ -65,7 +79,7 @@ def analyse_image(data: bytes, kit: VisualKit, *, ocr_engine: str = "tesseract")
     ]
     exclude = [ln.box for ln in all_lines] + ([logo.box] if logo else [])
     heat = warmth(rgb, exclude, cool_below=config.WARMTH_COOL_B)
-    return ImageAnalysis(rgb, lines, contrasts, logo, heat, engine, data[:3] == b"\xff\xd8\xff")
+    return ImageAnalysis(rgb, lines, contrasts, logo, heat, engine, lossy)
 
 
 def image_doc(analysis: ImageAnalysis, data: bytes) -> Doc:
@@ -135,13 +149,21 @@ def _line_span(doc: Doc, analysis: ImageAnalysis, index: int) -> tuple[int, int]
 
 
 def check_image(
-    analysis: ImageAnalysis, doc: Doc, kit: VisualKit, vault: Vault, alt_text: str | None
+    analysis: ImageAnalysis,
+    doc: Doc,
+    kit: VisualKit,
+    vault: Vault,
+    alt_text: str | None,
+    *,
+    standalone: bool = True,
 ) -> list[Finding]:
+    """`standalone=False` is an image inside a PDF page: the logo and alt text are checked at the
+    page/deck level, not per embedded picture."""
     out: list[Finding] = []
 
     # VS-03: logo present, wide enough, with clear space.
     rule = logo_rule(vault)
-    if rule and kit.logos:
+    if rule and kit.logos and (standalone or analysis.logo):
         logo = analysis.logo
         if logo is None:
             out.append(
@@ -235,7 +257,7 @@ def check_image(
                 )
 
     # A-02 / WCAG 1.1.1: an image needs alt text. (Its quality is the vision LLM's job.)
-    if not (alt_text or "").strip():
+    if standalone and not (alt_text or "").strip():
         out.append(
             Finding(
                 dimension="access",

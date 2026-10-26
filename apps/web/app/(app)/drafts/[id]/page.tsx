@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Citation, FindingView } from "@/components/drafts/finding-card";
 import { DraftWorkspace } from "@/components/drafts/draft-workspace";
-import { spanBox, spanTarget } from "@/lib/drafts/span";
+import { signedPages } from "@/lib/drafts/pages";
+import { spanBox, spanPage, spanTarget } from "@/lib/drafts/span";
 import { PageHeader } from "@/components/page-header";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
@@ -37,7 +38,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
   const { data: run } = version
     ? await supabase
         .from("review_runs")
-        .select("id, status, degraded, error_code, version_id, versions!inner(content_id)")
+        .select("id, status, degraded, error_code, version_id, pages, versions!inner(content_id)")
         .eq("versions.content_id", content.id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -102,6 +103,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
       span: { start: span?.start ?? 0, end: span?.end ?? 0 },
       target: spanTarget(r.span),
       box: spanBox(r.span),
+      page: spanPage(r.span),
       citations,
     } as FindingView;
   });
@@ -112,6 +114,12 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
       ? ((await supabase.storage.from("drafts").createSignedUrl(version.storage_path, 3600)).data
           ?.signedUrl ?? null)
       : null;
+
+  // PDF versions: the page renders the worker made for this version's run (P12).
+  const pdfPages =
+    version?.format === "pdf" && run && run.version_id === version.id
+      ? await signedPages(supabase, run.pages)
+      : [];
 
   const isOwner = content.owner_id === session.userId || session.role === "brand_admin";
   const canEdit = isOwner && (content.state === "draft" || content.state === "needs_revision");
@@ -137,6 +145,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
         }
         findings={findings}
         imageUrl={imageUrl}
+        pdfPages={pdfPages}
         canEdit={canEdit}
         canAct={isOwner}
       />

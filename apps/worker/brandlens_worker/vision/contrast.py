@@ -61,6 +61,28 @@ class TextContrast:
         return round(self.ratio, 2) >= self.required
 
 
+def ring_background(img: RGB, box: Box) -> tuple[int, int, int] | None:
+    """Median colour of a thin ring around `box`: the background the text sits on."""
+    h_img, w_img = img.shape[:2]
+    x0, y0, x1, y1 = (max(0, box[0]), max(0, box[1]), min(w_img, box[2]), min(h_img, box[3]))
+    if x1 - x0 < 1 or y1 - y0 < 1:
+        return None
+    pad = max(2, round((y1 - y0) * 0.2))
+    ox0, oy0, ox1, oy1 = (
+        max(0, x0 - pad),
+        max(0, y0 - pad),
+        min(w_img, x1 + pad),
+        min(h_img, y1 + pad),
+    )
+    ring_mask = np.ones((oy1 - oy0, ox1 - ox0), bool)
+    ring_mask[y0 - oy0 : y1 - oy0, x0 - ox0 : x1 - ox0] = False
+    ring = img[oy0:oy1, ox0:ox1][ring_mask]
+    if ring.size == 0:
+        return None
+    bg = np.median(ring.reshape(-1, 3), axis=0)
+    return (round(float(bg[0])), round(float(bg[1])), round(float(bg[2])))
+
+
 def measure_text_contrast(img: RGB, box: Box, *, large_text_px: int) -> TextContrast | None:
     """None if the box is degenerate or has no ring (it fills the image)."""
     h_img, w_img = img.shape[:2]

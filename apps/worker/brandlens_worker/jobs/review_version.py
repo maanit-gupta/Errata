@@ -2,6 +2,8 @@
 
 P06: stages 1–4 (ingest, protect, deterministic filters, retrieve). P07 adds the LLM pass + gate.
 P11: images (OCR, logo, contrast, palette, alt text; one vision call).
+P12: PDFs (text layer with page boxes, hidden text, page renders to `renders/`, one LLM call per
+page chunk).
 """
 
 from __future__ import annotations
@@ -123,6 +125,8 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         assert f.bbox is not None
         x0, y0, x1, y1 = f.bbox
         span, quote = {"x0": x0, "y0": y0, "x1": x1, "y1": y1}, f.quote or ""
+        if f.page:
+            span["page"] = f.page
     elif f.target == "alt_text":
         span, quote = {"target": "alt_text", "start": f.start, "end": f.end}, f.quote or ""
     else:
@@ -131,6 +135,9 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         box = f.bbox or doc.bbox_for(f.start, f.end)
         if box:
             span |= {"x0": box[0], "y0": box[1], "x1": box[2], "y1": box[3]}
+        page = doc.page_for(f.start, f.end)
+        if page:
+            span["page"] = page
     primary = {codes_by_id.get(x) for x in (f.rule_id, f.fact_id) if x} | {
         f.wcag_ref and f"WCAG {f.wcag_ref}"
     }
@@ -190,10 +197,10 @@ async def review_version(ctx: JobContext) -> None:
         vault = await load_vault(conn, p.org_id, row["campaign_id"], row["campaign_name"])
 
     data = None
-    if row["format"] in ("docx", "image") and row["storage_path"]:
+    if row["format"] in ("docx", "image", "pdf") and row["storage_path"]:
         data = await get_storage(ctx).download("drafts", row["storage_path"])
     kit = None
-    if row["format"] == "image":
+    if row["format"] in ("image", "pdf"):
         async with ctx.pool.connection() as conn:
             kit = await load_kit(
                 conn, p.org_id, get_storage(ctx), ctx.services.setdefault("logo_cache", {})
@@ -295,7 +302,27 @@ async def review_version(ctx: JobContext) -> None:
         trace_id = tracer.current_trace_id()
     tracer.flush()
 
-    await persist(ctx, p, row["content_id"], vault, result, started, llm=llm, trace_id=trace_id)
+    pages = await upload_renders(ctx, p, row["content_id"], result)
+    await persist(
+        ctx, p, row["content_id"], vault, result, started, llm=llm, trace_id=trace_id, pages=pages
+    )
+
+
+async def upload_renders(
+    ctx: JobContext, p: ReviewPayload, content_id: str, result: StagesResult
+) -> list[dict[str, Any]]:
+    """PDF page thumbnails → `renders/{org}/{content}/{version}/page-{n}.png` (SPEC §3). The
+    manifest lands in `review_runs.pages`; finding boxes are in these images' pixel space."""
+    if result.pdf is None:
+        return []
+    storage = get_storage(ctx)
+    paths = [f"{p.org_id}/{content_id}/{p.version_id}/page-{pg.n}.png" for pg in result.pdf.pages]
+    try:
+        for page, path in zip(result.pdf.pages, paths, strict=True):
+            await storage.upload("renders", path, page.png, "image/png")
+    except Exception as exc:
+        raise JobError("render_upload_failed") from exc
+    return result.pdf.manifest(paths)
 
 
 async def persist(
@@ -308,6 +335,7 @@ async def persist(
     *,
     llm: LLMStageResult | None,
     trace_id: str | None,
+    pages: list[dict[str, Any]] | None = None,
 ) -> None:
     codes_by_id = {r.id: r.code for r in vault.rules} | {f.id: f.code for f in vault.facts}
     rows = [to_row(f, result.doc, codes_by_id) for f in result.findings]
@@ -326,6 +354,13 @@ async def persist(
     timings["rewrite_failures"] = llm.rewrite_failures if llm else {}
     if trace_id:
         timings["trace_id"] = trace_id
+    if result.pdf is not None:
+        timings["pdf"] = {
+            "pages": len(result.pdf.pages),
+            "hidden": len(result.pdf.hidden),
+            "images": sum(pg.images for pg in result.pdf.pages),
+            "cool_images": sum(pg.cool_images for pg in result.pdf.pages),
+        }
 
     async with ctx.pool.connection() as conn, conn.transaction():
         cur = await conn.execute(
@@ -362,7 +397,7 @@ async def persist(
         await conn.execute(
             "update public.review_runs set status = 'done', finished_at = now(), retrieved = %s, "
             "timings = timings || %s, degraded = %s, error_code = %s, provider = %s, "
-            "model_version = %s, prompt_version = %s where id = %s",
+            "model_version = %s, prompt_version = %s, pages = %s where id = %s",
             (
                 Jsonb(result.retrieved),
                 Jsonb(timings),
@@ -371,6 +406,7 @@ async def persist(
                 llm.provider if llm else None,
                 llm.model_version if llm else None,
                 llm.prompt_version if llm else None,
+                Jsonb(pages or []),
                 p.run_id,
             ),
         )

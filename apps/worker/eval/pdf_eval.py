@@ -1,0 +1,183 @@
+"""P12 PDF eval → eval/pdf_report.md.
+
+    cd apps/worker && uv run python eval/pdf_eval.py      (or: make eval-pdf)
+
+1. The labelled fixture deck (fixtures/paywise/deck.pdf + deck_labels.json): every seeded issue
+   must be found on its page with an overlapping box (≥ 50% of the smaller box), with no extra
+   deterministic findings (precision and recall of the deterministic stages, which need no LLM).
+2. A 40-page deck (the fixture's 4 pages × 10, so 10 embedded pictures are OCR'd): stages 1-4
+   time and the process's peak RSS, against PDF_MAX_PAGES and the worker's memory.
+
+Exits non-zero if the deck misses a label, has an extra finding, or the 40-page run fails.
+Deterministic only: no LLM calls (the LLM chunk count is reported, not executed).
+
+Memory under the production limit (Render free tier, 512 MB), with the real embedding model
+loaded and used for retrieval queries, inside the worker image:
+
+    docker run --rm --memory=512m --memory-swap=512m -v "$PWD":/repo:ro -v /tmp/out:/out \
+      -w /repo/apps/worker brandlens-worker:local \
+      python eval/pdf_eval.py --real-embed --out /out/pdf_report.md
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import os
+import platform
+import resource
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+WORKER = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(WORKER))
+
+from brandlens_worker import config  # noqa: E402
+from brandlens_worker.pipeline.pdf import page_chunks  # noqa: E402
+from brandlens_worker.pipeline.run import VersionInput, run_stages_1_to_4  # noqa: E402
+from tests.kit_fixture import INTENT, fake_embed, kit  # noqa: E402
+from tests.pdf_labels import DECK, LABELS, fake_match, matches, page_and_box  # noqa: E402
+from tests.vault_fixture import paywise_vault  # noqa: E402
+
+REPORT = WORKER / "eval" / "pdf_report.md"
+
+
+def peak_rss_mb() -> float:
+    rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return rss / (1024 * 1024) if platform.system() == "Darwin" else rss / 1024
+
+
+def repeat_deck(times: int) -> bytes:
+    import pymupdf
+
+    src = pymupdf.open(stream=DECK, filetype="pdf")
+    out = pymupdf.open()
+    for _ in range(times):
+        out.insert_pdf(src)
+    return bytes(out.tobytes(garbage=4, deflate=True))
+
+
+EMBED: Any = fake_embed
+
+
+async def stages(data: bytes) -> Any:
+    return await run_stages_1_to_4(
+        VersionInput(format="pdf", data=data, intent=INTENT, kit=kit()),
+        paywise_vault(),
+        embed=EMBED,
+        match_vault=fake_match,
+        topk=config.TOPK,
+    )
+
+
+def main() -> int:
+    global EMBED
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--real-embed", action="store_true", help="load bge-small and embed")
+    parser.add_argument("--out", type=Path, default=REPORT)
+    args = parser.parse_args()
+    embed_note = "fake (zero vectors)"
+    if args.real_embed:
+        from brandlens_worker.embeddings import Embedder
+
+        model = Embedder(
+            os.environ.get("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
+            os.environ.get("MODEL_CACHE_DIR", ".models"),
+        )
+
+        async def real(texts: list[str]) -> Any:
+            return await asyncio.to_thread(model.embed, texts)
+
+        EMBED = real
+        model.embed(["warm-up"])
+        embed_note = "real bge-small (fastembed), loaded before measuring"
+
+    kit()  # load logo templates before measuring
+    base_rss = peak_rss_mb()
+
+    t = time.perf_counter()
+    deck = asyncio.run(stages(DECK))
+    deck_s = time.perf_counter() - t
+    deck_rss = peak_rss_mb()
+    expected = LABELS["expected"]
+    found = [e for e in expected if any(matches(f, deck.doc, e) for f in deck.findings)]
+    extra = [f for f in deck.findings if not any(matches(f, deck.doc, e) for e in expected)]
+    tp = len(deck.findings) - len(extra)
+    cover_findings = [f for f in deck.findings if page_and_box(f, deck.doc)[0] == 1]
+    precision = tp / len(deck.findings) if deck.findings else 1.0
+    recall = len(found) / len(expected)
+
+    rows = []
+    for e in expected:
+        hit = next((f for f in deck.findings if matches(f, deck.doc, e)), None)
+        box = page_and_box(hit, deck.doc)[1] if hit else None
+        what = e.get("code") or f"WCAG {e.get('wcag')}"
+        kind = "hidden text" if e.get("hidden") else ("picture" if e.get("image") else "text")
+        rows.append(
+            f"| {e['page']} | {e['dimension']} | {what} | {kind} | {tuple(e['box'])} | "
+            f"{box if box else '**missed**'} |"
+        )
+
+    big = repeat_deck(10)
+    t = time.perf_counter()
+    forty = asyncio.run(stages(big))
+    forty_s = time.perf_counter() - t
+    peak = peak_rss_mb()
+    assert forty.pdf is not None
+    chunks = page_chunks(forty.pdf.pages)
+    thumbs = sum(len(p.png) for p in forty.pdf.pages)
+
+    ok = recall == 1.0 and not extra and len(forty.pdf.pages) == 40
+    lines = [
+        "# PDF eval (P12)",
+        "",
+        "Generated by `make eval-pdf` (`apps/worker/eval/pdf_eval.py`). Deterministic stages only;",
+        "no LLM calls. Boxes are in render pixels (the page thumbnail's pixel space).",
+        "",
+        "## Fixture deck (`fixtures/paywise/deck.pdf`, 4 pages)",
+        "",
+        f"- Seeded issues found on the right page with an overlapping box: **{len(found)}/"
+        f"{len(expected)}** (recall {recall:.0%})",
+        f"- Deterministic findings that match a label: **{tp}/{len(deck.findings)}** "
+        f"(precision {precision:.0%}); clean cover page: "
+        f"{'HAS FINDINGS' if cover_findings else 'no findings'}",
+        f"- Hidden text runs detected: {len(deck.pdf.hidden) if deck.pdf else 0} "
+        "(white-on-white injection, 3 pt note); both redacted from the LLM-bound copy: "
+        f"{'yes' if 'Ignore previous' not in deck.redacted.text else 'NO'}",
+        f"- Stages 1-4: {deck_s:.2f} s",
+        "",
+        "| Page | Dimension | Cites | Where | Label box | Found box |",
+        "|---|---|---|---|---|---|",
+        *rows,
+        "",
+        "## 40-page deck (fixture × 10, 10 embedded pictures OCR'd)",
+        "",
+        f"- Pages processed: {len(forty.pdf.pages)} (cap `PDF_MAX_PAGES` = "
+        f"{config.PDF_MAX_PAGES}; a 41st page is rejected with `too_many_pages`)",
+        f"- Stages 1-4 wall time: **{forty_s:.1f} s** ({forty_s / 40 * 1000:.0f} ms/page; "
+        f"ingest {forty.timings['ingest'] / 1000:.1f} s, filters "
+        f"{forty.timings['filters'] / 1000:.1f} s) on {platform.machine()} {platform.system()}",
+        f"- Peak RSS of the whole eval process: **{peak:.0f} MB** (after imports and logo "
+        f"templates: {base_rss:.0f} MB; after the 4-page deck, which also pays the lazy imports: "
+        f"{deck_rss:.0f} MB). Memory is flat in the page count: pages are rendered and analysed "
+        f"one at a time and only the PNG thumbnails are kept ({thumbs / 1e6:.1f} MB for 40 "
+        "pages).",
+        f"- Retrieval embeddings: {embed_note}.",
+        f"- LLM calls this deck would make: {len(chunks)} (whole pages packed up to "
+        f"`PDF_CHUNK_WORDS` = {config.PDF_CHUNK_WORDS} words), plus one confirmation sample per "
+        "chunk that returns a blocker.",
+        f"- Findings: {len(forty.findings)} (the deck's 9, on each of its 10 copies: "
+        f"{'yes' if len(forty.findings) == 10 * len(deck.findings) else 'no'})",
+        "",
+        f"**Result: {'PASS' if ok else 'FAIL'}**",
+        "",
+    ]
+    args.out.write_text("\n".join(lines))
+    print("\n".join(lines))
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

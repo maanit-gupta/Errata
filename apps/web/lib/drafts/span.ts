@@ -17,3 +17,9 @@ export function spanTarget(span: unknown): FindingTarget {
   if (s.target === "alt_text") return "alt_text";
   return spanBox(span) && typeof s.start !== "number" ? "image" : "text";
 }
+
+/** 1-based PDF page of a finding (P12); null for everything that isn't from a PDF. */
+export function spanPage(span: unknown): number | null {
+  const s = (span && typeof span === "object" ? span : {}) as Record<string, unknown>;
+  return typeof s.page === "number" && Number.isInteger(s.page) && s.page > 0 ? s.page : null;
+}

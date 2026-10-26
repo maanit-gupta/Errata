@@ -13,6 +13,8 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
+from brandlens_worker import config
+
 DIM = 384
 
 Vector = npt.NDArray[np.float32]
@@ -52,7 +54,33 @@ class Embedder:
         if not texts:
             return np.zeros((0, DIM), dtype=np.float32)
         model = get_model(self.model_name, self.cache_dir)
-        return normalise(np.stack(list(model.embed(list(texts)))))
+        out = np.zeros((len(texts), DIM), dtype=np.float32)
+        for batch in token_batches(texts):
+            vecs = list(model.embed([texts[i] for i in batch], batch_size=len(batch)))
+            out[batch] = np.stack(vecs)
+        return normalise(out)
+
+
+MAX_TOKENS = 512  # bge-small truncates here
+
+
+def token_batches(texts: Sequence[str], budget: int = config.EMBED_TOKEN_BUDGET) -> list[list[int]]:
+    """Indices grouped by similar length so that (batch size × longest text, in rough tokens)
+    stays within `budget`. A batch pads to its longest text and ONNX Runtime keeps its peak arena,
+    so one 512-token query batched with 24 sentences cost ~500 MB in the P12 benchmark; a long text
+    now runs alone and short sentences still batch together."""
+    order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
+    batches: list[list[int]] = []
+    cur: list[int] = []
+    for i in order:
+        tokens = min(MAX_TOKENS, len(texts[i]) // 4 + 2)  # ~4 characters per token
+        if cur and (len(cur) + 1) * tokens > budget:
+            batches.append(cur)
+            cur = []
+        cur.append(i)
+    if cur:
+        batches.append(cur)
+    return batches
 
 
 def cosine(a: npt.NDArray[Any], b: npt.NDArray[Any]) -> float:

@@ -103,3 +103,13 @@ def test_embeddings_shape_and_normalisation() -> None:
     # the two returns sentences are closer to each other than to the webinar
     assert cosine(vecs[0], vecs[1]) > cosine(vecs[0], vecs[2])
     assert emb.embed([]).shape == (0, DIM)
+
+
+def test_token_batches_keep_long_texts_alone_and_preserve_order() -> None:
+    from brandlens_worker.embeddings import token_batches
+
+    texts = ["short one", "x" * 4000, "another short", "y" * 3000, "tiny"]
+    batches = token_batches(texts, budget=512)
+    assert sorted(i for b in batches for i in b) == [0, 1, 2, 3, 4]
+    assert [1] in batches and [3] in batches  # each long text runs alone
+    assert any(len(b) == 3 for b in batches)  # the short ones share a batch

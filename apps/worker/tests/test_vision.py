@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from functools import cache
-from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -14,7 +12,6 @@ from brandlens_worker.llm.cache import LLMCache
 from brandlens_worker.llm.router import LLMRouter
 from brandlens_worker.pipeline.image import (
     ImageAnalysis,
-    VisualKit,
     analyse_image,
     check_image,
     image_doc,
@@ -25,29 +22,21 @@ from brandlens_worker.pipeline.run import VersionInput, run_stages_1_to_4, run_s
 from brandlens_worker.pipeline.types import Finding
 from brandlens_worker.pipeline.vision_gate import vision_gate
 from brandlens_worker.vision import decode_image
-from brandlens_worker.vision.colour import PaletteColour, delta_e
+from brandlens_worker.vision.colour import delta_e
 from brandlens_worker.vision.contrast import contrast_ratio, hex_to_rgb
-from brandlens_worker.vision.logo import load_template
 from brandlens_worker.vision.ocr import OcrWord, group_lines
 from tests.fakes import ScriptedProvider
-from tests.vault_fixture import ROOT, d, paywise_vault
-
-KIT_DIR = ROOT / "fixtures" / "paywise"
-CREATIVES = KIT_DIR / "creatives"
-LABELS: list[dict[str, Any]] = json.loads((CREATIVES / "labels.json").read_text())["creatives"]
-INTENT = {"goal": "webinar sign-ups", "audience": "first-time investors", "cta": "Register now",
-          "channel": "instagram_post"}  # fmt: skip
-
-
-@cache
-def kit() -> VisualKit:
-    logos = [
-        load_template(a["name"], (KIT_DIR / "logos" / Path(a["storage_path"]).name).read_bytes())
-        for a in d.ASSETS
-        if a["kind"] == "logo"
-    ]
-    palette = [PaletteColour(c["name"], c["hex"]) for c in d.PALETTE]
-    return VisualKit(logos=logos, palette=palette)
+from tests.kit_fixture import (  # noqa: F401  (re-exported for evals)
+    CREATIVES,
+    INTENT,
+    KIT_DIR,
+    LABELS,
+    RETRIEVED,
+    fake_embed,
+    fake_match,
+    kit,
+)
+from tests.vault_fixture import paywise_vault
 
 
 @cache
@@ -215,12 +204,6 @@ def test_llm_image_masks_redactions_and_downscales() -> None:
 # ------------------------------------------------------------------ vision gate
 
 
-RETRIEVED = [
-    {"id": "rule-VS-02", "code": "VS-02", "kind": "rule", "dimension": "visual", "similarity": 0.6},
-    {"id": "rule-VS-03", "code": "VS-03", "kind": "rule", "dimension": "visual", "similarity": 0.5},
-    {"id": "rule-A-02", "code": "A-02", "kind": "rule", "dimension": "access", "similarity": 0.55},
-    {"id": "rule-CL-03", "code": "CL-03", "kind": "rule", "dimension": "claims", "similarity": 0.7},
-]
 ALT = "PayWise poster about a SIP."
 
 
@@ -279,14 +262,6 @@ def test_vision_gate_alt_text_and_text_targets() -> None:
 
 
 # ------------------------------------------------------------------ stages end to end
-
-
-async def fake_embed(texts: list[str]) -> Any:
-    return np.zeros((len(texts), 384), np.float32)
-
-
-async def fake_match(_vec: Any) -> list[dict[str, Any]]:
-    return [dict(r) for r in RETRIEVED]
 
 
 async def test_image_through_stages_1_to_6() -> None:

@@ -25,6 +25,8 @@ export type FindingView = {
   /** What the finding points at: draft text, a region of an uploaded image, or its alt text. */
   target: "text" | "image" | "alt_text";
   box: { x0: number; y0: number; x1: number; y1: number } | null;
+  /** PDFs: the 1-based page the finding is on (P12). */
+  page?: number | null;
   explanation: string;
   rewrite: string | null;
   status: "open" | "accepted" | "edited" | "dismissed" | "routed" | "superseded";
@@ -40,9 +42,11 @@ type Props = {
   canAct: boolean;
   /** Image versions: fixes happen in the design file, so "Mark fixed" replaces accept/edit. */
   imageMode?: boolean;
-  /** The finding's number on the image overlay. */
+  /** The finding's number on the image overlay (per page for PDFs). */
   marker?: number;
   onFocus: (id: string | null, scroll?: boolean) => void;
+  /** PDFs: turn to the finding's page and bring its box into view. */
+  onShow?: (finding: FindingView) => void;
   onApply: (finding: FindingView, text: string, status: "accepted" | "edited") => Promise<void>;
   onResolve: (
     finding: FindingView,
@@ -68,6 +72,7 @@ export function FindingCard({
   imageMode = false,
   marker,
   onFocus,
+  onShow,
   onApply,
   onResolve,
 }: Props) {
@@ -125,9 +130,12 @@ export function FindingCard({
         >
           {marker ? (
             <span className="bg-foreground text-background rounded-sm px-1.5 py-0.5 font-mono text-xs">
-              <span className="sr-only">Image marker </span>
+              <span className="sr-only">{f.page ? `Page ${f.page} marker ` : "Image marker "}</span>
               {marker}
             </span>
+          ) : null}
+          {f.page ? (
+            <span className="text-muted-foreground font-mono text-xs">p. {f.page}</span>
           ) : null}
           <SeverityBadge severity={f.severity} />
           {f.citations.map((c) => (
@@ -154,6 +162,11 @@ export function FindingCard({
       {open ? (
         <div id={`${id}-body`} className="border-border space-y-3 border-t p-3 text-sm">
           <p>{f.explanation}</p>
+          {f.page && onShow ? (
+            <Button size="sm" variant="outline" onClick={() => onShow(f)}>
+              Show on page {f.page}
+            </Button>
+          ) : null}
           <p className="text-muted-foreground flex items-center gap-2 text-xs">
             <span className="font-mono">confidence {f.confidence.toFixed(2)}</span>
             {lowConfidence ? (
@@ -277,7 +290,7 @@ export function FindingCard({
                 aria-describedby={`${id}-design`}
                 onClick={() => run(() => onApply(f, "", "edited"))}
               >
-                Mark fixed in the image
+                {f.page ? "Mark fixed in the PDF" : "Mark fixed in the image"}
               </Button>
               <Button
                 size="sm"
@@ -298,7 +311,8 @@ export function FindingCard({
                 </Button>
               ) : null}
               <p id={`${id}-design`} className="text-muted-foreground basis-full text-xs">
-                Fix it in the design file, then upload the new image: the next check verifies it.
+                Fix it in the design file, then upload the new {f.page ? "PDF" : "image"}: the next
+                check verifies it.
               </p>
             </div>
           ) : null}

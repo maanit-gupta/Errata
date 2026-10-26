@@ -21,7 +21,8 @@ sys.path.insert(0, str(WORKER))
 from brandlens_worker import config  # noqa: E402
 from brandlens_worker.pipeline.image import analyse_image, check_image, image_doc  # noqa: E402
 from brandlens_worker.vision.contrast import contrast_ratio, hex_to_rgb  # noqa: E402
-from tests.test_vision import CREATIVES, LABELS, checks, iou, kit  # noqa: E402
+from tests.kit_fixture import CREATIVES, LABELS, kit  # noqa: E402
+from tests.test_vision import checks, iou  # noqa: E402
 from tests.vault_fixture import paywise_vault  # noqa: E402
 
 REPORT = WORKER / "eval" / "vision_report.md"

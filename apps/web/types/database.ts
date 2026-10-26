@@ -739,6 +739,7 @@ export type Database = {
           id: string
           model_version: string | null
           org_id: string
+          pages: Json
           prompt_version: string | null
           provider: string | null
           retrieved: Json
@@ -755,6 +756,7 @@ export type Database = {
           id?: string
           model_version?: string | null
           org_id: string
+          pages?: Json
           prompt_version?: string | null
           provider?: string | null
           retrieved?: Json
@@ -771,6 +773,7 @@ export type Database = {
           id?: string
           model_version?: string | null
           org_id?: string
+          pages?: Json
           prompt_version?: string | null
           provider?: string | null
           retrieved?: Json

@@ -30,8 +30,12 @@ class Doc:
     images: list[bytes] = field(default_factory=list)
 
     def bbox_for(self, start: int, end: int) -> tuple[int, int, int, int] | None:
-        """Pixel box covering [start, end) in `text`, for docs built from an image (OCR)."""
-        boxes = [s.bbox for s in self.segments if s.bbox and s.start < end and s.end > start]
+        """Pixel box covering [start, end) in `text`, for docs built from an image (OCR) or a PDF.
+        A span that crosses a page break is boxed on its first page."""
+        hits = [s for s in self.segments if s.bbox and s.start < end and s.end > start]
+        if not hits:
+            return None
+        boxes = [s.bbox for s in hits if s.page == hits[0].page and s.bbox]
         if not boxes:
             return None
         return (
@@ -40,6 +44,18 @@ class Doc:
             int(max(b[2] for b in boxes)),
             int(max(b[3] for b in boxes)),
         )
+
+    def page_for(self, start: int, end: int) -> int | None:
+        """1-based page of the first segment overlapping [start, end) (PDFs); None otherwise."""
+        hit = next(
+            (
+                s
+                for s in self.segments
+                if s.page is not None and s.start < max(end, start + 1) and s.end > start
+            ),
+            None,
+        )
+        return hit.page if hit else None
 
     def to_original(self, start: int, end: int) -> tuple[int, int]:
         """Map a [start, end) span in `text` back to `original`."""
@@ -149,6 +165,7 @@ class Finding:
     target: Target = "text"
     bbox: tuple[int, int, int, int] | None = None
     quote: str | None = None  # overrides the text slice (image and alt-text targets)
+    page: int | None = None  # PDFs: 1-based page of an image-target finding
 
     @property
     def cited(self) -> bool:

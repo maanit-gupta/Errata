@@ -7,7 +7,7 @@ WORKER := apps/worker
 UV     := cd $(WORKER) && uv run
 
 .PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
-        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision seed-demo seed-assets-local
+        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision eval-pdf seed-demo seed-assets-local
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -95,6 +95,9 @@ eval: ## Golden-set eval (P14)
 
 eval-vision: ## P11 vision eval on the labelled creatives → apps/worker/eval/vision_report.md
 	$(UV) python eval/vision_eval.py
+
+eval-pdf: ## P12 PDF eval: fixture deck labels + 40-page benchmark → apps/worker/eval/pdf_report.md
+	$(UV) python eval/pdf_eval.py
 
 seed-demo: ## Load the PayWise demo into the cloud project: make seed-demo url=https://<ref>.supabase.co
 	@test -n "$(url)" || { echo "usage: make seed-demo url=<SUPABASE_URL>  (must match apps/worker/.env; local uses make db-reset)"; exit 1; }

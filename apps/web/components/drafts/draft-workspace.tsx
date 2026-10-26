@@ -20,6 +20,8 @@ import {
 import { docToText, spanToRange, textToDocJSON } from "@/lib/editor/offsets";
 import { FindingCard, type FindingView } from "./finding-card";
 import { ImageFindings, type ImageMarker } from "./image-findings";
+import { PdfFindings, pageSummary, type PdfMarker } from "./pdf-findings";
+import type { PdfPageView } from "@/lib/drafts/pages";
 
 const SEVERITY_ORDER = { blocker: 0, warning: 1, suggestion: 2 } as const;
 
@@ -37,6 +39,8 @@ type Props = {
   findings: FindingView[];
   /** Signed URL of the current version's image (image versions only). */
   imageUrl: string | null;
+  /** Rendered pages of the current PDF version, once its check has run (P12). */
+  pdfPages?: PdfPageView[];
   canEdit: boolean;
   canAct: boolean;
 };
@@ -48,6 +52,7 @@ export function DraftWorkspace({
   run,
   findings,
   imageUrl,
+  pdfPages = [],
   canEdit,
   canAct,
 }: Props) {
@@ -55,6 +60,11 @@ export function DraftWorkspace({
   const id = useId();
   const [pending, start] = useTransition();
   const [active, setActive] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [allPages, setAllPages] = useState(false);
+  // "Show on page N" pins its finding: scrolling moves the card from under the pointer, and the
+  // resulting mouseleave must not clear the box it just pointed at.
+  const [pinned, setPinned] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof Intent, string>>>({});
   const [intent, setIntent] = useState<Partial<Intent>>({
@@ -123,6 +133,21 @@ export function DraftWorkspace({
   }, [editor, version?.body, run, visible]);
 
   const imageVersion = version?.format === "image" && !!imageUrl;
+  const pdfVersion = version?.format === "pdf";
+  // Uploaded files (images, PDFs) are fixed in the design and re-checked on the next upload.
+  const fileVersion = version?.format === "image" || pdfVersion;
+  const pdfMarkers: PdfMarker[] = pdfVersion
+    ? visible
+        .filter((f) => f.box && f.page && f.status === "open")
+        .map((f) => ({
+          id: f.id,
+          severity: f.severity,
+          codes: f.citations.map((c) => c.code).join(" · "),
+          label: f.quote,
+          box: f.box!,
+          page: f.page!,
+        }))
+    : [];
   const markers: ImageMarker[] = imageVersion
     ? visible
         .filter((f) => f.box && f.status === "open")
@@ -134,10 +159,24 @@ export function DraftWorkspace({
           box: f.box!,
         }))
     : [];
-  const markerNumber = new Map(markers.map((m, i) => [m.id, i + 1]));
+  // Numbered like the overlay: per image, or per page of a PDF.
+  const markerNumber = new Map([
+    ...markers.map((m, i) => [m.id, i + 1] as const),
+    ...pdfMarkers.map(
+      (m) =>
+        [
+          m.id,
+          pdfMarkers.filter((x) => x.page === m.page).findIndex((x) => x.id === m.id) + 1,
+        ] as const,
+    ),
+  ]);
 
   const focus = (fid: string | null, scroll = false) => {
-    setActive(fid);
+    if (fid && fid !== pinned) setPinned(null);
+    setActive(fid ?? pinned);
+    // PDFs: keyboard focus on a finding from another page turns to that page.
+    const onPage = fid ? visible.find((f) => f.id === fid)?.page : null;
+    if (pdfVersion && onPage && scroll && onPage !== page) setPage(onPage);
     if (!editor) return;
     editor.view.dispatch(editor.state.tr.setMeta(findingsKey, { active: fid }));
     // Scroll only for keyboard focus; scrolling on hover moves the card under the pointer.
@@ -147,6 +186,14 @@ export function DraftWorkspace({
         ?.scrollIntoView({ block: "nearest" });
   };
 
+  const showOnPage = (f: FindingView) => {
+    if (!f.page) return;
+    setPage(f.page);
+    setActive(f.id);
+    setPinned(f.id);
+    document.getElementById(`${id}-editor`)?.scrollIntoView({ block: "start" });
+  };
+
   const removeHighlight = (fid: string) => {
     if (!editor) return;
     const ranges = (findingsKey.getState(editor.state)?.ranges ?? []).filter((r) => r.id !== fid);
@@ -154,7 +201,7 @@ export function DraftWorkspace({
   };
 
   const apply = async (f: FindingView, text: string, status: "accepted" | "edited") => {
-    if (version?.format === "image") {
+    if (fileVersion) {
       // Nothing to patch in place: alt text lives in the intent; everything else is fixed in the
       // design and verified when the corrected image is uploaded.
       if (f.target === "alt_text") setIntent((s) => ({ ...s, alt_text: text }));
@@ -164,7 +211,7 @@ export function DraftWorkspace({
         toast.success(
           f.target === "alt_text"
             ? "Alt text updated. Resubmit to check it."
-            : "Marked fixed. Upload the corrected image to resubmit.",
+            : `Marked fixed. Upload the corrected ${pdfVersion ? "PDF" : "image"} to resubmit.`,
         );
       router.refresh();
       return;
@@ -199,6 +246,12 @@ export function DraftWorkspace({
     );
     router.refresh();
   };
+
+  // PDFs: the list follows the page on screen unless "Show all pages" is on.
+  const shown =
+    pdfVersion && pdfPages.length && !allPages
+      ? visible.filter((f) => !f.page || f.page === page)
+      : visible;
 
   const openBlockers = visible.filter(
     (f) => f.severity === "blocker" && f.status === "open",
@@ -277,11 +330,36 @@ export function DraftWorkspace({
         >
           <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
             <h2 id={`${id}-editor`} className="font-sans text-sm font-medium">
-              {imageVersion ? "Image" : "Draft"} {version ? `· version ${version.n}` : ""}
+              {pdfVersion ? "PDF" : imageVersion ? "Image" : "Draft"}{" "}
+              {version ? `· version ${version.n}` : ""}
             </h2>
             <StateBadge state={content.state} />
           </div>
-          {imageVersion ? (
+          {pdfVersion ? (
+            <div className="px-4 py-3">
+              {pdfPages.length ? (
+                <PdfFindings
+                  title={content.title}
+                  pages={pdfPages}
+                  markers={checking ? [] : pdfMarkers}
+                  page={page}
+                  onPageChange={(n) => {
+                    setPage(n);
+                    setActive(null);
+                    setPinned(null);
+                  }}
+                  active={active}
+                  onFocus={focus}
+                />
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  {checking
+                    ? "Reading the PDF and rendering its pages…"
+                    : "The PDF's pages appear here after its check."}
+                </p>
+              )}
+            </div>
+          ) : imageVersion ? (
             <div className="px-4 py-3">
               <ImageFindings
                 src={imageUrl!}
@@ -301,7 +379,9 @@ export function DraftWorkspace({
               <label htmlFor={`${id}-file`} className="font-medium">
                 {imageVersion
                   ? "Upload the corrected image (PNG, JPEG or WebP)"
-                  : "Or upload a file (DOCX, PDF or image)"}
+                  : pdfVersion
+                    ? "Upload the corrected PDF"
+                    : "Or upload a file (DOCX, PDF or image)"}
               </label>
               <input
                 id={`${id}-file`}
@@ -312,8 +392,8 @@ export function DraftWorkspace({
               />
               {fileKind === "pdf" ? (
                 <p className="text-muted-foreground mt-1 text-xs">
-                  PDF checks arrive in a later release; text checks run on DOCX, images and typed
-                  drafts today.
+                  Up to 40 pages. Every text rule runs on the PDF&apos;s text, plus contrast, hidden
+                  text, link text, the logo and the pictures on each page.
                 </p>
               ) : fileKind === "image" ? (
                 <p className="text-muted-foreground mt-1 text-xs">
@@ -349,24 +429,49 @@ export function DraftWorkspace({
               The check failed ({run.error_code}). Your draft is back in your hands; try again.
             </p>
           ) : null}
+          {pdfVersion && pdfPages.length && visible.length && !checking ? (
+            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+              <p className="m-0">
+                {allPages
+                  ? `All ${pdfPages.length} pages`
+                  : `Page ${page}: ${pageSummary(pdfMarkers, page)}`}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-pressed={allPages}
+                onClick={() => setAllPages((v) => !v)}
+              >
+                Show all pages
+              </Button>
+            </div>
+          ) : null}
           {checking ? (
             <p className="text-muted-foreground text-sm">Checking against your brand vault…</p>
-          ) : visible.length ? (
+          ) : shown.length ? (
             <ul className="space-y-3">
-              {visible.map((f) => (
+              {shown.map((f) => (
                 <FindingCard
                   key={f.id}
                   finding={f}
                   active={active === f.id}
                   canAct={canAct}
-                  imageMode={version?.format === "image"}
+                  imageMode={fileVersion}
                   marker={markerNumber.get(f.id)}
                   onFocus={focus}
+                  onShow={pdfVersion ? showOnPage : undefined}
                   onApply={apply}
                   onResolve={resolve}
                 />
               ))}
             </ul>
+          ) : visible.length ? (
+            <p className="text-sm">
+              No findings on page {page}.{" "}
+              <button type="button" className="underline" onClick={() => setAllPages(true)}>
+                Show all pages
+              </button>
+            </p>
           ) : run?.status === "done" ? (
             <p className="text-sm">
               No findings. This draft follows every approved rule BrandLens checked.
@@ -467,8 +572,8 @@ export function DraftWorkspace({
                 ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} still open: accept, edit, dismiss with a reason, or route each one.`
                 : checking
                   ? "A check is running."
-                  : imageVersion && !file
-                    ? "Upload the corrected image above, then resubmit. Nothing is ever published automatically."
+                  : (imageVersion || pdfVersion) && !file
+                    ? `Upload the corrected ${pdfVersion ? "PDF" : "image"} above, then resubmit. Nothing is ever published automatically.`
                     : "Saves a new version and checks it. Nothing is ever published automatically."}
             </p>
           </div>

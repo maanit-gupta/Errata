@@ -55,6 +55,17 @@ TINY_TEXT_PX: Final = 12  # text shorter than this is hidden fine print (A-02)
 FAINT_TEXT_RATIO: Final = 1.5  # contrast below this is hidden (near-invisible) text
 WARMTH_COOL_B: Final = -4.0  # mean CIELAB b* below this pre-filters an image as cold (VS-02)
 VISION_MAX_SIDE: Final = 1024  # the LLM-bound copy of an image is downscaled to this
+# PDFs (P12). Pages are rendered so the long side is at most PDF_RENDER_MAX_SIDE px; bboxes and
+# thumbnails share that pixel space.
+PDF_RENDER_MAX_SIDE: Final = 1400
+PDF_RENDER_MAX_ZOOM: Final = 2.0
+PDF_MAX_WORDS: Final = 12000  # a deck is bounded by PDF_MAX_PAGES; this caps text-dense PDFs
+PDF_HIDDEN_PT: Final = 4.0  # text smaller than this (points) is hidden (SPEC §6 stage 2)
+PDF_IMAGE_MIN_PX: Final = 120  # embedded images smaller than this (rendered px) aren't analysed
+PDF_CHUNK_WORDS: Final = 700  # whole pages are packed into LLM chunks up to this many words
+# Padded tokens per ONNX embedding batch (texts × longest); bounds peak memory on the 512 MB
+# worker. 512 = one full-length text alone (P12 benchmark: 205 MB vs 498 MB for a batch of 16).
+EMBED_TOKEN_BUDGET: Final = 512
 LLM_CACHE: Final = False  # True in eval/tests
 
 # Queues (SQL migration 20261026100011). Review jobs use PGMQ_QUEUE from env.

@@ -86,8 +86,13 @@ def detect(text: str) -> list[Redaction]:
     return sorted(taken, key=lambda r: r.start)
 
 
-def protect(doc: Doc) -> RedactedDoc:
-    redactions = detect(doc.text)
+def protect(doc: Doc, extra: list[Redaction] | None = None) -> RedactedDoc:
+    """`extra` spans (e.g. hidden PDF text) are redacted too and win over detector hits."""
+    redactions = sorted(extra or [], key=lambda r: r.start)
+    redactions += [
+        r for r in detect(doc.text) if all(r.end <= x.start or r.start >= x.end for x in redactions)
+    ]
+    redactions.sort(key=lambda r: r.start)
     parts: list[str] = []
     cursor = 0
     for r in redactions:

@@ -171,16 +171,22 @@ def _template_match(img_gray: GRAY, tpl: LogoTemplate) -> LogoMatch | None:
     return LogoMatch(tpl.name, top[1], "template", top[0], 0, top[0])
 
 
-def detect_logo(img: RGB, templates: list[LogoTemplate], *, min_inliers: int) -> LogoMatch | None:
+def detect_logo(
+    img: RGB, templates: list[LogoTemplate], *, min_inliers: int, confirm: bool = False
+) -> LogoMatch | None:
     """The best match over all templates. ORB wins when it has enough inliers (its box follows the
-    homography); otherwise the strongest template correlation above TM_MIN_SCORE."""
+    homography); otherwise the strongest template correlation above TM_MIN_SCORE.
+
+    `confirm=True` (PDF pages: lots of large bold type) also requires the template to correlate at
+    the ORB box; bold headings in a similar face can otherwise collect enough ORB inliers."""
     gray = _gray(img)
     orb = [m for t in templates if (m := _orb_match(gray, t, min_inliers))]
     if orb:
         best = max(orb, key=lambda m: m.inliers)
         tpl = next(t for t in templates if t.name == best.template)
         corr = _correlation_at(gray, tpl, best.box)
-        return LogoMatch(best.template, best.box, "orb", best.score, best.inliers, corr)
+        if not confirm or corr >= TM_MIN_SCORE:
+            return LogoMatch(best.template, best.box, "orb", best.score, best.inliers, corr)
     # Too small (or too few features) for ORB: the template search is the second opinion.
     tm = [m for t in templates if (m := _template_match(gray, t))]
     return max(tm, key=lambda m: m.correlation, default=None)

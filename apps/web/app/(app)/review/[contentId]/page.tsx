@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ImageFindings } from "@/components/drafts/image-findings";
+import { PdfFindings } from "@/components/drafts/pdf-findings";
 import { IdBadge } from "@/components/id-badge";
 import { PageHeader } from "@/components/page-header";
 import { Comments, type CommentView } from "@/components/review/comments";
@@ -10,7 +11,8 @@ import { SeverityBadge } from "@/components/severity-badge";
 import { StateBadge } from "@/components/state-badge";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
-import { spanBox } from "@/lib/drafts/span";
+import { signedPages } from "@/lib/drafts/pages";
+import { spanBox, spanPage } from "@/lib/drafts/span";
 import { createClient } from "@/lib/supabase/server";
 import { can as canDo } from "@/lib/workflow/permissions";
 
@@ -167,6 +169,17 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
       ? [{ id: f.id, severity: f.severity, codes: f.codes, label: f.quote, box }]
       : [];
   });
+  // PDF versions: the page renders of the run these findings came from (P12).
+  const { data: pdfRun } =
+    current?.format === "pdf" && latestRun
+      ? await supabase.from("review_runs").select("pages").eq("id", latestRun).maybeSingle()
+      : { data: null };
+  const pdfPages = pdfRun ? await signedPages(supabase, pdfRun.pages) : [];
+  const pageOf = new Map(findings.map((f) => [f.id, spanPage(f.span)]));
+  const pdfMarkers = markers.flatMap((m) => {
+    const page = pageOf.get(m.id);
+    return page ? [{ ...m, page }] : [];
+  });
 
   const resolvedByChange = (findingRows ?? [])
     .filter(
@@ -256,6 +269,8 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
                     label: `${f.severity} ${f.codes}`,
                   }))}
               />
+            ) : pdfPages.length ? (
+              <PdfFindings title={content.title} pages={pdfPages} markers={pdfMarkers} />
             ) : imageUrl ? (
               <ImageFindings
                 src={imageUrl}
@@ -299,6 +314,13 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
                   </p>
                   <p className="mt-1">“{f.quote}”</p>
                   <p className="text-muted-foreground mt-1">{f.explanation}</p>
+                  {pdfPages.length && pageOf.get(f.id) ? (
+                    <p className="mt-1">
+                      <a href={`#show-${f.id}`} className="text-sm underline underline-offset-2">
+                        Show on page {pageOf.get(f.id)}
+                      </a>
+                    </p>
+                  ) : null}
                 </li>
               ))}
               {findings.length ? null : (
