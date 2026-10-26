@@ -139,6 +139,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-26 | P10 | Supabase region is ap-southeast-1 (Singapore), Render region singapore | Actual project region (not Mumbai as planned) |
 | 2026-10-26 | P10 | Free-tier sleep mitigated by submit-time `/healthz` ping (`WORKER_URL`) + 10-min GitHub keep-alive | Free web services stop the consumer when idle |
 | 2026-10-26 | P10 | E2E is manual in CI; `worker-image` job builds the Docker image | E2E needs LLM keys and a running worker |
+| 2026-10-26 | P10 | `main` fast-forwarded to `phase/P10-deploy` (P00–P10 linear stack) without PR review; Render + Vercel deploy from `main` (user decision) | GitHub repo was empty; deploys need a stable production branch. Jagpreet can review after the fact |
+| 2026-10-26 | P10 | Render service created via MCP with non-secret env only; secrets pasted by the user in the dashboard; Vercel secrets piped through the CLI | CLAUDE.md: never read secret values |
 
 **Dependencies and licences** (append when adding any dependency):
 
