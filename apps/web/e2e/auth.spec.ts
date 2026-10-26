@@ -117,6 +117,8 @@ test("non-admins can't open admin pages", async ({ page }) => {
 });
 
 test.describe("accessibility (axe, WCAG 2.2 AA)", () => {
+  // Toasts and findings fade in (DESIGN §4); audit settled frames.
+  test.use({ reducedMotion: "reduce" });
   test("/login has no violations", async ({ page }) => {
     await page.goto("/login");
     await expectNoA11yViolations(page);
@@ -135,7 +137,7 @@ test.describe("accessibility (axe, WCAG 2.2 AA)", () => {
 });
 
 test.describe("accessibility in dark mode", () => {
-  test.use({ colorScheme: "dark" });
+  test.use({ colorScheme: "dark", reducedMotion: "reduce" });
 
   test("/login has no violations", async ({ page }) => {
     await page.goto("/login");

@@ -40,8 +40,10 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   test.skip(!RUN, "set E2E_WORKER=1 (local) or E2E_BASE_URL (deployed)");
   test.setTimeout(180_000);
   await signInAs(page, "Creator");
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(TITLE);
-  await page.getByRole("button", { name: "New draft" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   const draftUrl = page.url();
   const contentId = draftUrl.split("/").pop()!;

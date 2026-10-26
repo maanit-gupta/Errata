@@ -19,7 +19,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26; Terminal Noir UI per DESIGN §6.6 on ui/P05 (2026-10-27) |
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
-| P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26 |
+| P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26; Terminal Noir UI per DESIGN §6.2–6.3 on ui/P08 (2026-10-27) |
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
@@ -186,6 +186,16 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P05-UI | Saving a rule card keeps each example's `source` (`guide`/`generated`) | It reset every example to `guide`, erasing the P13 GENERATED tag |
 | 2026-10-27 | P05-UI | CSV import is a 3-step dialog (Upload → Preview → Import) but stays all-or-nothing; invalid rows block the import and can be downloaded as an error report | DESIGN says "only valid rows import"; the P04 all-or-nothing decision wins on behaviour (logged deviation) |
 | 2026-10-27 | P05-UI | Bulk bar label is `Approve n rule cards` (selected, or all drafts when none selected) | Storyboard F01 copy; one button instead of two |
+| 2026-10-27 | P08-UI | New drafts start at `/drafts/new` (title, channel, campaign → Create draft); `/drafts` shows onboarding or the table | The top bar's `+ New draft` needs a route; the list page stays a list (DESIGN §6.2) |
+| 2026-10-27 | P08-UI | Workspace = intent (280) · editor · findings (400) at ≥xl; intent spans the top at lg; Submit sits in the header, Resubmit in a sticky bar under the findings when `needs_revision` | DESIGN §6.3; never two buttons with the same name on screen |
+| 2026-10-27 | P08-UI | Submit is disabled (focusable, with the reason via `aria-describedby`) until intent is complete and the draft is ≤ 2,000 words | DESIGN §6.3 "Submit disabled until intent is complete"; WordCounter mirrors worker `MAX_WORDS` in `lib/drafts/limits.ts` |
+| 2026-10-27 | P08-UI | Dismiss is a dialog of radio cards with per-reason help ("tells your brand team the rule may be unclear") | DESIGN §6.3 |
+| 2026-10-27 | P08-UI | Citation popovers get rule body/version/source page/never-send from the draft page (agencies: `rule_cards_public` summary, marked SUMMARY VIEW); vault links only for brand admins | Server-loaded, RLS-scoped (U0 decision) |
+| 2026-10-27 | P08-UI | IntentCheckTag shows a bare `✓ intent verified` on surviving LLM rewrites; the cosine isn't persisted per finding | No column for it; dropped rewrites never reach the UI (P07) |
+| 2026-10-27 | P08-UI | No version switcher on the draft page yet; the version label shows `vN` and the review page's DiffView covers history | Scope; logged for U2 |
+| 2026-10-27 | P08-UI | `j/k/a/e/x` act on finding cards via the `bl-finding-key` event from the global shortcut handler | DESIGN §7.4; single-key shortcuts can be switched off (WCAG 2.1.4) |
+| 2026-10-27 | P08-UI | App-wide `(app)/loading.tsx` (Spinner) and `(app)/error.tsx` (ErrorPanel with digest) | DESIGN §11 loading/error states for every route |
+| 2026-10-27 | P08-UI | E2E: specs wait for `networkidle` after `goto('/drafts/new')`; axe tests emulate reduced motion | Typing before hydration was reset by the Base UI input; axe flagged mid-fade frames |
 
 **Dependencies and licences** (append when adding any dependency):
 

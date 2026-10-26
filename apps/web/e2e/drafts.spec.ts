@@ -29,8 +29,12 @@ test("creator: hero draft → live findings → accept fixes → route CL-03 →
   test.setTimeout(120_000);
   await signInAs(page, "Creator");
 
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
+
   await page.getByLabel("Title").fill("Hero caption (e2e)");
-  await page.getByRole("button", { name: "New draft" }).click();
+
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
 
   await page.getByRole("textbox", { name: "Draft text" }).click();
@@ -63,8 +67,8 @@ test("creator: hero draft → live findings → accept fixes → route CL-03 →
   const accept = async (code: string) =>
     test.step(`accept ${code}`, async () => {
       const c = card(page, code);
-      if ((await c.getByRole("button", { expanded: false }).count()) > 0)
-        await c.getByRole("button", { expanded: false }).click();
+      const header = c.locator('h3 button[aria-expanded="false"]');
+      if ((await header.count()) > 0) await header.click();
       await c.getByRole("button", { name: "Accept fix" }).click();
       await expect(c).toContainText("Fix accepted");
     });
@@ -87,8 +91,10 @@ test("agency sees rule summaries, not bodies", async ({ page }) => {
   test.skip(process.env.E2E_WORKER !== "1", "needs the worker running (E2E_WORKER=1)");
   test.setTimeout(120_000);
   await signInAs(page, "Agency");
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill("Agency caption (e2e)");
-  await page.getByRole("button", { name: "New draft" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   await page.getByRole("textbox", { name: "Draft text" }).click();
   await page.keyboard.insertText("Invest on PayWise and lock in 14.2% assured annual returns.");
@@ -107,7 +113,7 @@ test("keyboard: tab to a finding, Enter expands it, actions are reachable", asyn
   test.skip(process.env.E2E_WORKER !== "1", "needs the worker running (E2E_WORKER=1)");
   await signInAs(page, "Agency");
   await page.getByRole("link", { name: "Agency caption (e2e)" }).first().click();
-  const header = page.getByRole("button", { name: /CL-03/ }).first();
+  const header = page.locator("li[data-finding] h3 button").filter({ hasText: "CL-03" }).first();
   await header.focus();
   const before = await header.getAttribute("aria-expanded");
   await page.keyboard.press("Enter");
@@ -121,6 +127,8 @@ test("keyboard: tab to a finding, Enter expands it, actions are reachable", asyn
 
 test("draft page with findings has no axe violations (WCAG 2.2 AA)", async ({ page }) => {
   test.skip(process.env.E2E_WORKER !== "1", "needs the worker running (E2E_WORKER=1)");
+  // Findings fade in (DESIGN §4); audit the settled page, not a mid-animation frame.
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await signInAs(page, "Creator");
   await page.getByRole("link", { name: "Hero caption (e2e)" }).first().click();
   await expect(page.getByRole("heading", { name: /Findings/ })).toBeVisible();

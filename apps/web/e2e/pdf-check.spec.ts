@@ -34,8 +34,10 @@ test("a seeded deck shows page findings with overlays, hidden text and page jump
   test.skip(!RUN, "set E2E_WORKER=1 (local) or E2E_BASE_URL (deployed)");
   test.setTimeout(240_000);
   await signInAs(page, "Creator");
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(TITLE);
-  await page.getByRole("button", { name: "New draft" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   const contentId = page.url().split("/").pop()!;
   await page.getByLabel("Goal").fill("webinar sign-ups");

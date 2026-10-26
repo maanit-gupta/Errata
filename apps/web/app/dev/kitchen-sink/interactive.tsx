@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/brand/data-table";
+import { FindingCard, type FindingView } from "@/components/drafts/finding-card";
 import { Drawer } from "@/components/brand/drawer";
 import { IdCode } from "@/components/brand/id-badge";
 import { RiskMeter } from "@/components/brand/risk-meter";
@@ -146,5 +147,89 @@ export function DrawerDemo() {
         </p>
       </Drawer>
     </>
+  );
+}
+
+const BASE: FindingView = {
+  id: "f1",
+  dimension: "claims",
+  severity: "blocker",
+  confidence: 1,
+  source: "deterministic",
+  quote: "lock in 14.2% assured annual returns",
+  span: { start: 0, end: 10 },
+  target: "text",
+  box: null,
+  explanation:
+    "Presents a return as certain on a market-linked product. It also quotes F-112 without the required disclaimer.",
+  rewrite: "earn returns linked to the market (Flexi-Cap 3-yr historical CAGR 14.2%*)",
+  status: "open",
+  dismiss_reason: null,
+  citations: [
+    {
+      code: "CL-03",
+      kind: "rule",
+      title: "No guaranteed or assured returns",
+      text: "Never promise or imply guaranteed returns.",
+    },
+    { code: "F-112", kind: "fact", text: "Flexi-Cap 3-yr historical CAGR is 14.2% as of Q3 2026" },
+  ],
+};
+
+export function FindingCardsDemo() {
+  const noop = async () => {};
+  const cards: FindingView[] = [
+    BASE,
+    {
+      ...BASE,
+      id: "f2",
+      severity: "warning",
+      dimension: "tone",
+      source: "llm",
+      confidence: 0.54,
+      quote: "Don't miss out!!!",
+      rewrite: null,
+      model_version: "openai/gpt-oss-120b",
+      prompt_version: "review@2",
+      citations: [{ code: "TV-02", kind: "rule", title: "Warm, plain-spoken; no hype" }],
+    },
+    {
+      ...BASE,
+      id: "f3",
+      severity: "warning",
+      dimension: "terms",
+      quote: "Paywise app",
+      rewrite: "PayWise",
+      status: "accepted",
+      resolved_at: new Date().toISOString(),
+      citations: [{ code: "G-07", kind: "rule", title: "Write PayWise, camel-cased" }],
+    },
+    {
+      ...BASE,
+      id: "f4",
+      severity: "warning",
+      dimension: "access",
+      quote: "Register now",
+      rewrite: null,
+      status: "dismissed",
+      dismiss_reason: "doesnt_apply",
+      citations: [{ code: "WCAG 1.4.3", kind: "wcag" }],
+    },
+  ];
+  return (
+    <ul className="space-y-2">
+      {cards.map((f, i) => (
+        <FindingCard
+          key={f.id}
+          index={i}
+          finding={f}
+          active={false}
+          canAct
+          onFocus={() => {}}
+          onApply={noop}
+          onResolve={noop}
+        />
+      ))}
+    </ul>
   );
 }

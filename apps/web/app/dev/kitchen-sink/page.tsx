@@ -24,7 +24,7 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
-import { DrawerDemo, TableDemo, TabsDemo, ToastDemo } from "./interactive";
+import { DrawerDemo, FindingCardsDemo, TableDemo, TabsDemo, ToastDemo } from "./interactive";
 
 export const metadata = { title: "Kitchen sink" };
 
@@ -210,6 +210,10 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
           <WordCounter count={2104} max={2000} />
           <IllustrativeDataPill />
         </Row>
+      </Section>
+
+      <Section title="Finding cards">
+        <FindingCardsDemo />
       </Section>
 
       <Section title="Run panel">
