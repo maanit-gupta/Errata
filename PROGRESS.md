@@ -296,7 +296,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 - PDFs (P12): vector-drawn logos aren't detected; scanned PDFs (no text layer) are rejected (`no_text_layer`); VS-02 warmth isn't judged for pictures inside decks (counted as `cool_images` only); reading grade highlights the first word of the PDF.
 - Peak RSS for a 40-page deck in the worker image is 484 MB against Render's 512 MB. It's flat in page count, but the margin is thin; the serving worker also holds FastAPI and the LLM SDKs. Consider a 1 GB instance before heavy PDF use.
-- Worker Docker image: the duplicated-venv `chown -R` layer is gone (P15, builds as `app`). P11 adds ~240 MB (scipy, OpenCV, scikit-image) and Tesseract (~100 MB apt layer, shared with libgomp).
+- Worker Docker image: 4.04 GB → 1.73 GB (P15: builds as `app`, no `chown -R` layer, no uv cache; verified locally 2026-10-27). P11 adds ~240 MB (scipy, OpenCV, scikit-image) and Tesseract (~100 MB apt layer, shared with libgomp).
 - Contrast on JPEG uploads is an estimate (4:2:0 chroma smears thin coloured strokes; 7/20 within ±0.1 at q85); the finding says so. PNG is exact.
 - Groq free-tier 429 backoff can push one image review to ~30 s when several run within a minute (P95 target 15 s); revisit in P15 load testing.
 

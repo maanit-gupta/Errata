@@ -6,6 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_NO_CACHE=1 \
+    UV_HTTP_TIMEOUT=600 \
     UV_PROJECT_ENVIRONMENT=/app/.venv \
     MODEL_CACHE_DIR=/app/.models \
     PATH="/app/.venv/bin:$PATH"
