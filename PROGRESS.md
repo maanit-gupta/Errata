@@ -47,14 +47,15 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - `docs/usability/`: consent note, moderator script (A/B manual vs BrandLens with two captions that each carry the same four deterministic issues, verified in-process; tasks T1–T4), SUS form with scoring, results tables.
   - `docs/SECURITY.md`: git history secret scan (clean; the one webhook match is a test fixture).
 - **Waiting on the team (P16 acceptance):**
-  1. **Cloud migrations** `…100020` (submit rate limit) and `…100021` (storage limits): apply with `supabase db push --db-url <session pooler>`. The code works without them.
+  1. ~~Cloud migrations `…100020`/`…100021`~~: confirmed applied on cloud (Supabase migration list, 2026-10-27).
   2. **Usability sessions** (Jagpreet): run `docs/usability/tasks.md`, fill in `results.md`, then replace "Results pending" in README → Results.
   3. **Contributions** (Jagpreet): add specifics to README → Team and contributions. Git shows every commit from `maanit-gupta`.
-  4. **Make the repo public** (currently PRIVATE) after a `gitleaks detect` pass; **tag `v1.0-round2`**; confirm the live link in README.
+  4. **Make the repo public** (still PRIVATE; needs the user's go-ahead). `gitleaks git` is clean (2026-10-27; two fake test strings ignored in `.gitleaksignore`). Tag `v1.0-round2` is pushed (at `1e4a334`; move it if later commits must be included). Confirm the live link in README.
   5. Optional: add `GROQ_API_KEY`/`GEMINI_API_KEY` as GitHub Actions secrets so `eval.yml` can run live on prompt changes.
   6. Before judging: `scripts/reset_demo.sh`, then a recorded dry run per `docs/DEMO.md`.
 - **Gotchas:** `make check` resets the local DB (`make test-db`). Free-tier LLM quotas run out after a full eval plus a burst; keep load tests off the cloud stack on demo day.
-- **Exact next step:** the team items above, then tag `v1.0-round2`.
+- **Final check (2026-10-27, /complete):** `make check` green (pytest, Vitest, 106 pgTAP).
+- **Exact next step:** the team items above (usability results, contributions, make the repo public, demo reset and dry run).
 
 ## Decisions log (append-only)
 
@@ -257,6 +258,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | UI | "View as table" toggle; in chart view the table is `sr-only`, not removed | Screen-reader users always get the numbers (DESIGN §6.7). Replaces the P13-UI side-by-side deviation |
 | 2026-10-27 | UI | Focus rings on elements that also need `outline-none` use `focus-visible:outline-solid` (or drop `outline-none`) | Tailwind v4 `outline-none` sets `--tw-outline-style: none`, which overrides a later `outline-2`; this hid the SegmentedTabs panel ring |
 | 2026-10-27 | UI | Kitchen-sink reduced-motion e2e skips when the route 404s (production builds) | `/dev/kitchen-sink` is dev-only by design (§10) |
+| 2026-10-27 | P16 | `.gitleaksignore` lists the two fake detector-test strings by fingerprint; gitleaks (MIT, local tool, not a project dependency) used for the pre-public scan | Keeps a future `gitleaks git` run clean without weakening rules |
 
 **Dependencies and licences** (append when adding any dependency):
 

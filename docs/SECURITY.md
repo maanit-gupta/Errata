@@ -27,7 +27,9 @@ The names `SUPABASE_SECRET_KEY` and `DISCORD_WEBHOOK_URL` and the string `sb_sec
 
 ## Git history scan
 
-`gitleaks` isn't installed here, so the history was grepped (`git log --all -p`) for Supabase secret keys (`sb_secret_…`), Groq (`gsk_…`), Google (`AIza…`), Langfuse (`sk-lf-`/`pk-lf-`), Resend (`re_…`), Postgres URIs with passwords, JWTs and Discord webhook URLs. Nothing real was found: the one webhook match is the fixture `https://discord.com/api/webhooks/1/x` in `apps/web/lib/__tests__/env.test.ts`. No `.env` file (other than `.env.example`) was ever committed. Run `gitleaks detect` before making the repo public for a second opinion.
+First pass (P16): the history was grepped (`git log --all -p`) for Supabase secret keys (`sb_secret_…`), Groq (`gsk_…`), Google (`AIza…`), Langfuse (`sk-lf-`/`pk-lf-`), Resend (`re_…`), Postgres URIs with passwords, JWTs and Discord webhook URLs. Nothing real was found: the one webhook match is the fixture `https://discord.com/api/webhooks/1/x` in `apps/web/lib/__tests__/env.test.ts`. No `.env` file (other than `.env.example`) was ever committed.
+
+`gitleaks git` (2026-10-27, 61 commits): no leaks. It flagged two strings, both fake values in the redactor's detector tests (`sk-abcdefghijklmnop1234` and `AKIAABCDEFGHIJKLMNOP` in `apps/worker/tests/test_pipeline.py`). They are listed by fingerprint in `.gitleaksignore`.
 
 ## Prompt injection
 
