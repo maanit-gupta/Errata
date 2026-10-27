@@ -77,7 +77,7 @@ export function SegmentedTabs({
       </Tabs.List>
       <Tabs.Panel
         value={value}
-        className="mt-6 rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--focus)"
+        className="mt-6 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--focus) focus-visible:outline-solid"
       >
         {children}
       </Tabs.Panel>
