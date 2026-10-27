@@ -26,7 +26,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
     .maybeSingle();
   if (!content) notFound();
 
-  const [{ data: campaigns }, { data: version }] = await Promise.all([
+  const [{ data: campaigns }, { data: version }, { data: allVersions }] = await Promise.all([
     supabase.from("campaigns").select("id, name, status").eq("org_id", session.orgId),
     content.current_version_id
       ? supabase
@@ -35,6 +35,11 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
           .eq("id", content.current_version_id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+    supabase
+      .from("versions")
+      .select("id, n, created_at")
+      .eq("content_id", id)
+      .order("n", { ascending: false }),
   ]);
 
   // The latest run for this content (the current version, or the one before a resubmit lands).
@@ -208,6 +213,12 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
         canEdit={canEdit}
         canAct={isOwner}
         summaryView={isAgency}
+        versions={(allVersions ?? []).map((v) => ({
+          n: v.n,
+          at: v.created_at,
+          latest: v.id === content.current_version_id,
+          href: v.id === content.current_version_id ? `/drafts/${id}` : `/review/${id}?v=${v.n}`,
+        }))}
       />
     </>
   );

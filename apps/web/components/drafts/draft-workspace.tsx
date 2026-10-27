@@ -11,6 +11,7 @@ import { ErrorPanel } from "@/components/brand/error-panel";
 import { RunPanel, type RunStatus } from "@/components/brand/run-panel";
 import { Spinner } from "@/components/brand/spinner";
 import { StateBadge, type ContentState } from "@/components/brand/state-badge";
+import { VersionSwitcher, type VersionOption } from "@/components/brand/version-switcher";
 import { WordCounter } from "@/components/brand/word-counter";
 import { Button } from "@/components/ui/button";
 import { fieldClass, Input } from "@/components/ui/input";
@@ -70,6 +71,8 @@ type Props = {
   canAct: boolean;
   /** Agency viewers: citations show rule summaries only. */
   summaryView?: boolean;
+  /** Every version, newest first; older ones open read-only on the review page. */
+  versions?: VersionOption[];
 };
 
 export function DraftWorkspace({
@@ -83,6 +86,7 @@ export function DraftWorkspace({
   canEdit,
   canAct,
   summaryView = false,
+  versions = [],
 }: Props) {
   const router = useRouter();
   const id = useId();
@@ -558,7 +562,7 @@ export function DraftWorkspace({
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[1.75rem] leading-tight tracking-[-0.015em]">{content.title}</h1>
             <StateBadge state={content.state} routeTo={content.routeTo} />
-            {version ? <span className="mono-id text-fg-faint">v{version.n}</span> : null}
+            {version ? <VersionSwitcher current={version.n} versions={versions} /> : null}
           </div>
         </div>
         {canEdit && content.state !== "needs_revision" ? submitButton : null}

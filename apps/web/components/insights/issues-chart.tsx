@@ -15,7 +15,7 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
   return (
     <div
       role="img"
-      aria-label="Bar chart of findings per cited rule, fact or WCAG criterion. The table beside it lists the same numbers."
+      aria-label="Bar chart of findings per cited rule, fact or WCAG criterion. The same numbers are in the table that follows."
       className="h-64 w-full"
     >
       <ResponsiveContainer width="100%" height="100%">

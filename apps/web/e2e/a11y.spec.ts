@@ -74,7 +74,12 @@ test("keyboard-only: demo sign-in, skip link and nav", async ({ page }) => {
   await page.keyboard.press("Enter");
   await expect(page.locator("#main")).toBeFocused();
 
-  for (const name of ["Review queue", "Vault", "Insights"]) {
+  const urls: Record<string, RegExp> = {
+    "Review queue": /\/review$/,
+    "Rule cards": /\/vault\?tab=rules$/,
+    Insights: /\/insights$/,
+  };
+  for (const [name, url] of Object.entries(urls)) {
     const link = page.getByRole("navigation").getByRole("link", { name, exact: true });
     await link.focus();
     const outline = await link.evaluate((el) => {
@@ -83,8 +88,6 @@ test("keyboard-only: demo sign-in, skip link and nav", async ({ page }) => {
     });
     expect(outline, `${name} has a visible focus indicator`).toBe(true);
     await page.keyboard.press("Enter");
-    await page.waitForURL(
-      new RegExp(`/${name === "Review queue" ? "review" : name.toLowerCase()}$`),
-    );
+    await page.waitForURL(url);
   }
 });

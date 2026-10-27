@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { AssetUpload, PaletteEditor } from "./asset-forms";
+import { AssetUpload, PaletteSection } from "./asset-forms";
 import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 type Spec = Record<string, unknown>;
@@ -40,9 +40,7 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
         <h2 id="palette-h" className="mono-label text-fg-faint mb-2">
           Palette
         </h2>
-        <div className="border-line bg-elevated rounded-md border p-4">
-          <PaletteEditor palette={palette} />
-        </div>
+        <PaletteSection palette={palette} />
       </section>
       <section aria-labelledby="images-h">
         <h2 id="images-h" className="mono-label text-fg-faint mb-2">

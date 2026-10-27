@@ -84,10 +84,12 @@ test("F04: not in the manager's queue; Legal sees diff and citations and signs o
   ).toBeVisible();
   await expect(page.getByText("Findings these changes resolved")).toBeVisible();
 
+  await page.getByRole("button", { name: "Sign off" }).click();
   await page
+    .getByRole("dialog")
     .getByLabel("Reason (required)")
     .fill("Historical figure is dated and the disclaimer will be added in the creative.");
-  await page.getByRole("button", { name: "Sign off" }).click();
+  await page.getByRole("button", { name: "Confirm sign-off" }).click();
   await expect(page.getByText("Approved", { exact: true })).toBeVisible({ timeout: 15_000 });
 });
 

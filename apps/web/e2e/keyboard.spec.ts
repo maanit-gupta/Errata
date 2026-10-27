@@ -43,8 +43,11 @@ test("? opens the shortcuts sheet; g d goes to Drafts", async ({ page }) => {
   await page.goto("/settings");
   await page.locator("body").click({ position: { x: 5, y: 300 } });
   await page.keyboard.press("Shift+?");
-  await expect(page.getByRole("dialog", { name: "Keyboard shortcuts" })).toBeVisible();
+  const sheet = page.getByRole("dialog", { name: "Keyboard shortcuts" });
+  await expect(sheet).toBeVisible();
   await page.keyboard.press("Escape");
+  // Shortcuts pause while any dialog is in the DOM, including its close transition.
+  await expect(sheet).toHaveCount(0);
   await page.keyboard.press("g");
   await page.keyboard.press("d");
   await expect(page).toHaveURL(/\/drafts$/);
@@ -53,7 +56,8 @@ test("? opens the shortcuts sheet; g d goes to Drafts", async ({ page }) => {
 test.describe("reduced motion", () => {
   test.use({ reducedMotion: "reduce" });
   test("spinners, cursors and fades don't animate", async ({ page }) => {
-    await page.goto("/dev/kitchen-sink");
+    const res = await page.goto("/dev/kitchen-sink");
+    test.skip(res?.status() === 404, "the kitchen sink is dev-only (404 in production builds)");
     const names = await page.evaluate(() =>
       [...document.querySelectorAll(".spin, .cursor-blink, .pixel-shimmer")].map(
         (el) => getComputedStyle(el).animationName,

@@ -1,7 +1,8 @@
 import { EmptyState } from "@/components/brand/empty-state";
 import { IllustrativeDataPill } from "@/components/brand/illustrative-pill";
 import { KpiTile } from "@/components/brand/kpi-tile";
-import { IssuesChart, type Issue } from "@/components/insights/issues-chart";
+import type { Issue } from "@/components/insights/issues-chart";
+import { IssuesView } from "@/components/insights/issues-view";
 import {
   Watchlist,
   type GcsStatus,
@@ -149,35 +150,7 @@ export default async function InsightsPage() {
               Top recurring issues · 30 days
             </h2>
             {summary.top_issues.length ? (
-              <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-                <IssuesChart issues={summary.top_issues} />
-                <table className="w-full self-start text-sm">
-                  <caption className="text-fg-muted mb-2 text-left text-xs">
-                    Findings per cited rule, fact or WCAG criterion, last 30 days
-                  </caption>
-                  <thead className="text-left">
-                    <tr className="border-line border-b">
-                      <th scope="col" className="py-1 font-medium">
-                        Issue
-                      </th>
-                      <th scope="col" className="py-1 text-right font-medium">
-                        Findings
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {summary.top_issues.map((i) => (
-                      <tr key={i.code} className="border-line border-b last:border-0">
-                        <th scope="row" className="py-1 pr-3 text-left font-normal">
-                          <span className="font-mono text-xs font-medium">{i.code}</span>{" "}
-                          <span className="text-fg-muted">{i.label}</span>
-                        </th>
-                        <td className="py-1 text-right tabular-nums">{i.n}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <IssuesView issues={summary.top_issues} />
             ) : (
               <p className="text-fg-muted text-sm">No findings in the last 30 days.</p>
             )}

@@ -824,9 +824,30 @@ These sit **alongside** `docs/PHASES.md`. UI work inside the existing J-owned ph
 | **U2** | UI polish and audit: run axe on every route in both themes; keyboard walkthrough; reduced-motion pass; copy pass against §7.3; landing performance; fix everything. Feeds P15. | J | P13 | |
 
 **Acceptance for every UI phase**
-- [ ] `make check` is green, including the token contrast test.
-- [ ] axe reports zero serious or critical issues on the touched routes, in dark and light.
-- [ ] Every new screen implements the §11 states.
-- [ ] Keyboard-only walkthrough of the touched flow works.
-- [ ] Reduced motion is respected.
-- [ ] Screenshots of touched screens, dark and light, saved to `docs/screens/<phase>/` (Playwright `page.screenshot`), for the README and the judges.
+- [x] `make check` is green, including the token contrast test.
+- [x] axe reports zero serious or critical issues on the touched routes, in dark and light.
+- [x] Every new screen implements the §11 states.
+- [x] Keyboard-only walkthrough of the touched flow works.
+- [x] Reduced motion is respected.
+- [x] Screenshots of touched screens, dark and light, saved to `docs/screens/<phase>/` (Playwright `page.screenshot`), for the README and the judges.
+
+---
+
+## 13. Implementation status (2026-10-27, on `main`)
+
+Every screen in §6, the landing page in §8 and the shared components in §5 ship on `main`. U0–U2 were built on `ui/*` branches, briefly reverted, then restored on top of P15 hardening. The U2 follow-ups are closed:
+
+| §     | Item | Status |
+|---|---|---|
+| 6.5   | Sticky DecisionBar with one dialog per action: "Override with rationale" (a required reason per open warning), Sign off, Request changes, Send to specialist, Archive in the overflow menu behind a confirm | Done (`components/review/decision-bar.tsx`, `components/brand/modal.tsx`) |
+| 6.3, 6.5 | Version switcher `v3 ▾` in the draft and review headers. Older versions open read-only at `/review/[id]?v=N`; decisions apply only to the latest version | Done (`components/brand/version-switcher.tsx`) |
+| 6.7   | "View as table" toggle on Top recurring issues. In chart view the table stays in the accessibility tree | Done (`components/insights/issues-view.tsx`) |
+| 6.11  | Contrast and ΔE swatches on image and PDF findings, parsed from the worker's fixed explanation format; hex values and numbers are always written out | Done (`lib/drafts/swatches.ts`, `components/brand/colour-swatches.tsx`) |
+| 6.6, 11 | Palette empty state ("No palette yet" + Add palette) instead of an editor pre-filled with a colour the org never chose | Done (`PaletteSection` in `components/vault/asset-forms.tsx`) |
+
+**Gates on this state:** `make check` green; `e2e/ui.spec.ts` axe 38/38 (19 routes × 2 themes); `keyboard.spec.ts` and `a11y.spec.ts` green; core loop F02–F05, review and drafts e2e green locally.
+
+**Remaining deliberate deviations** (logged in PROGRESS → Decisions):
+- CSV import stays all-or-nothing. §6.6 says "only valid rows import", but the P04 decision wins on behaviour; invalid rows block the import and can be downloaded as a report.
+- The `/dev/kitchen-sink` reduced-motion check runs in dev only, because the route returns 404 in production builds (§10).
+

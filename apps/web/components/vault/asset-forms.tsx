@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useId, useState, useTransition } from "react";
+import { EmptyState } from "@/components/brand/empty-state";
 import { Button } from "@/components/ui/button";
 import { fieldClass, Input } from "@/components/ui/input";
 import { savePalette, uploadAsset, type ActionResult } from "@/lib/vault/actions";
@@ -81,6 +82,37 @@ export function AssetUpload() {
 }
 
 type Colour = { name: string; hex: string };
+
+/**
+ * Palette section (DESIGN.md §6.6, §11): with no palette saved yet it shows the empty state and
+ * one primary action, instead of an editor pre-filled with a colour the org never chose.
+ */
+export function PaletteSection({
+  palette,
+}: {
+  palette?: { id: string; name: string; colours: Colour[]; max_delta_e: number };
+}) {
+  const [adding, setAdding] = useState(false);
+  if (!palette && !adding) {
+    return (
+      <EmptyState
+        glyph="eye"
+        title="No palette yet"
+        headingLevel={3}
+        className="py-10"
+        action={<Button onClick={() => setAdding(true)}>Add palette</Button>}
+      >
+        Image checks compare flat fills against these colours (VS-01). Add the brand colours and the
+        largest colour difference you accept.
+      </EmptyState>
+    );
+  }
+  return (
+    <div className="border-line bg-elevated rounded-md border p-4">
+      <PaletteEditor palette={palette} />
+    </div>
+  );
+}
 
 export function PaletteEditor({
   palette,

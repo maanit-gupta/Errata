@@ -85,8 +85,12 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   const row = page.getByRole("region", { name: "Findings" }).getByRole("listitem").first();
   await expect(row).toContainText("VS-03");
   await expect(row).toContainText(/Edited fix applied.*by /);
-  await page.getByLabel("What needs to change (required)").fill("Give the logo its clear space.");
   await page.getByRole("button", { name: "Request changes" }).click();
+  await page
+    .getByRole("dialog")
+    .getByLabel("What needs to change (required)")
+    .fill("Give the logo its clear space.");
+  await page.getByRole("button", { name: "Send request" }).click();
   await expect(page.getByText("Changes requested", { exact: true }).first()).toBeVisible();
 
   await switchDemoRole(page, "Creator");

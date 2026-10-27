@@ -1,10 +1,18 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Modal } from "@/components/brand/modal";
 import { StateBadge } from "@/components/brand/state-badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { fieldClass } from "@/components/ui/input";
 import {
   approve,
@@ -23,12 +31,21 @@ type Props = {
   openWarnings: { id: string; label: string }[];
 };
 
-const area = "w-full rounded-md border border-control bg-elevated px-3 py-2 text-sm";
+type Open = null | "override" | "escalate" | "signoff" | "changes" | "archive";
 
+const area = "w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm";
+const MIN_REASON = 3;
+
+/**
+ * DecisionBar (DESIGN.md §6.5): a sticky row of actions; each one that needs a reason opens its
+ * own dialog. Approve with open warnings opens "Override with rationale" with one required reason
+ * per warning. Archive lives in the overflow menu behind a confirm dialog.
+ */
 export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
   const id = useId();
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [open, setOpen] = useState<Open>(null);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [changes, setChanges] = useState("");
   const [signoff, setSignoff] = useState("");
@@ -42,13 +59,20 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
       const r = await fn();
       if (r.ok) {
         setError(null);
+        setOpen(null);
         toast.success(r.message);
         router.refresh();
       } else {
+        setOpen(null);
         setError(r.error);
         toast.error(r.error);
       }
     });
+
+  const dialog = (which: Exclude<Open, null>) => ({
+    open: open === which,
+    onOpenChange: (o: boolean) => setOpen(o ? which : null),
+  });
 
   if (state === "publish_ready") {
     return (
@@ -83,63 +107,179 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
     );
   }
 
+  const overridesReady = openWarnings.every(
+    (w) => (overrides[w.id] ?? "").trim().length >= MIN_REASON,
+  );
+  const doApprove = () =>
+    run(() =>
+      approve({
+        contentId,
+        overrides: openWarnings.map((w) => ({ findingId: w.id, reason: overrides[w.id] ?? "" })),
+      }),
+    );
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       {error ? (
         <p role="alert" className="border-danger text-danger rounded-md border p-3 text-sm">
           {error}
         </p>
       ) : null}
 
-      {can.review ? (
-        <>
-          <section aria-labelledby={`${id}-approve`} className="space-y-2">
-            <h3 id={`${id}-approve`} className="mono-label text-fg-faint">
-              Approve
-            </h3>
-            {openWarnings.length ? (
-              <p className="text-fg-muted text-xs">
-                Each open warning needs an override reason before approval.
-              </p>
-            ) : null}
-            {openWarnings.map((w) => (
-              <div key={w.id} className="space-y-1">
-                <label htmlFor={`${id}-ov-${w.id}`} className="text-xs font-medium">
-                  Override reason for {w.label}
-                </label>
-                <textarea
-                  id={`${id}-ov-${w.id}`}
-                  rows={2}
-                  className={area}
-                  value={overrides[w.id] ?? ""}
-                  onChange={(e) => setOverrides((o) => ({ ...o, [w.id]: e.target.value }))}
-                />
-              </div>
-            ))}
-            <Button
-              disabled={
-                pending || openWarnings.some((w) => (overrides[w.id] ?? "").trim().length < 3)
-              }
-              onClick={() =>
-                run(() =>
-                  approve({
-                    contentId,
-                    overrides: openWarnings.map((w) => ({
-                      findingId: w.id,
-                      reason: overrides[w.id] ?? "",
-                    })),
-                  }),
-                )
-              }
+      <div className="flex flex-wrap items-center gap-2">
+        {can.review ? (
+          <Button
+            disabled={pending}
+            onClick={() => (openWarnings.length ? setOpen("override") : doApprove())}
+          >
+            Approve
+          </Button>
+        ) : null}
+        {can.specialist ? (
+          <Button disabled={pending} onClick={() => setOpen("signoff")}>
+            Sign off
+          </Button>
+        ) : null}
+        {can.markReady ? (
+          <Button disabled={pending} onClick={() => run(() => markPublishReady(contentId))}>
+            Mark publish-ready
+          </Button>
+        ) : null}
+        {can.review || can.specialist ? (
+          <Button variant="outline" disabled={pending} onClick={() => setOpen("changes")}>
+            Request changes
+          </Button>
+        ) : null}
+        {can.review ? (
+          <Button variant="ghost" disabled={pending} onClick={() => setOpen("escalate")}>
+            Send to specialist
+          </Button>
+        ) : null}
+        {can.archive ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={<Button variant="ghost" size="icon" aria-label="More decisions" />}
             >
-              Approve
-            </Button>
-          </section>
-          <section aria-labelledby={`${id}-esc`} className="space-y-2">
-            <h3 id={`${id}-esc`} className="mono-label text-fg-faint">
-              Send to a specialist
-            </h3>
-            <label htmlFor={`${id}-route`} className="sr-only">
+              <MoreHorizontal aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem variant="destructive" onClick={() => setOpen("archive")}>
+                Archive…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
+        {openWarnings.length && can.review ? (
+          <p className="text-fg-muted text-xs">
+            {openWarnings.length} open warning{openWarnings.length === 1 ? "" : "s"} need an
+            override reason to approve.
+          </p>
+        ) : null}
+      </div>
+
+      <Modal
+        {...dialog("override")}
+        title="Override with rationale"
+        description="Each open warning needs a reason. Overrides are audited and feed the rule's clarity score."
+        confirm={
+          <Button disabled={pending || !overridesReady} focusableWhenDisabled onClick={doApprove}>
+            Approve with overrides
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          {openWarnings.map((w) => (
+            <div key={w.id} className="space-y-1">
+              <label htmlFor={`${id}-ov-${w.id}`} className="text-sm font-medium">
+                Override reason for {w.label}
+              </label>
+              <textarea
+                id={`${id}-ov-${w.id}`}
+                rows={2}
+                required
+                className={area}
+                value={overrides[w.id] ?? ""}
+                onChange={(e) => setOverrides((o) => ({ ...o, [w.id]: e.target.value }))}
+              />
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      <Modal
+        {...dialog("signoff")}
+        title="Sign off"
+        description="Your sign-off moves this content to Approved and is recorded in the audit trail."
+        confirm={
+          <Button
+            disabled={pending || signoff.trim().length < MIN_REASON}
+            focusableWhenDisabled
+            onClick={() => run(() => signOff(contentId, signoff))}
+          >
+            Confirm sign-off
+          </Button>
+        }
+      >
+        <div className="space-y-1">
+          <label htmlFor={`${id}-signwhy`} className="text-sm font-medium">
+            Reason (required)
+          </label>
+          <textarea
+            id={`${id}-signwhy`}
+            rows={3}
+            required
+            className={area}
+            value={signoff}
+            onChange={(e) => setSignoff(e.target.value)}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        {...dialog("changes")}
+        title="Request changes"
+        description="The creator gets this note and the content goes back to them as Needs revision."
+        confirm={
+          <Button
+            disabled={pending || changes.trim().length < MIN_REASON}
+            focusableWhenDisabled
+            onClick={() => run(() => requestChanges(contentId, changes))}
+          >
+            Send request
+          </Button>
+        }
+      >
+        <div className="space-y-1">
+          <label htmlFor={`${id}-changeswhy`} className="text-sm font-medium">
+            What needs to change (required)
+          </label>
+          <textarea
+            id={`${id}-changeswhy`}
+            rows={3}
+            required
+            className={area}
+            value={changes}
+            onChange={(e) => setChanges(e.target.value)}
+          />
+        </div>
+      </Modal>
+
+      <Modal
+        {...dialog("escalate")}
+        title="Send to a specialist"
+        description="Routes this content to a specialist queue. They sign off or request changes."
+        confirm={
+          <Button
+            disabled={pending}
+            onClick={() => run(() => escalate(contentId, route, routeWhy))}
+          >
+            Send
+          </Button>
+        }
+      >
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <label htmlFor={`${id}-route`} className="text-sm font-medium">
               Specialist
             </label>
             <select
@@ -152,106 +292,47 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
               <option value="a11y">Accessibility</option>
               <option value="brand">Brand</option>
             </select>
-            <label htmlFor={`${id}-routewhy`} className="sr-only">
+          </div>
+          <div className="space-y-1">
+            <label htmlFor={`${id}-routewhy`} className="text-sm font-medium">
               Why (optional)
             </label>
             <input
               id={`${id}-routewhy`}
-              placeholder="Why (optional)"
               value={routeWhy}
               onChange={(e) => setRouteWhy(e.target.value)}
               className={area}
             />
-            <Button
-              variant="outline"
-              disabled={pending}
-              onClick={() => run(() => escalate(contentId, route, routeWhy))}
-            >
-              Send to specialist
-            </Button>
-          </section>
-        </>
-      ) : null}
-
-      {can.specialist ? (
-        <section aria-labelledby={`${id}-sign`} className="space-y-2">
-          <h3 id={`${id}-sign`} className="mono-label text-fg-faint">
-            Sign off
-          </h3>
-          <label htmlFor={`${id}-signwhy`} className="text-xs font-medium">
-            Reason (required)
-          </label>
-          <textarea
-            id={`${id}-signwhy`}
-            rows={2}
-            className={area}
-            value={signoff}
-            onChange={(e) => setSignoff(e.target.value)}
-          />
-          <Button
-            disabled={pending || signoff.trim().length < 3}
-            onClick={() => run(() => signOff(contentId, signoff))}
-          >
-            Sign off
-          </Button>
-        </section>
-      ) : null}
-
-      {can.review || can.specialist ? (
-        <section aria-labelledby={`${id}-changes`} className="space-y-2">
-          <h3 id={`${id}-changes`} className="mono-label text-fg-faint">
-            Request changes
-          </h3>
-          <label htmlFor={`${id}-changeswhy`} className="text-xs font-medium">
-            What needs to change (required)
-          </label>
-          <textarea
-            id={`${id}-changeswhy`}
-            rows={2}
-            className={area}
-            value={changes}
-            onChange={(e) => setChanges(e.target.value)}
-          />
-          <Button
-            variant="outline"
-            disabled={pending || changes.trim().length < 3}
-            onClick={() => run(() => requestChanges(contentId, changes))}
-          >
-            Request changes
-          </Button>
-        </section>
-      ) : null}
-
-      {can.markReady ? (
-        <Button disabled={pending} onClick={() => run(() => markPublishReady(contentId))}>
-          Mark publish-ready
-        </Button>
-      ) : null}
-
-      {can.archive ? (
-        <details className="text-sm">
-          <summary className="text-fg-muted cursor-pointer">Archive</summary>
-          <div className="mt-2 space-y-2">
-            <label htmlFor={`${id}-arch`} className="text-xs font-medium">
-              Reason
-            </label>
-            <input
-              id={`${id}-arch`}
-              value={archiveWhy}
-              onChange={(e) => setArchiveWhy(e.target.value)}
-              className={area}
-            />
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={pending}
-              onClick={() => run(() => archive(contentId, archiveWhy))}
-            >
-              Archive content
-            </Button>
           </div>
-        </details>
-      ) : null}
+        </div>
+      </Modal>
+
+      <Modal
+        {...dialog("archive")}
+        title="Archive this content?"
+        description="Archived content leaves every queue. The audit trail is kept."
+        confirm={
+          <Button
+            variant="danger"
+            disabled={pending}
+            onClick={() => run(() => archive(contentId, archiveWhy))}
+          >
+            Archive content
+          </Button>
+        }
+      >
+        <div className="space-y-1">
+          <label htmlFor={`${id}-arch`} className="text-sm font-medium">
+            Reason
+          </label>
+          <input
+            id={`${id}-arch`}
+            value={archiveWhy}
+            onChange={(e) => setArchiveWhy(e.target.value)}
+            className={area}
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

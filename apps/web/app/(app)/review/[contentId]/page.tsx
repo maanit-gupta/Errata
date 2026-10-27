@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Citation, FindingView } from "@/components/drafts/finding-card";
 import { ReviewFindings } from "@/components/review/review-findings";
@@ -12,6 +13,7 @@ import { DecisionBar } from "@/components/review/decision-bar";
 import { HighlightedText } from "@/components/review/highlighted-text";
 import { VersionDiff } from "@/components/review/version-diff";
 import { StateBadge } from "@/components/brand/state-badge";
+import { VersionSwitcher } from "@/components/brand/version-switcher";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import { signedPages } from "@/lib/drafts/pages";
@@ -78,8 +80,12 @@ type RuleSrc = {
   never_send?: boolean | null;
 };
 
-export default async function ReviewContentPage({ params }: PageProps<"/review/[contentId]">) {
+export default async function ReviewContentPage({
+  params,
+  searchParams,
+}: PageProps<"/review/[contentId]">) {
   const { contentId } = await params;
+  const { v } = await searchParams;
   const session = await requireSession();
   const supabase = await createClient();
 
@@ -97,8 +103,11 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
     .select("id, n, body, format, storage_path, intent, created_at")
     .eq("content_id", contentId)
     .order("n", { ascending: false });
-  const current = versions?.find((v) => v.id === content.current_version_id) ?? versions?.[0];
-  const previous = versions?.find((v) => current && v.n === current.n - 1);
+  const latest = versions?.find((x) => x.id === content.current_version_id) ?? versions?.[0];
+  // `?v=N` views an older version read-only; decisions always apply to the latest one.
+  const current = (typeof v === "string" && versions?.find((x) => String(x.n) === v)) || latest;
+  const viewingOld = !!current && !!latest && current.id !== latest.id;
+  const previous = versions?.find((x) => current && x.n === current.n - 1);
   const versionIds = (versions ?? []).map((v) => v.id);
 
   const [{ data: profiles }, { data: findingRows }, { data: decisions }, { data: commentRows }] =
@@ -437,7 +446,18 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
           <span className="mono-label bg-accent-deep text-accent-soft rounded-sm px-1.5 py-0.5">
             → {ROUTE_LABEL[content.route_to ?? "manager"]}
           </span>
-          <span className="mono-id text-fg-faint">v{current?.n ?? "–"}</span>
+          {current ? (
+            <VersionSwitcher
+              current={current.n}
+              versions={(versions ?? []).map((x) => ({
+                n: x.n,
+                at: x.created_at,
+                latest: x.id === latest?.id,
+                href:
+                  x.id === latest?.id ? `/review/${content.id}` : `/review/${content.id}?v=${x.n}`,
+              }))}
+            />
+          ) : null}
         </div>
         <p className="text-fg-muted text-sm">
           By {name.get(content.owner_id) ?? "Someone"} ·{" "}
@@ -489,25 +509,34 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
         </section>
 
         <div className="min-w-0 space-y-6">
-          <section
-            aria-labelledby="decision-h"
-            className="border-line bg-elevated rounded-md border p-4"
-          >
-            <h2 id="decision-h" className="mono-label text-fg-faint mb-3">
-              Decision
-            </h2>
-            <DecisionBar
-              contentId={content.id}
-              state={content.state}
-              can={can}
-              openWarnings={openWarnings}
-            />
-          </section>
           <section aria-labelledby="findings-h">
             <h2 id="findings-h" className="sr-only">
               Findings
             </h2>
             <ReviewTabs panels={panels} />
+          </section>
+          <section
+            aria-labelledby="decision-h"
+            className="border-line-strong bg-elevated shadow-pop sticky bottom-3 z-10 rounded-md border p-4"
+          >
+            <h2 id="decision-h" className="mono-label text-fg-faint mb-3">
+              Decision
+            </h2>
+            {viewingOld ? (
+              <p className="text-sm">
+                You&apos;re viewing v{current?.n}. Decisions apply to the latest version.{" "}
+                <Link href={`/review/${content.id}`} className="text-accent-soft underline">
+                  View v{latest?.n}
+                </Link>
+              </p>
+            ) : (
+              <DecisionBar
+                contentId={content.id}
+                state={content.state}
+                can={can}
+                openWarnings={openWarnings}
+              />
+            )}
           </section>
         </div>
       </div>

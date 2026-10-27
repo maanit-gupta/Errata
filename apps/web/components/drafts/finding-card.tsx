@@ -8,10 +8,12 @@ import { DimensionLabel } from "@/components/brand/dimension";
 import { IdBadge, type CitationKind, type CitationSource } from "@/components/brand/id-badge";
 import { IntentCheckTag } from "@/components/brand/intent-check-tag";
 import { SeverityBadge, type Severity } from "@/components/brand/severity-badge";
+import { ColourSwatches } from "@/components/brand/colour-swatches";
 import { SourceTag } from "@/components/brand/source-tag";
 import { Button } from "@/components/ui/button";
 import { fieldClass } from "@/components/ui/input";
 import { DISMISS_REASONS } from "@/lib/drafts/intent";
+import { parseSwatches } from "@/lib/drafts/swatches";
 import { cn } from "@/lib/utils";
 
 export type Citation = {
@@ -145,6 +147,8 @@ export function FindingCard({
   const fixInDesign = imageMode && f.target !== "alt_text";
   const canRoute = f.dimension === "claims" && f.severity === "blocker";
   const codes = f.citations.map((c) => c.code).join(", ");
+  // Measured colours only exist on image/PDF findings (contrast, palette ΔE).
+  const swatches = f.target === "text" ? null : parseSwatches(f.explanation);
 
   const run = async (fn: () => Promise<void>) => {
     setBusy(true);
@@ -256,6 +260,7 @@ export function FindingCard({
             ) : null}
           </div>
           <p className="text-fg-muted">{f.explanation}</p>
+          {swatches ? <ColourSwatches swatches={swatches} /> : null}
 
           <div className="space-y-1.5">
             <p className="mono-label text-fg-faint flex items-center gap-2">

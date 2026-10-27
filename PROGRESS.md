@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P16 (partial, waiting on team items). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
+**Current phase:** P16 (partial, waiting on team items). All work is on `main`, including the U0–U2 Terminal Noir UI (restored 2026-10-27, DESIGN.md §13)
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -28,13 +28,15 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P14 | Golden set & eval gate | M | done | M (Claude, /complete) | main | 2026-10-27; eval PASS (0 degraded, all dims ≥ 0.85, blocker recall 1.00); broken-prompt gate shown locally |
 | P15 | Hardening | Both | done | M (Claude, /complete) | main | 2026-10-27; SECURITY.md, rate limit, CSP, injection fence, router cool-down, load + restart tests; 2 migrations local only |
 | P16 | Docs & submission 🎯 D14 | J | partial | M (Claude, /complete) | main | 2026-10-27; README, DEMO.md, reset_demo.sh, usability templates done; waiting on team: usability sessions, contributions, cloud migrations, repo public, tag |
-| U0 | Design-system foundation (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; built on ui/* branches; merged to main and then reverted the same day (user); rebuild later on request |
-| U1 | Public landing + /ai-use (DESIGN.md §8) | J | shelved | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
-| U2 | UI polish and audit (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U2 | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
+| U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; built on ui/* branches, reverted, then restored on main with the U2 follow-ups closed (DESIGN.md §13) |
+| U1 | Public landing + /ai-use (DESIGN.md §8) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; landing + /ai-use public |
+| U2 | UI polish and audit (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`. **Don't re-apply it until the user asks.**
+- **UI (2026-10-27, user request "complete the design.md"):** `main` runs the full Terminal Noir UI (DESIGN.md). It was re-applied from `ui/U2` as a 3-way patch on top of P15, so the P15 limits, CSP, signed-URL TTL and loading/error states are kept. The U2 follow-ups are closed (DESIGN.md §13): sticky DecisionBar with per-action dialogs, version switcher (`?v=N` read-only), "View as table" toggle, contrast/ΔE swatches, palette empty state.
+  - Gates: `make check` green; axe 38/38 (19 routes × 2 themes), keyboard and a11y specs green; core-loop, review and drafts e2e green on the local stack. E2E changes: sign-off and request-changes now go through dialogs ("Confirm sign-off", "Send request"); the P15 keyboard test uses the new nav labels ("Rule cards").
+  - **Local Storage is broken after `make check`'s db reset:** every upload returns 500 (Postgres 42P10) from storage-api v1.72.1, so `make seed-assets-local`, `image-check.spec` and `pdf-check.spec` fail locally. Cloud Storage is unaffected. Try `supabase stop && supabase start` (or upgrade the CLI) before running those specs locally.
 - **Workflow (user rule 2026-10-27):** work and commit directly on `main`. No phase/UI branches and no worktrees.
 - **Phase / status:** P16 / **partial** (2026-10-27). Everything Claude can do is done; the rest needs the team (below). P14 and P15 are done (see their rows; P15 details are in `docs/SECURITY.md` and README "Security and reliability").
 - **What P16 added:**
@@ -247,6 +249,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
 | 2026-10-27 | UI | Terminal Noir UI reverted on `main` (web, lockfile and CLAUDE.md restored to pre-U0); the code stays on `ui/U2` | User: production didn't match the UI they run locally; they will ask for a rebuild later |
 | 2026-10-27 | all | Work directly on `main`; no phase/UI branches or worktrees (CLAUDE.md and the commands updated) | User rule: what runs on localhost from the main checkout is what ships |
+| 2026-10-27 | UI | Terminal Noir UI restored on `main` (`git diff f6f4e7e d1415c5 -- apps/web` applied 3-way on top of P15; 5 conflicts resolved to the redesign, keeping P15's `SIGNED_URL_TTL_S`) and deployed (user request) | User: "complete the design.md", push to main, deploy |
+| 2026-10-27 | UI | DecisionBar is a sticky panel under the review tabs; each reasoned action opens a centred `Modal` (Base UI Dialog), and Archive sits in a `⋯` menu behind a confirm. Confirm buttons have their own names ("Approve with overrides", "Confirm sign-off", "Send request") | DESIGN §6.5; distinct names keep the trigger and confirm unambiguous for AT and tests. Replaces the P09-UI panel deviation |
+| 2026-10-27 | UI | Version switcher: older versions open read-only at `/review/[id]?v=N`; on an older version the decision panel shows "Decisions apply to the latest version" with a link | DESIGN §6.3/§6.5; a decision must always target the version that will ship |
+| 2026-10-27 | UI | Contrast/ΔE swatches are parsed from the worker's fixed explanation strings (`lib/drafts/swatches.ts`, unit-tested), not new columns | No migration or worker change; an unmatched string just renders no swatch. Replaces the P12-UI deviation |
+| 2026-10-27 | UI | "View as table" toggle; in chart view the table is `sr-only`, not removed | Screen-reader users always get the numbers (DESIGN §6.7). Replaces the P13-UI side-by-side deviation |
+| 2026-10-27 | UI | Kitchen-sink reduced-motion e2e skips when the route 404s (production builds) | `/dev/kitchen-sink` is dev-only by design (§10) |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -276,9 +284,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | Tesseract OCR (system binary, Docker `tesseract-ocr`) | Apache-2.0 | P11 |
 | paddleocr, paddlepaddle (optional extra `ocr-paddle`, not installed by default) | Apache-2.0 | P11 |
 | recharts | MIT | P13 |
-| geist | OFL-1.1 (fonts) / MIT | U0 (removed with the UI revert) |
-| motion | MIT | U0 (removed with the UI revert) |
-| cmdk | MIT | U0 (removed with the UI revert) |
+| geist | OFL-1.1 (fonts) / MIT | U0 (restored on main 2026-10-27) |
+| motion | MIT | U0 (restored on main 2026-10-27) |
+| cmdk | MIT | U0 (restored on main 2026-10-27) |
 
 ## Open questions (ask the user; don't guess)
 

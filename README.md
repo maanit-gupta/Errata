@@ -158,6 +158,7 @@ Mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
 | Area | Round 1 plan said | We built | Why |
 |---|---|---|---|
 | Auth | Google sign-in | Supabase email/password, plus a demo role switcher when `NEXT_PUBLIC_DEMO_MODE=true` | No OAuth setup; judges get one-click roles |
+| Visual design | Light off-white palette with a serif display face | "Terminal Noir" ([`docs/DESIGN.md`](docs/DESIGN.md)): dark by default with a light theme, Geist Sans and Mono, a public landing page, a ⌘K palette and keyboard shortcuts. The app is axe-clean (WCAG 2.2 AA) on every route in both themes | Team design decision; rule and fact IDs stay first-class, and severity never relies on colour alone |
 | LLM | Claude or Gemini | **Groq** primary, **Gemini** fallback, both free tiers, chosen by `LLM_PROVIDER` | Free APIs; the provider switch still avoids lock-in |
 | Notifications | Slack + email | Discord webhook (email via Resend is optional and off) | Team uses Discord |
 | Tracing | Self-hosted Langfuse | Langfuse Cloud | Faster to set up; traces contain only fictional demo data |
