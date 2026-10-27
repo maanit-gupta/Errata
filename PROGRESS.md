@@ -25,7 +25,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
 | P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` (local); not merged |
-| P14 | Golden set & eval gate | M | todo | | | |
+| P14 | Golden set & eval gate | M | in-progress | M (Claude) | phase/P14-eval-gate | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 
