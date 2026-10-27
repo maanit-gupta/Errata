@@ -48,6 +48,15 @@ export function ImageFindings({
   onFocus?: (id: string | null, scroll?: boolean) => void;
 }) {
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const [zoom, setZoom] = useState<number | "fit">("fit");
+  const [showBoxes, setShowBoxes] = useState(true);
+  const ZOOMS = [0.5, 0.75, 1, 1.5, 2];
+  const step = (dir: 1 | -1) =>
+    setZoom((z) => {
+      const cur = z === "fit" ? 1 : z;
+      const i = ZOOMS.indexOf(cur);
+      return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, (i < 0 ? 2 : i) + dir))];
+    });
   const [hover, setHover] = useState<string | null>(null);
   const current = onFocus ? (active ?? null) : hover;
   const focus = (id: string | null, scroll = false) =>
@@ -66,58 +75,96 @@ export function ImageFindings({
     document.getElementById(`finding-${id}`)?.scrollIntoView({ block: "nearest" });
   };
 
+  const ctl =
+    "border-line-strong text-fg-muted hover:bg-hover hover:text-fg inline-flex h-7 min-w-7 items-center justify-center rounded-sm border px-1.5 font-mono text-xs aria-pressed:bg-accent aria-pressed:text-accent-fg";
   return (
-    <figure className="m-0">
-      <div className="relative">
-        {/* eslint-disable-next-line @next/next/no-img-element -- signed, short-lived Storage URL */}
-        <img
-          src={src}
-          alt={alt}
-          className="block h-auto w-full rounded-md"
-          onLoad={(e) =>
-            setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
-          }
-        />
-        {whole.some((m) => m.id === current) ? (
-          <div
-            aria-hidden
-            className="border-ring pointer-events-none absolute inset-0 rounded-md border-4"
+    <figure className="m-0 space-y-2">
+      <div className="flex flex-wrap items-center gap-1.5" role="toolbar" aria-label="Image view">
+        <button type="button" className={ctl} onClick={() => step(-1)} aria-label="Zoom out">
+          −
+        </button>
+        <span className="mono-id text-fg-muted w-12 text-center" aria-live="polite">
+          {zoom === "fit" ? "fit" : `${Math.round(zoom * 100)}%`}
+        </span>
+        <button type="button" className={ctl} onClick={() => step(1)} aria-label="Zoom in">
+          +
+        </button>
+        <button
+          type="button"
+          className={ctl}
+          aria-pressed={zoom === "fit"}
+          onClick={() => setZoom("fit")}
+        >
+          Fit
+        </button>
+        <button type="button" className={ctl} aria-pressed={zoom === 1} onClick={() => setZoom(1)}>
+          100%
+        </button>
+        <label className="text-fg-muted ml-auto flex items-center gap-2 text-xs">
+          <input
+            type="checkbox"
+            checked={showBoxes}
+            onChange={(e) => setShowBoxes(e.target.checked)}
+            className="size-4 accent-(--accent)"
           />
-        ) : null}
-        {size
-          ? boxed.map((m) => (
-              <button
-                key={m.id}
-                type="button"
-                aria-label={`Finding ${number.get(m.id)}, ${m.severity}, ${m.codes}: ${m.label}`}
-                onMouseEnter={() => focus(m.id)}
-                onMouseLeave={() => focus(null)}
-                onFocus={() => focus(m.id)}
-                onBlur={() => focus(null)}
-                onClick={() => reveal(m.id)}
-                className={cn(
-                  "focus-visible:outline-ring absolute rounded-sm border-2 transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2",
-                  BOX[m.severity],
-                  current === m.id && "ring-ring ring-2 ring-offset-1",
-                )}
-                style={{
-                  left: pct(m.box.x0, size.w),
-                  top: pct(m.box.y0, size.h),
-                  width: pct(Math.max(m.box.x1 - m.box.x0, 4), size.w),
-                  height: pct(Math.max(m.box.y1 - m.box.y0, 4), size.h),
-                }}
-              >
-                <span
+          Show boxes
+        </label>
+      </div>
+      <div className="max-h-[75vh] overflow-auto rounded-md">
+        <div
+          className="relative"
+          style={zoom === "fit" || !size ? undefined : { width: size.w * zoom }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed, short-lived Storage URL */}
+          <img
+            src={src}
+            alt={alt}
+            className="block h-auto w-full rounded-md"
+            onLoad={(e) =>
+              setSize({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })
+            }
+          />
+          {whole.some((m) => m.id === current) ? (
+            <div
+              aria-hidden
+              className="border-focus pointer-events-none absolute inset-0 rounded-md border-4"
+            />
+          ) : null}
+          {size && showBoxes
+            ? boxed.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-label={`Finding ${number.get(m.id)}, ${m.severity}, ${m.codes}: ${m.label}`}
+                  onMouseEnter={() => focus(m.id)}
+                  onMouseLeave={() => focus(null)}
+                  onFocus={() => focus(m.id)}
+                  onBlur={() => focus(null)}
+                  onClick={() => reveal(m.id)}
                   className={cn(
-                    "absolute -top-5 left-0 rounded-sm px-1 font-mono text-[0.65rem] leading-4 font-semibold whitespace-nowrap uppercase",
-                    TAG[m.severity],
+                    "overlay-draw absolute rounded-sm border-2 transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus)",
+                    BOX[m.severity],
+                    current === m.id && "ring-focus ring-2 ring-offset-1",
                   )}
+                  style={{
+                    left: pct(m.box.x0, size.w),
+                    top: pct(m.box.y0, size.h),
+                    width: pct(Math.max(m.box.x1 - m.box.x0, 4), size.w),
+                    height: pct(Math.max(m.box.y1 - m.box.y0, 4), size.h),
+                  }}
                 >
-                  {number.get(m.id)} · {m.codes.split(" · ")[0]} · {m.severity}
-                </span>
-              </button>
-            ))
-          : null}
+                  <span
+                    className={cn(
+                      "absolute -top-5 left-0 rounded-sm px-1 font-mono text-[0.65rem] leading-4 font-semibold whitespace-nowrap uppercase",
+                      TAG[m.severity],
+                    )}
+                  >
+                    {number.get(m.id)} · {m.codes.split(" · ")[0]} · {m.severity}
+                  </span>
+                </button>
+              ))
+            : null}
+        </div>
       </div>
       {whole.length ? (
         <figcaption className="mt-2 text-sm">
@@ -127,7 +174,7 @@ export function ImageFindings({
               {i ? ", " : ""}
               <button
                 type="button"
-                className="hover:text-fg focus-visible:outline-ring font-mono text-xs underline underline-offset-2"
+                className="hover:text-fg font-mono text-xs underline underline-offset-2"
                 onMouseEnter={() => focus(m.id)}
                 onMouseLeave={() => focus(null)}
                 onClick={() => reveal(m.id)}

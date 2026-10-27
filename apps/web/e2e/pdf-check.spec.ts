@@ -2,6 +2,9 @@ import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
+// Overlays and findings animate in (DESIGN §4); axe audits settled frames.
+test.use({ reducedMotion: "reduce" });
+
 // P12 PDF decks: upload the seeded 4-page deck, see per-page findings with overlays on the page
 // renders, hidden text flagged, and "Show on page N" jumping to the finding's page and box.
 // Needs web + worker against the seeded local DB with logo files uploaded
@@ -76,7 +79,7 @@ test("a seeded deck shows page findings with overlays, hidden text and page jump
   await e19.getByRole("button", { name: "Show on page 2" }).click();
   await expect(page.getByText(/^Page 2 of 4/)).toBeVisible();
   await expect(page.getByRole("button", { name: /^Finding \d+, blocker, E-19/ })).toBeVisible();
-  await expect(e19).toHaveClass(/border-ring/);
+  await expect(e19).toHaveClass(/border-focus/);
 
   // Page 4: the picture's claim (read by OCR), its off-palette fill and the too-small logo.
   await pages(page)

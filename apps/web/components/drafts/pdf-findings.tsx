@@ -83,7 +83,7 @@ export function PdfFindings({
   if (!current) return null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+    <div className="grid gap-4 sm:grid-cols-[5.5rem_minmax(0,1fr)]">
       <nav aria-label="Pages" className="min-w-0">
         <ol className="flex gap-2 overflow-x-auto pb-1 sm:max-h-[75vh] sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:pr-1">
           {pages.map((p) => {
@@ -97,7 +97,7 @@ export function PdfFindings({
                   aria-label={`Page ${p.n}: ${pageSummary(markers, p.n)}`}
                   onClick={() => setPage(p.n)}
                   className={cn(
-                    "focus-visible:outline-ring block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-full",
+                    "block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus) sm:w-full",
                     p.n === page ? "border-line-strong" : "hover:border-line border-transparent",
                   )}
                 >

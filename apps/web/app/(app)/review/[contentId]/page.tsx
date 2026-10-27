@@ -236,6 +236,7 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
       model_version: f.model_version,
       prompt_version: f.prompt_version,
       resolved_at: f.resolved_at,
+      resolvedBy: f.resolved_by ? (name.get(f.resolved_by) ?? "someone") : null,
       citations: citationsFor(f),
     }))
     .filter((f) => f.citations.length)

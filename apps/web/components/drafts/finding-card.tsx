@@ -44,6 +44,8 @@ export type FindingView = {
   model_version?: string | null;
   prompt_version?: string | null;
   resolved_at?: string | null;
+  /** Display name of whoever resolved it (review page). */
+  resolvedBy?: string | null;
 };
 
 export { HUMAN_CONFIDENCE };
@@ -213,6 +215,9 @@ export function FindingCard({
             )}
             <span className="mono-id text-accent-soft">{codes}</span>
             <DimensionLabel dimension={f.dimension} />
+            {resolved && f.resolvedBy ? (
+              <span className="text-fg-faint text-xs">· by {f.resolvedBy}</span>
+            ) : null}
             {resolved && f.resolved_at ? (
               <span className="text-fg-faint text-xs">· {ago(f.resolved_at)}</span>
             ) : null}

@@ -23,7 +23,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26; Terminal Noir UI per DESIGN §6.4–6.5, §6.8–6.9 on ui/P09 (2026-10-27) |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
-| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
+| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; overlay UI per DESIGN §6.11 on ui/P12 (2026-10-27) |
 | P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` (local); not merged |
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
@@ -203,6 +203,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P09-UI | Settings: Profile, Appearance (theme radio cards, landing-page toggle undoing `bl_skip_landing`, single-key shortcut toggle), Notifications (Discord status + admin "Send test message", Resend status), Organisation members (admin), Demo reset as disabled button with the script name | DESIGN §6.9; webhook URL never shown |
 | 2026-10-27 | P09-UI | StateBadge keeps sentence-case DOM text (`<span>{label}</span>`) and uppercases with CSS; specialist state reads `Legal/A11y/Brand review` from `route_to` | Tests and screen readers get words, not shouting; DESIGN §2.4 labels |
 | 2026-10-27 | P09-UI | In-text links are underlined by default | axe `link-in-text-block` (WCAG 1.4.1) |
+| 2026-10-27 | P12-UI | OverlayCanvas (image) gets zoom (− / % / + / Fit / 100%) and a `Show boxes` toggle; boxes draw in over 300ms (`overlay-draw`), instant under reduced motion | DESIGN §6.11, §4.1 |
+| 2026-10-27 | P12-UI | PDFs over 40 pages are rejected in the browser before upload (counting `/Type /Page` objects) with "This PDF has N pages; the limit is 40." | DESIGN §6.11; the worker still enforces it |
+| 2026-10-27 | P12-UI | Resolved findings show who resolved them (`· by Rohan`) | DESIGN §6.3 resolved line; the review e2e relies on it |
+| 2026-10-27 | P12-UI | Contrast/ΔE swatches inside the card aren't rendered; the measured ratio stays in the explanation text | Findings don't persist structured colour values; adding them is a worker change (logged for U2/P15) |
 
 **Dependencies and licences** (append when adding any dependency):
 

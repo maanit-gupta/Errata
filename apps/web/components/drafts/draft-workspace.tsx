@@ -93,6 +93,20 @@ export function DraftWorkspace({
   // resulting mouseleave must not clear the box it just pointed at.
   const [pinned, setPinned] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  // Reject over-long PDFs before uploading (SPEC §14); the worker enforces it too.
+  const pickFile = async (f: File | null) => {
+    setFileError(null);
+    setFile(f);
+    if (f?.type === "application/pdf") {
+      const text = new TextDecoder("latin1").decode(await f.arrayBuffer());
+      const pages = (text.match(/\/Type\s*\/Page(?!s)/g) ?? []).length;
+      if (pages > PDF_MAX_PAGES) {
+        setFile(null);
+        setFileError(`This PDF has ${pages} pages; the limit is ${PDF_MAX_PAGES}.`);
+      }
+    }
+  };
   const [errors, setErrors] = useState<Partial<Record<keyof Intent, string>>>({});
   const [intent, setIntent] = useState<Partial<Intent>>({
     goal: "",
@@ -633,8 +647,15 @@ export function DraftWorkspace({
                   type="file"
                   accept=".docx,.pdf,.png,.jpg,.jpeg,.webp"
                   className="file:border-control file:text-fg mt-1 block max-w-full text-xs file:mr-2 file:rounded-md file:border file:bg-transparent file:px-2 file:py-1"
-                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => void pickFile(e.target.files?.[0] ?? null)}
+                  aria-describedby={fileError ? `${id}-file-err` : undefined}
+                  aria-invalid={fileError ? true : undefined}
                 />
+                {fileError ? (
+                  <p id={`${id}-file-err`} role="alert" className="text-danger mt-1 text-xs">
+                    {fileError}
+                  </p>
+                ) : null}
                 {fileKind === "pdf" ? (
                   <p className="text-fg-faint mt-1 text-xs">
                     Up to {PDF_MAX_PAGES} pages. Text rules run on the PDF&apos;s text, plus
@@ -833,7 +854,7 @@ export function DraftWorkspace({
                   : "This draft is with reviewers and can't be edited right now."}{" "}
               <a
                 href={`/review/${content.id}`}
-                className="text-accent-soft underline-offset-4 hover:underline"
+                className="text-accent-soft underline underline-offset-4"
               >
                 Review status
               </a>

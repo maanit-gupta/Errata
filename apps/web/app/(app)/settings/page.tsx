@@ -158,10 +158,7 @@ export default async function SettingsPage() {
             </Cell>
           ) : null}
           <p className="text-fg-muted text-sm">
-            <Link
-              href="/settings/ai-use"
-              className="text-accent-soft underline underline-offset-4"
-            >
+            <Link href="/settings/ai-use" className="text-accent-soft underline underline-offset-4">
               Services &amp; AI use
             </Link>{" "}
             lists every external service, what it receives, and the models in use.
