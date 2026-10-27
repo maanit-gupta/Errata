@@ -1,4 +1,3 @@
-import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // Core loop (storyboard F02→F05). Runs locally with E2E_WORKER=1 (web + worker + seeded DB), or
@@ -22,10 +21,8 @@ const card = (page: Page, code: string) =>
     .first();
 
 async function newDraft(page: Page, title: string, body: string) {
-  await page.goto("/drafts/new");
-  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(title);
-  await page.getByRole("button", { name: "Create draft" }).click();
+  await page.getByRole("button", { name: "New draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   await page.getByRole("textbox", { name: "Draft text" }).click();
   await page.keyboard.insertText(body);
@@ -60,7 +57,7 @@ test("F02–F03: creator fixes two, routes CL-03 and resubmits → lands with Le
 
   await page.getByRole("button", { name: "Resubmit for check" }).click();
   // Routed claim → straight to specialist review (manager skipped).
-  await expect(page.getByText("Legal review", { exact: true })).toBeVisible({
+  await expect(page.getByText("Specialist review", { exact: true })).toBeVisible({
     timeout: 60_000,
   });
 });
@@ -73,12 +70,12 @@ test("F04: not in the manager's queue; Legal sees diff and citations and signs o
   await page.goto("/review");
   await expect(page.getByRole("link", { name: TITLE })).toHaveCount(0);
 
-  await switchDemoRole(page, "Legal");
+  await page.getByLabel("Switch demo role").selectOption({ label: "Legal" });
+  await page.getByRole("button", { name: "Switch" }).click();
   await page.waitForURL(/\/review$/);
   await page.getByRole("link", { name: TITLE }).click();
   await expect(page.getByText("Routed CL-03 · F-112 claim → Legal")).toBeVisible();
-  await page.getByRole("tab", { name: /^Diff/ }).click();
-  await expect(page.getByRole("heading", { name: "What changed" })).toBeAttached();
+  await expect(page.getByRole("heading", { name: "What changed" })).toBeVisible();
   await expect(
     page.locator("ins").filter({ hasText: "7:00 PM IST (online)" }).first(),
   ).toBeVisible();
@@ -88,7 +85,7 @@ test("F04: not in the manager's queue; Legal sees diff and citations and signs o
     .getByLabel("Reason (required)")
     .fill("Historical figure is dated and the disclaimer will be added in the creative.");
   await page.getByRole("button", { name: "Sign off" }).click();
-  await expect(page.getByText("Approved", { exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Approved", { exact: true })).toBeVisible();
 });
 
 test("F05: owner marks publish-ready; audit trail lists every transition", async ({ page }) => {
@@ -96,11 +93,12 @@ test("F05: owner marks publish-ready; audit trail lists every transition", async
   await signInAs(page, "Creator");
   await page.goto(`/review/${contentId}`);
   await page.getByRole("button", { name: "Mark publish-ready" }).click();
-  await expect(page.getByText("Publish-ready", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Publish ready").first()).toBeVisible();
 
-  await switchDemoRole(page, "Manager");
+  await page.getByLabel("Switch demo role").selectOption({ label: "Manager" });
+  await page.getByRole("button", { name: "Switch" }).click();
+  await expect(page.getByTestId("role-pill")).toHaveText("Manager");
   await page.goto(`/review/${contentId}`);
-  await page.getByRole("tab", { name: "Audit" }).click();
   const audit = page.locator("#audit");
   for (const step of [
     "draft → ai_check",

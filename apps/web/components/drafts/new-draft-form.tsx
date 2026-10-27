@@ -2,7 +2,7 @@
 
 import { useActionState, useId } from "react";
 import { Button } from "@/components/ui/button";
-import { fieldClass, Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { createDraft, type Result } from "@/lib/drafts/actions";
 import { CHANNELS } from "@/lib/drafts/intent";
 
@@ -15,57 +15,56 @@ export function NewDraftForm({
   const id = useId();
   const active = campaigns.filter((c) => c.status !== "ended");
   return (
-    <form action={action} className="border-line bg-elevated space-y-5 rounded-md border p-6">
-      <div className="space-y-1.5">
+    <form
+      action={action}
+      className="border-border grid items-end gap-3 rounded-lg border border-dashed p-4 sm:grid-cols-[1fr_12rem_14rem_auto]"
+    >
+      <div className="space-y-1">
         <label htmlFor={`${id}-t`} className="text-sm font-medium">
           Title
         </label>
         <Input id={`${id}-t`} name="title" required placeholder="Diwali SIP launch caption" />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <label htmlFor={`${id}-ch`} className="text-sm font-medium">
-            Channel
-          </label>
-          <select id={`${id}-ch`} name="channel" className={fieldClass}>
-            {CHANNELS.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor={`${id}-cp`} className="text-sm font-medium">
-            Campaign
-          </label>
-          <select
-            id={`${id}-cp`}
-            name="campaign_id"
-            className={fieldClass}
-            aria-describedby={`${id}-cp-help`}
-          >
-            {active.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} · {c.status.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <p id={`${id}-cp-help`} className="text-fg-faint text-xs">
-            Facts are checked against this campaign. Ended campaigns aren&apos;t listed.
-          </p>
-        </div>
+      <div className="space-y-1">
+        <label htmlFor={`${id}-ch`} className="text-sm font-medium">
+          Channel
+        </label>
+        <select
+          id={`${id}-ch`}
+          name="channel"
+          className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
+        >
+          {CHANNELS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </div>
+      <div className="space-y-1">
+        <label htmlFor={`${id}-cp`} className="text-sm font-medium">
+          Campaign
+        </label>
+        <select
+          id={`${id}-cp`}
+          name="campaign_id"
+          className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
+        >
+          {active.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <Button type="submit" disabled={pending}>
+        New draft
+      </Button>
       {state && !state.ok ? (
-        <p role="alert" className="text-danger text-sm">
+        <p role="alert" className="text-accent-text text-sm sm:col-span-4">
           {state.error}
         </p>
       ) : null}
-      <div className="border-line flex justify-end border-t pt-4">
-        <Button type="submit" size="lg" disabled={pending}>
-          {pending ? "Creating…" : "Create draft"}
-        </Button>
-      </div>
     </form>
   );
 }

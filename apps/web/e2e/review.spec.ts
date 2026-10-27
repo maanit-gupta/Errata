@@ -1,5 +1,4 @@
 import { execSync } from "node:child_process";
-import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
 
 // Local-only review checks (uses docker exec against the local DB): E2E_WORKER=1.
@@ -13,10 +12,8 @@ async function signInAs(page: Page, label: string) {
   await page.waitForURL(/\/(drafts|review)$/);
 }
 async function newDraft(page: Page, title: string, body: string) {
-  await page.goto("/drafts/new");
-  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(title);
-  await page.getByRole("button", { name: "Create draft" }).click();
+  await page.getByRole("button", { name: "New draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   await page.getByRole("textbox", { name: "Draft text" }).click();
   await page.keyboard.insertText(body);
@@ -40,7 +37,9 @@ test("stale or wrong-role decisions are rejected server-side with a friendly err
   );
   await expect(page.getByText("In review", { exact: true })).toBeVisible({ timeout: 60_000 });
 
-  await switchDemoRole(page, "Manager");
+  await page.getByLabel("Switch demo role").selectOption({ label: "Manager" });
+  await page.getByRole("button", { name: "Switch" }).click();
+  await expect(page.getByTestId("role-pill")).toHaveText("Manager");
   await page.goto(`/review/${id}`);
   await expect(page.getByRole("button", { name: "Approve" })).toBeVisible();
 

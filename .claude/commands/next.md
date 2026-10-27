@@ -14,7 +14,7 @@ Target phase argument: "$ARGUMENTS"
 3. If no phase argument is passed:
    - Look for any phase marked `in-progress` or `partial`.
    - Otherwise, select the first phase marked `todo` whose dependencies are fully `done`.
-4. Check that your branch matches the phase (e.g., `phase/Pxx-<name>`). In `PROGRESS.md`, update the phase row with your owner initial and status `in-progress`.
+4. Make sure you are on `main` (no phase branches; `git pull --ff-only` first). In `PROGRESS.md`, update the phase row with your owner initial and status `in-progress`.
 
 ## 2. Context Loading (Do Not Crawl Repo)
 1. Read **only** the target phase's section in `docs/PHASES.md`.

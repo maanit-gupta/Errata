@@ -46,7 +46,7 @@ For each active phase `<ID>`:
 - Read the phase's corresponding section in `PHASES.md` and the relevant `SPEC.md` chapters.
 
 #### 2. Plan & Branch
-- Create or switch to the phase branch: `git checkout -b ui/<ID>` (or work directly on the designated staging branch per project convention).
+- Work on `main` in the main checkout. No `ui/<ID>` branches or worktrees.
 - Identify the explicit routes, components, and state boundaries to construct.
 
 #### 3. Build Rules

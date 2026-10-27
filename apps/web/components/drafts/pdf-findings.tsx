@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { Severity } from "@/components/brand/severity-badge";
+import type { Severity } from "@/components/severity-badge";
 import { Button } from "@/components/ui/button";
 import type { PdfPageView } from "@/lib/drafts/pages";
 import { cn } from "@/lib/utils";
@@ -27,9 +27,9 @@ function worst(markers: PdfMarker[], page: number): Severity | null {
 }
 
 const DOT: Record<Severity, string> = {
-  blocker: "bg-blocker text-blocker-fg",
-  warning: "bg-warning-bg text-warning border-warning border",
-  suggestion: "bg-hover text-suggestion",
+  blocker: "bg-blocker text-blocker-foreground",
+  warning: "bg-warning-surface text-warning border-warning border",
+  suggestion: "bg-suggestion-surface text-suggestion",
 };
 
 /**
@@ -83,7 +83,7 @@ export function PdfFindings({
   if (!current) return null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
+    <div className="grid gap-4 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
       <nav aria-label="Pages" className="min-w-0">
         <ol className="flex gap-2 overflow-x-auto pb-1 sm:max-h-[75vh] sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:pr-1">
           {pages.map((p) => {
@@ -94,10 +94,11 @@ export function PdfFindings({
                 <button
                   type="button"
                   aria-current={p.n === page ? "page" : undefined}
+                  aria-label={`Page ${p.n}: ${pageSummary(markers, p.n)}`}
                   onClick={() => setPage(p.n)}
                   className={cn(
-                    "block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus) sm:w-full",
-                    p.n === page ? "border-line-strong" : "hover:border-line border-transparent",
+                    "focus-visible:outline-ring block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 sm:w-full",
+                    p.n === page ? "border-foreground" : "hover:border-border border-transparent",
                   )}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- signed, short-lived Storage URL */}
@@ -107,24 +108,19 @@ export function PdfFindings({
                     loading="lazy"
                     width={p.width}
                     height={p.height}
-                    className="border-line block h-auto w-full rounded-sm border"
+                    className="border-border block h-auto w-full rounded-sm border"
                   />
-                  <span className="sr-only">{`Page ${p.n}: ${pageSummary(markers, p.n)}`}</span>
-                  <span
-                    aria-hidden
-                    className="mt-1 flex items-center justify-between gap-1 font-mono text-xs"
-                  >
+                  <span className="mt-1 flex items-center justify-between gap-1 font-mono text-xs">
                     <span>p. {p.n}</span>
                     {sev ? (
                       <span
                         aria-hidden
                         className={cn(
-                          "rounded-sm px-1 text-[0.65rem] leading-4 whitespace-nowrap uppercase",
+                          "rounded-sm px-1 text-[0.65rem] leading-4 uppercase",
                           DOT[sev],
                         )}
                       >
-                        {count}
-                        {sev.slice(0, 1)}
+                        {count} · {sev.slice(0, 1)}
                       </span>
                     ) : null}
                   </span>
@@ -139,7 +135,7 @@ export function PdfFindings({
         <div className="mb-2 flex items-center justify-between gap-2 text-sm">
           <p aria-live="polite" className="m-0">
             Page {current.n} of {pages.length}{" "}
-            <span className="text-fg-muted">· {pageSummary(markers, current.n)}</span>
+            <span className="text-muted-foreground">· {pageSummary(markers, current.n)}</span>
           </p>
           <div className="flex gap-1">
             <Button

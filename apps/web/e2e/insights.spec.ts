@@ -1,9 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-// Overlays and findings animate in (DESIGN §4); axe audits settled frames.
-test.use({ reducedMotion: "reduce" });
-
 // P13 Guideline Clarity Score loop: the simulated month puts TV-04 at GCS 60 (UNCLEAR); the worker
 // generated three examples; a brand admin approves them → TV-04 v2, re-embedded, scored afresh.
 // Needs the local stack with the worker and `make simulate-activity` run first: E2E_WORKER=1.

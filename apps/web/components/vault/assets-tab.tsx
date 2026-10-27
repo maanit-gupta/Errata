@@ -5,12 +5,11 @@ type Spec = Record<string, unknown>;
 
 export async function AssetsTab({ orgId }: { orgId: string }) {
   const supabase = await createClient();
-  const { data: assets, error } = await supabase
+  const { data: assets } = await supabase
     .from("assets")
     .select("id, kind, name, storage_path, spec")
     .eq("org_id", orgId)
     .order("created_at");
-  if (error) throw new Error(`Couldn't load assets: ${error.message}`);
   const images = (assets ?? []).filter((a) => a.kind === "logo" || a.kind === "reference_image");
   const signed = await Promise.all(
     images.map(async (a) =>
@@ -36,36 +35,32 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
   return (
     <div className="space-y-10">
       <section aria-labelledby="palette-h">
-        <h2 id="palette-h" className="mono-label text-fg-faint mb-2">
+        <h2 id="palette-h" className="font-heading mb-3 text-lg">
           Palette
         </h2>
-        <div className="border-line bg-elevated rounded-md border p-4">
+        <div className="border-border bg-card rounded-lg border p-4">
           <PaletteEditor palette={palette} />
         </div>
       </section>
       <section aria-labelledby="images-h">
-        <h2 id="images-h" className="mono-label text-fg-faint mb-2">
+        <h2 id="images-h" className="font-heading mb-3 text-lg">
           Logos and reference images
         </h2>
         <ul className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {images.map((a, i) => {
             const s = (a.spec ?? {}) as Spec;
             return (
-              <li key={a.id} className="border-line bg-elevated rounded-md border p-3">
+              <li key={a.id} className="border-border bg-card rounded-lg border p-3">
                 {signed[i] ? (
                   // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL, not optimisable
                   <img
                     src={signed[i]!}
                     alt={`${a.name} (${a.kind === "logo" ? "logo" : "reference image"})`}
-                    className="mb-3 h-28 w-full rounded-sm object-contain p-2"
-                    style={{
-                      background:
-                        "repeating-conic-gradient(var(--bg-hover) 0 25%, var(--bg-elevated) 0 50%) 0 0 / 16px 16px",
-                    }}
+                    className="mb-2 h-24 w-full object-contain"
                   />
                 ) : null}
                 <p className="font-medium">{a.name}</p>
-                <p className="mono-id text-fg-muted text-xs">
+                <p className="text-muted-foreground text-xs">
                   {a.kind === "logo"
                     ? `Logo · clear space ${String(s.min_clear_space_ratio ?? "?")}× height · min ${String(s.min_width_px ?? "?")} px`
                     : "Reference image"}
@@ -74,7 +69,7 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
             );
           })}
         </ul>
-        <div className="border-control rounded-md border border-dashed p-4">
+        <div className="border-border rounded-lg border border-dashed p-4">
           <AssetUpload />
         </div>
       </section>

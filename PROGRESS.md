@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P14 (partial; P12/P13 and the U0–U2 UI track merged to `main`)
+**Current phase:** P14 (partial). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -13,33 +13,30 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 |---|---|---|---|---|---|---|
 | P00 | Repo bootstrap & tooling | M | done | M (Claude) | phase/P00-bootstrap | 2026-10-26 |
 | P01 | DB schema, RLS, queue, seed | M | done | M (Claude) | phase/P01-schema | 2026-10-26 |
-| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) moved to U0; UI per DESIGN §6.1 on ui/P02 (2026-10-27) |
+| P02 | Web shell, auth, demo switcher | J | done | M (Claude, /complete) | phase/P02-web-shell | 2026-10-26; tasks 1–2 (tokens/restyle) moved to U0; UI per DESIGN §6.1 on ui/P02 (shelved, not on main) |
 | P03 | Worker core | M | done | M (Claude) | phase/P03-worker-core | 2026-10-26 |
 | P04 | Vault ingestion & PayWise kit | M | done | M (Claude) | phase/P04-vault-ingestion | 2026-10-26 |
-| P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26; Terminal Noir UI per DESIGN §6.6 on ui/P05 (2026-10-27) |
+| P05 | Vault admin UI | J | done | M (Claude, /complete) | phase/P05-vault-ui | 2026-10-26; Terminal Noir UI per DESIGN §6.6 on ui/P05 (shelved, not on main) |
 | P06 | Pipeline stages 1–4 | M | done | M (Claude) | phase/P06-pipeline-1-4 | 2026-10-26 |
 | P07 | Stages 5–6: LLM, gate, intent | M | done | M (Claude) | phase/P07-llm-gate | 2026-10-26 |
-| P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26; Terminal Noir UI per DESIGN §6.2–6.3 on ui/P08 (2026-10-27) |
-| P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26; Terminal Noir UI per DESIGN §6.4–6.5, §6.8–6.9 on ui/P09 (2026-10-27) |
+| P08 | Editor & findings UI | J | done | M (Claude, /complete) | phase/P08-editor-findings | 2026-10-26; Terminal Noir UI per DESIGN §6.2–6.3 on ui/P08 (shelved, not on main) |
+| P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26; Terminal Noir UI per DESIGN §6.4–6.5, §6.8–6.9 on ui/P09 (shelved, not on main) |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
-| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27; overlay UI per DESIGN §6.11 on ui/P12 |
-| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 |
-| P14 | Golden set & eval gate | M | partial | M (Claude) | phase/P14-eval-gate | checkpoint 2026-10-27: eval blocked on free-tier 429s |
+| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27; overlay UI per DESIGN §6.11 on ui/P12 (shelved) |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 (shelved) |
+| P14 | Golden set & eval gate | M | partial | M (Claude) | main (was phase/P14-eval-gate) | checkpoint 2026-10-27: eval blocked on free-tier 429s |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
-| U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; worktree .claude/worktrees/ui |
-| U1 | Public landing + /ai-use (DESIGN.md §8) | J | done | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
-| U2 | UI polish and audit (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U2 | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
+| U0 | Design-system foundation (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; built on ui/* branches; merged to main and then reverted the same day (user); rebuild later on request |
+| U1 | Public landing + /ai-use (DESIGN.md §8) | J | shelved | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
+| U2 | UI polish and audit (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U2 | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI track (U0 → U1 → P02 → P05 → P08 → P09 → P12 → P13 → U2):** done 2026-10-27 on stacked `ui/*` branches (worktree `.claude/worktrees/ui`). `main` was merged into `ui/U2` (conflict only in this file), then `main` was fast-forwarded to it and deployed 2026-10-27 (user request).
-  - Terminal Noir tokens in `app/globals.css` (dark default, `bl_theme` cookie), `lib/design/tokens.ts`, contrast test, and a hex-literal ESLint rule. `components/brand/*`, `components/shell/*`, `components/marketing/*`, `components/motion/*`.
-  - Routes: public `/` landing, `/ai-use`, `/dev/kitchen-sink` (non-prod), `/drafts/new`, `/audit`, plus `(app)/loading.tsx` and `error.tsx`. Every existing screen is restyled.
-  - Gates: `e2e/ui.spec.ts` (axe per route × theme, 38/38) and `e2e/keyboard.spec.ts`. Screenshots are in `docs/screens/`.
-  - UI gotchas: specs wait for `networkidle` after `goto('/drafts/new')`. `make check` resets the local DB, so run `make seed-assets-local` and `make simulate-activity` before image or insights work. Re-run `core-loop`, `drafts` and `pdf-check` while the LLM quota is quiet (runs took about 80 s under 429s).
-- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14) on `phase/P14-eval-gate`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
+- **UI (2026-10-27):** the Terminal Noir UI (U0–U2, from the `ui/*` branches) was merged and deployed, but it didn't match the UI the user runs on localhost. At the user's request, `main`'s web app, `pnpm-lock.yaml` and `CLAUDE.md` were restored to the pre-redesign state (identical to `phase/P14-eval-gate`) and redeployed. The redesign code stays on `ui/U2` (worktree `.claude/worktrees/ui`); `docs/DESIGN.md` and `docs/screens/` are kept for reference. **Don't re-apply it until the user asks for the UI rebuild.**
+- **Workflow (user rule 2026-10-27):** work and commit directly on `main` in the main checkout. No phase/UI branches and no worktrees.
+- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14), now on `main`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
 - **What exists now:**
   - `eval/golden/drafts.jsonl` (60 rows: 49 text, 10 images, 1 PDF; 13 clean), with hero variants, bleed cases and the tricky negatives. `eval/golden/rewrites.jsonl` (16 good / 24 bad rewrite pairs).
   - `eval/run_eval.py` (`make eval`): full pipeline in-process, no DB (vault from `scripts/demo_data.py`, real bge-small retrieval mirroring `match_vault`), committed LLM cache `eval/cache/`, §17 metrics, intent-cosine table, 30-run latency benchmark, `report.md` + `report.json`, and a non-zero exit when a gate fails (including any degraded row). `tests/test_eval.py`.
@@ -55,7 +52,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - The cache has 14 entries recorded with `gemini-3.6-flash`; `.env` and the repo variables say `gemini-3.5-flash`. They only replay if the model ID matches. `--prune` on a full run removes unused entries.
   - Don't change `DIMENSION_MAX_SEVERITY` from a run with degraded rows: those rows measure only the deterministic stages.
 - **Exact next step (P14):** once the quotas reset, `make eval` (only the missing rows go live). Then apply the precision gate (`DIMENSION_MAX_SEVERITY` → `suggestion` for any dimension still < 0.85), rerun until PASS, `make eval args=--prune`, commit the cache. Demonstrate the CI failing on a broken prompt on a throwaway branch (needs the secrets), note it here, then finish P14 (Decisions + README "AI assistance").
-- **After P14:** U0–U2 are done and on `main`, so next comes P15 (including the U2 follow-ups in Decisions), then P16.
+- **After P14:** P15, then P16. The UI rebuild happens when the user asks for it.
 
 ## Decisions log (append-only)
 
@@ -233,6 +230,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P14 | `review@2` prompt: cite the specific TV rule; leave reading level, jargon and link text to deterministic checks | review@1 LLM FPs (TV-02 instead of TV-04; A-01 on "SIP"/"equity fund") |
 | 2026-10-27 | P14 | `eval.yml` is a separate path-filtered workflow using repository secrets and repo variables for model IDs | Model IDs are in the cache key; non-worker PRs shouldn't spend quota |
 | 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
+| 2026-10-27 | UI | Terminal Noir UI reverted on `main` (web, lockfile and CLAUDE.md restored to pre-U0); the code stays on `ui/U2` | User: production didn't match the UI they run locally; they will ask for a rebuild later |
+| 2026-10-27 | all | Work directly on `main`; no phase/UI branches or worktrees (CLAUDE.md and the commands updated) | User rule: what runs on localhost from the main checkout is what ships |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -262,9 +261,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | Tesseract OCR (system binary, Docker `tesseract-ocr`) | Apache-2.0 | P11 |
 | paddleocr, paddlepaddle (optional extra `ocr-paddle`, not installed by default) | Apache-2.0 | P11 |
 | recharts | MIT | P13 |
-| geist | OFL-1.1 (fonts) / MIT | U0 |
-| motion | MIT | U0 |
-| cmdk | MIT | U0 |
+| geist | OFL-1.1 (fonts) / MIT | U0 (removed with the UI revert) |
+| motion | MIT | U0 (removed with the UI revert) |
+| cmdk | MIT | U0 (removed with the UI revert) |
 
 ## Open questions (ask the user; don't guess)
 

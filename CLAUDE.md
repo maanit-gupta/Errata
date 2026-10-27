@@ -16,7 +16,6 @@ Round 2 is judged on five things: end-to-end workflow (30), depth and reliabilit
 | `docs/plan.pdf` | Round 1 plan, used for product intent and judging context. **Do not read it by default** (it's large); consult a specific page only when SPEC is silent. |
 | `docs/SPEC.md` | The **build spec**. It wins over the PDF on any conflict, because it records the deliberate deviations. |
 | `docs/PHASES.md` | Phase-by-phase tasks and acceptance criteria. |
-| `docs/DESIGN.md` | Visual and interaction system ("Terminal Noir") and the UI phases U0–U2 (§12). Wins on look and feel. |
 | `PROGRESS.md` | Live state: phase status, the latest handoff, decisions and open questions. **Read it first, every session.** |
 
 ---
@@ -33,11 +32,11 @@ The team works in **phase-scoped sessions**: `/clear` → `/next` (or `/next P07
    - set the phase status
    - rewrite the **Handoff** section (what exists now, what's stubbed, gotchas, exact next step)
    - append to **Decisions**
-6. **Commit.** Use a conventional commit on the phase branch, e.g. `feat(worker): P07 citation gate`. Then stop and tell the user: *"P07 done. Run /clear then /next."*
+6. **Commit.** Use a conventional commit **on `main`** (no phase or UI branches, no worktrees; user rule 2026-10-27), e.g. `feat(worker): P07 citation gate`. Then stop and tell the user: *"P07 done. Run /clear then /next."*
 7. **If context is getting heavy mid-phase**, run the `/checkpoint` routine: write a precise handoff (status `partial`, the exact next step), commit WIP, and stop.
 8. **Decisions.** If a decision is genuinely the user's (money, accounts, scope cuts, anything listed under "Open questions"), ask. Otherwise pick the SPEC default, log it under Decisions, and keep going.
 
-**Parallel work.** Maanit and Jagpreet may run phases at the same time on different branches. Before starting, set `Owner/Session` on your phase row in `PROGRESS.md` and commit that line immediately. Never start a phase whose dependencies aren't `done`. Never edit another in-progress phase's files without saying so in the handoff.
+**Parallel work.** Maanit and Jagpreet may run phases at the same time, both on `main` (pull before you start, commit small, push often). Before starting, set `Owner/Session` on your phase row in `PROGRESS.md` and commit that line immediately. Never start a phase whose dependencies aren't `done`. Never edit another in-progress phase's files without saying so in the handoff.
 
 ---
 
@@ -268,7 +267,7 @@ Violating any of these is a bug, regardless of the phase.
 - Every new table gets a pgTAP RLS test (member can, non-member can't).
 
 **Git**
-- Phase branches `phase/P07-citation-gate`, PR into `main` reviewed by the other member.
+- **Work directly on `main`** (user rule 2026-10-27). Don't create phase or UI branches or worktrees; what runs on localhost from the main checkout is what ships. The old `phase/*` and `ui/*` branches are history only.
 - Conventional commits.
 - Never commit `.env*` (other than `.env.example`), model caches or `node_modules`.
 - AI-assisted code is disclosed in the README (General Rules 6–7). Keep the "AI assistance" section current.
@@ -289,9 +288,13 @@ Violating any of these is a bug, regardless of the phase.
 
 ---
 
-## UI and UX conventions
+## UI and UX conventions (match the Round 1 visual language)
 
-All visual and interaction rules live in `docs/DESIGN.md`. It wins on look and feel; the invariants still win over it.
+- **Palette:** off-white `#F8F7F4` background, near-black `#141414` text, vermilion `#D63A24` accent for blockers and primary actions, warm greys for rules and borders. Define these as CSS tokens and support dark mode.
+- **Type:** a serif display face for headings (e.g. Fraunces or Newsreader), a clean sans for body (e.g. DM Sans or Inter), and a mono face (JetBrains Mono or IBM Plex Mono) for IDs, labels and badges such as `CL-03 · BLOCKER`.
+- **Rule and fact IDs are first-class UI.** Show them on every finding, clickable to open the rule card or fact.
+- **Severity:** blocker (vermilion fill), warning (outlined), suggestion (muted). Never rely on colour alone; always pair it with a text label.
+- The app UI itself must meet **WCAG 2.2 AA**: keyboard navigation, focus rings, 4.5:1 contrast, labelled controls. Usability is 10 points, and the product checks accessibility, so it must pass its own checks.
 
 ---
 

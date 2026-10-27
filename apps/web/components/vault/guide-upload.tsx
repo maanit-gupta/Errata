@@ -21,10 +21,10 @@ export function GuideUpload() {
           name="file"
           type="file"
           accept=".pdf,.docx"
-          className="file:border-control file:text-fg block text-sm file:mr-3 file:rounded-md file:border file:bg-transparent file:px-3 file:py-1.5"
+          className="block text-sm"
         />
       </div>
-      <p className="text-fg-muted text-sm sm:pb-1.5">or</p>
+      <p className="text-muted-foreground text-sm sm:pb-1.5">or</p>
       <div className="space-y-1">
         <label htmlFor={`${id}-url`} className="text-sm font-medium">
           Paste a web page URL
@@ -35,7 +35,7 @@ export function GuideUpload() {
         {pending ? "Uploading…" : "Add guide"}
       </Button>
       <p aria-live="polite" className="text-sm sm:col-span-4">
-        {state && !state.ok ? <span className="text-danger">{state.error}</span> : null}
+        {state && !state.ok ? <span className="text-accent-text">{state.error}</span> : null}
       </p>
     </form>
   );

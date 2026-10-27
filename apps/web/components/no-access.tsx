@@ -1,6 +1,10 @@
-import { Forbidden } from "@/components/brand/forbidden";
+import { Lock } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
 
-/** Forbidden state for a page (DESIGN.md §11). */
-export function NoAccess({ what, role = "Your role" }: { what: string; role?: string }) {
-  return <Forbidden role={role} action={`view ${what}`} />;
+export function NoAccess({ what }: { what: string }) {
+  return (
+    <EmptyState icon={Lock} title="You don't have access to this page">
+      Your role can&apos;t view {what}. Ask a brand admin if you think that&apos;s wrong.
+    </EmptyState>
+  );
 }

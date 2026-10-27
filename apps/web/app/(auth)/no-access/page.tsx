@@ -1,24 +1,18 @@
-import { EmptyState } from "@/components/brand/empty-state";
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
 import { signOut } from "@/lib/auth/actions";
 
 export const metadata = { title: "No organisation" };
 
 export default function NoAccessPage() {
   return (
-    <main
-      id="main"
-      className="blueprint-grid flex min-h-dvh flex-1 items-center justify-center px-6"
-    >
+    <main className="mx-auto flex w-full max-w-xl flex-1 items-center px-6">
       <EmptyState
-        glyph="lock"
-        className="w-full max-w-xl"
         title="You're not in an organisation yet"
         action={
           <form action={signOut}>
-            <Button type="submit" variant="secondary">
+            <button type="submit" className="text-sm font-medium underline underline-offset-4">
               Sign out
-            </Button>
+            </button>
           </form>
         }
       >

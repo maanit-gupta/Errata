@@ -1,13 +1,9 @@
 "use client";
 
-import { FileWarning, Lock } from "lucide-react";
-import { useState, useTransition } from "react";
-import { DataTable } from "@/components/brand/data-table";
-import { Drawer } from "@/components/brand/drawer";
-import { EmptyState } from "@/components/brand/empty-state";
-import { IdCode } from "@/components/brand/id-badge";
+import { Fragment, useState, useTransition } from "react";
+import { IdBadge } from "@/components/id-badge";
 import { Button } from "@/components/ui/button";
-import { fieldClass, Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { saveFact } from "@/lib/vault/actions";
 import { toastResult } from "./use-action-toast";
 
@@ -25,126 +21,87 @@ export type FactRow = {
 
 const toLocal = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
 
-/** Fact Vault table (DESIGN.md §6.6). Editing opens the drawer. */
 export function FactsTable({ facts, now }: { facts: FactRow[]; now: string }) {
-  const [editing, setEditing] = useState<FactRow | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   return (
-    <>
-      <DataTable
-        caption="Facts in the Fact Vault"
-        rows={facts}
-        rowKey={(f) => f.id}
-        initialSort={{ key: "code", dir: "asc" }}
-        empty={
-          <EmptyState glyph="calendar-x" title="No facts yet">
-            Import a facts CSV above. Dates, venues and fees are then checked deterministically.
-          </EmptyState>
-        }
-        columns={[
-          {
-            key: "code",
-            header: "Code",
-            rowHeader: true,
-            sortValue: (f) => f.code,
-            cell: (f) => <IdCode code={f.code} />,
-          },
-          {
-            key: "campaign",
-            header: "Campaign",
-            sortValue: (f) => f.campaign ?? "",
-            cell: (f) => f.campaign ?? <span className="mono-label text-fg-faint">ORG-WIDE</span>,
-          },
-          {
-            key: "kind",
-            header: "Kind",
-            sortValue: (f) => f.kind,
-            cell: (f) => <span className="mono-label text-fg-muted">{f.kind}</span>,
-          },
-          {
-            key: "statement",
-            header: "Statement",
-            className: "min-w-64",
-            cell: (f) => f.statement,
-          },
-          {
-            key: "value",
-            header: "Value",
-            cell: (f) => {
-              const v = JSON.stringify(f.value);
-              return (
-                <code
-                  title={JSON.stringify(f.value, null, 2)}
-                  className="text-fg-muted block max-w-56 truncate font-mono text-xs"
-                >
-                  {v}
-                </code>
-              );
-            },
-          },
-          {
-            key: "disclaimer",
-            header: "Disclaimer",
-            cell: (f) =>
-              f.required_disclaimer ? (
-                <span
-                  title={f.required_disclaimer}
-                  className="text-fg-muted inline-flex items-center gap-1 text-xs"
-                >
-                  <FileWarning aria-hidden className="size-4" />
-                  <span className="sr-only">Required disclaimer: {f.required_disclaimer}</span>
-                </span>
-              ) : (
-                <span className="text-fg-faint">—</span>
-              ),
-          },
-          {
-            key: "expires",
-            header: "Expires",
-            sortValue: (f) => f.valid_until ?? "",
-            cell: (f) => {
-              const expired = f.valid_until !== null && f.valid_until < now;
-              return (
-                <span className="mono-id inline-flex items-center gap-1.5 whitespace-nowrap">
-                  {f.valid_until
-                    ? new Date(f.valid_until).toLocaleDateString("en-IN", { dateStyle: "medium" })
-                    : "—"}
-                  {expired ? (
-                    <span className="mono-label bg-blocker-bg text-blocker rounded-sm px-1.5 py-0.5">
-                      Expired
-                    </span>
-                  ) : null}
-                </span>
-              );
-            },
-          },
-          {
-            key: "never",
-            header: "Never send",
-            cell: (f) =>
-              f.never_send ? (
-                <span className="text-fg-muted inline-flex items-center gap-1 text-xs">
-                  <Lock aria-hidden className="size-3.5" /> Yes
-                </span>
-              ) : (
-                <span className="text-fg-faint text-xs">No</span>
-              ),
-          },
-          {
-            key: "edit",
-            header: "",
-            align: "right",
-            cell: (f) => (
-              <Button variant="secondary" size="sm" onClick={() => setEditing(f)}>
-                Edit <span className="sr-only">{f.code}</span>
-              </Button>
-            ),
-          },
-        ]}
-      />
-      {editing ? (
-        <FactEditor key={editing.id} fact={editing} onDone={() => setEditing(null)} />
-      ) : null}
-    </>
+    <div className="border-border bg-card overflow-x-auto rounded-lg border">
+      <table className="w-full text-left text-sm">
+        <caption className="sr-only">Facts in the Fact Vault</caption>
+        <thead className="border-border bg-muted/60 border-b">
+          <tr>
+            {[
+              "Code",
+              "Campaign",
+              "Kind",
+              "Statement",
+              "Value",
+              "Disclaimer",
+              "Expires",
+              "Never send",
+              "",
+            ].map((h, i) => (
+              <th key={i} scope="col" className="px-3 py-2 font-medium">
+                {h || <span className="sr-only">Actions</span>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {facts.map((f) => {
+            const expired = f.valid_until !== null && f.valid_until < now;
+            return (
+              <Fragment key={f.id}>
+                <tr className="border-border border-b align-top last:border-0">
+                  <th scope="row" className="px-3 py-2">
+                    <IdBadge code={f.code} />
+                  </th>
+                  <td className="px-3 py-2">
+                    {f.campaign ?? <span className="text-muted-foreground">Org-wide</span>}
+                  </td>
+                  <td className="px-3 py-2">{f.kind}</td>
+                  <td className="px-3 py-2">{f.statement}</td>
+                  <td className="px-3 py-2">
+                    <pre className="max-w-xs overflow-x-auto font-mono text-xs whitespace-pre-wrap">
+                      {JSON.stringify(f.value, null, 2)}
+                    </pre>
+                  </td>
+                  <td className="max-w-xs px-3 py-2 text-xs">{f.required_disclaimer ?? "—"}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {f.valid_until
+                      ? new Date(f.valid_until).toLocaleDateString("en-IN", { dateStyle: "medium" })
+                      : "—"}
+                    {expired ? (
+                      <span className="border-accent-text text-accent-text ml-1 rounded-sm border px-1 font-mono text-[0.7rem] uppercase">
+                        Expired
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-2">{f.never_send ? "Yes" : "No"}</td>
+                  <td className="px-3 py-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-expanded={editing === f.id}
+                      onClick={() => setEditing(editing === f.id ? null : f.id)}
+                    >
+                      {editing === f.id ? "Cancel" : "Edit"}{" "}
+                      <span className="sr-only">{f.code}</span>
+                    </Button>
+                  </td>
+                </tr>
+                {editing === f.id ? (
+                  <tr className="border-border bg-muted/40 border-b">
+                    <td colSpan={9} className="px-3 py-3">
+                      <FactEditor fact={f} onDone={() => setEditing(null)} />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -157,73 +114,50 @@ function FactEditor({ fact, onDone }: { fact: FactRow; onDone: () => void }) {
   const [neverSend, setNeverSend] = useState(fact.never_send);
   const p = `fact-${fact.id}`;
   return (
-    <Drawer
-      open
-      onClose={onDone}
-      eyebrow={<IdCode code={fact.code} />}
-      title="Edit fact"
-      footer={
-        <>
-          <Button type="submit" form={`${p}-form`} disabled={pending}>
-            {pending ? "Saving…" : `Save ${fact.code}`}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onDone}>
-            Cancel
-          </Button>
-        </>
-      }
-    >
-      <form
-        id={`${p}-form`}
-        className="space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          start(async () => {
-            const r = await saveFact({
-              id: fact.id,
-              statement,
-              value,
-              required_disclaimer: disclaimer,
-              valid_until: validUntil,
-              never_send: neverSend,
-            });
-            toastResult(r);
-            if (r.ok) onDone();
+    <form
+      className="grid gap-3 md:grid-cols-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        start(async () => {
+          const r = await saveFact({
+            id: fact.id,
+            statement,
+            value,
+            required_disclaimer: disclaimer,
+            valid_until: validUntil,
+            never_send: neverSend,
           });
-        }}
-      >
-        <p className="text-fg-muted text-sm">
-          {fact.campaign ? `Campaign: ${fact.campaign}` : "Org-wide fact"} · {fact.kind}
-        </p>
-        <div className="space-y-1.5">
-          <label htmlFor={`${p}-st`} className="text-sm font-medium">
-            Statement
-          </label>
-          <Input id={`${p}-st`} value={statement} onChange={(e) => setStatement(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor={`${p}-val`} className="text-sm font-medium">
-            Value (JSON)
-          </label>
-          <textarea
-            id={`${p}-val`}
-            rows={6}
-            className={`${fieldClass} font-mono text-xs`}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <label htmlFor={`${p}-dis`} className="text-sm font-medium">
-            Required disclaimer
-          </label>
-          <Input
-            id={`${p}-dis`}
-            value={disclaimer}
-            onChange={(e) => setDisclaimer(e.target.value)}
-          />
-        </div>
-        <div className="space-y-1.5">
+          toastResult(r);
+          if (r.ok) onDone();
+        });
+      }}
+    >
+      <div className="space-y-1">
+        <label htmlFor={`${p}-st`} className="text-sm font-medium">
+          Statement
+        </label>
+        <Input id={`${p}-st`} value={statement} onChange={(e) => setStatement(e.target.value)} />
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={`${p}-dis`} className="text-sm font-medium">
+          Required disclaimer
+        </label>
+        <Input id={`${p}-dis`} value={disclaimer} onChange={(e) => setDisclaimer(e.target.value)} />
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={`${p}-val`} className="text-sm font-medium">
+          Value (JSON)
+        </label>
+        <textarea
+          id={`${p}-val`}
+          rows={4}
+          className="border-input bg-card w-full rounded-md border px-3 py-2 font-mono text-xs"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      </div>
+      <div className="space-y-3">
+        <div className="space-y-1">
           <label htmlFor={`${p}-exp`} className="text-sm font-medium">
             Valid until
           </label>
@@ -234,24 +168,23 @@ function FactEditor({ fact, onDone }: { fact: FactRow; onDone: () => void }) {
             onChange={(e) => setValidUntil(e.target.value)}
           />
         </div>
-        <label className="flex items-start gap-3 text-sm">
+        <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
-            role="switch"
-            className="mt-0.5 size-5 accent-(--accent)"
             checked={neverSend}
             onChange={(e) => setNeverSend(e.target.checked)}
           />
-          <span>
-            <span className="inline-flex items-center gap-1 font-medium">
-              <Lock aria-hidden className="size-3.5" /> Never send to AI
-            </span>
-            <span className="text-fg-faint block text-xs">
-              Checked locally only; never included in an LLM prompt.
-            </span>
-          </span>
+          Never send to an LLM
         </label>
-      </form>
-    </Drawer>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={pending}>
+            Save {fact.code}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onDone}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </form>
   );
 }

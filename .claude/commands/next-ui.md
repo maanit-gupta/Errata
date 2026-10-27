@@ -3,7 +3,7 @@ description: Start the next BrandLens UI phase (U0, U1, J-owned UI phases, U2), 
 argument-hint: "[phase-id]"
 ---
 
-Run a phase-scoped **UI** session. Follow every step of `.claude/commands/next.md` (orient → claim and branch → plan → build → verify → hand off), with these additions:
+Run a phase-scoped **UI** session. Follow every step of `.claude/commands/next.md` (orient → claim on `main` → plan → build → verify → hand off), with these additions:
 
 **First run only.** If `CLAUDE.md` still has the old "UI and UX conventions" section (serif, off-white, `#F8F7F4`):
 1. Replace that section with one line: "All visual and interaction rules live in `docs/DESIGN.md`. It wins on look and feel; the invariants still win over it."

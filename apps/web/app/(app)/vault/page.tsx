@@ -1,25 +1,21 @@
 import { NoAccess } from "@/components/no-access";
-import { PageHeader } from "@/components/brand/page-header";
+import { PageHeader } from "@/components/page-header";
 import { AssetsTab } from "@/components/vault/assets-tab";
 import { CampaignsTab } from "@/components/vault/campaigns-tab";
 import { FactsTab } from "@/components/vault/facts-tab";
 import { GlossaryTab } from "@/components/vault/glossary-tab";
 import { GuidesTab } from "@/components/vault/guides-tab";
 import { RuleCardsTab } from "@/components/vault/rule-cards-tab";
-import { StatusTabs } from "@/components/vault/status-tabs";
-import { VAULT_TABS, type VaultTab } from "@/components/vault/vault-tabs";
+import { VAULT_TABS, VaultTabs, type VaultTab } from "@/components/vault/vault-tabs";
 import { requireSession } from "@/lib/auth/session";
-import { can, roleLabel } from "@/lib/workflow/permissions";
+import { can } from "@/lib/workflow/permissions";
 
 export const metadata = { title: "Vault" };
 
 export default async function VaultPage({ searchParams }: PageProps<"/vault">) {
   const session = await requireSession();
   // SPEC §2: only brand admins define the vault; agencies never see it.
-  if (!can(session.role, "define_vault"))
-    return (
-      <NoAccess what="the brand vault" role={roleLabel(session.role, session.specialistKind)} />
-    );
+  if (!can(session.role, "define_vault")) return <NoAccess what="the brand vault" />;
 
   const params = await searchParams;
   const str = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
@@ -35,28 +31,19 @@ export default async function VaultPage({ searchParams }: PageProps<"/vault">) {
         title="Rules, facts and assets"
         description="Every draft is checked against what's approved here, and every finding cites it."
       />
-      <StatusTabs
-        label="Vault sections"
-        value={tab}
-        tabs={VAULT_TABS.map((t) => ({
-          value: t.key,
-          label: t.label,
-          href: `/vault?tab=${t.key}`,
-        }))}
-      >
-        {tab === "rules" ? (
-          <RuleCardsTab
-            orgId={session.orgId}
-            status={str(params.status) ?? "all"}
-            cardId={str(params.card)}
-          />
-        ) : null}
-        {tab === "facts" ? <FactsTab orgId={session.orgId} /> : null}
-        {tab === "glossary" ? <GlossaryTab orgId={session.orgId} /> : null}
-        {tab === "campaigns" ? <CampaignsTab orgId={session.orgId} /> : null}
-        {tab === "assets" ? <AssetsTab orgId={session.orgId} /> : null}
-        {tab === "guides" ? <GuidesTab orgId={session.orgId} /> : null}
-      </StatusTabs>
+      <VaultTabs active={tab} />
+      {tab === "rules" ? (
+        <RuleCardsTab
+          orgId={session.orgId}
+          status={str(params.status) ?? "all"}
+          cardId={str(params.card)}
+        />
+      ) : null}
+      {tab === "facts" ? <FactsTab orgId={session.orgId} /> : null}
+      {tab === "glossary" ? <GlossaryTab orgId={session.orgId} /> : null}
+      {tab === "campaigns" ? <CampaignsTab orgId={session.orgId} /> : null}
+      {tab === "assets" ? <AssetsTab orgId={session.orgId} /> : null}
+      {tab === "guides" ? <GuidesTab orgId={session.orgId} /> : null}
     </>
   );
 }
