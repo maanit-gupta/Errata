@@ -80,7 +80,10 @@ test("keyboard-only: demo sign-in, skip link and nav", async ({ page }) => {
     Insights: /\/insights$/,
   };
   for (const [name, url] of Object.entries(urls)) {
-    const link = page.getByRole("navigation").getByRole("link", { name, exact: true });
+    // The review link's name gains "<n> waiting" when the queue isn't empty.
+    const link = page
+      .getByRole("navigation")
+      .getByRole("link", { name: new RegExp(`^${name} ?(\\d+ waiting)?$`) });
     await link.focus();
     const outline = await link.evaluate((el) => {
       const s = getComputedStyle(el);

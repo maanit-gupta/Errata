@@ -26,7 +26,7 @@ export function VersionSwitcher({
   return (
     <Menu.Root>
       <Menu.Trigger
-        aria-label={`Version ${current} of ${versions.length}. Switch version`}
+        aria-label={`v${current}: switch version (${versions.length} versions)`}
         className={cn(
           "mono-id text-fg-muted hover:bg-hover hover:text-fg border-control inline-flex h-7 items-center gap-1 rounded-sm border px-2 text-xs",
           className,

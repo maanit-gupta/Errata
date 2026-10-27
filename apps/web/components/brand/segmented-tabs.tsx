@@ -75,7 +75,10 @@ export function SegmentedTabs({
           );
         })}
       </Tabs.List>
-      <Tabs.Panel value={value} className="mt-6 outline-none">
+      <Tabs.Panel
+        value={value}
+        className="mt-6 rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--focus)"
+      >
         {children}
       </Tabs.Panel>
     </Tabs.Root>
