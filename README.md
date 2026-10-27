@@ -92,6 +92,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P11 | Image checks: OCR (Tesseract, optional Paddle), logo detection (ORB + template), WCAG contrast, palette ΔE, warmth pre-filter, vision LLM pass and gate, labelled test creatives and vision eval, image viewer with bbox overlays |
 | P12 | PDF decks: page spans and word boxes, hidden-text detection, page renders, per-chunk LLM pass, embedded-image checks, page overlays and page navigation, 40-page benchmark |
 | P13 | Guideline Clarity Score SQL, insights summary, UNCLEAR-rule example generation and approval flow, activity simulator, insights dashboard, AI-use models list |
+| P14 | Golden set (60 rows, 40 rewrite pairs), in-process eval runner with committed LLM cache, precision gate, `INTENT_COSINE` calibration, latency benchmark, eval CI workflow, precision fixes from the reports |
 
 ## Licence
 

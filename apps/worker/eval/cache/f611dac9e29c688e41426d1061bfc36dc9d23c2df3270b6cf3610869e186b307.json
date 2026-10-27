@@ -1,1 +1,0 @@
-{"meta": {"cache_hit": false, "input_tokens": 1407, "latency_ms": 1024, "model": "openai/gpt-oss-120b", "output_tokens": 302, "provider": "groq", "validation_retries": 0}, "output": {"findings": []}}

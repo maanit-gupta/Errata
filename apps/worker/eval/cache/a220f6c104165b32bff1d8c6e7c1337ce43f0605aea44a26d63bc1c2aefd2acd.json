@@ -1,1 +1,0 @@
-{"meta": {"cache_hit": false, "input_tokens": 1112, "latency_ms": 5429, "model": "gemini-3.6-flash", "output_tokens": 5, "provider": "gemini", "validation_retries": 0}, "output": {"findings": []}}

@@ -1,30 +1,23 @@
 {
-  "generated_at": "2026-10-26T22:28:07+00:00",
-  "passed": false,
-  "failed": [
-    "terms precision 0.79 < 0.85 while configured as blocker (set DIMENSION_MAX_SEVERITY['terms'] = 'suggestion')",
-    "tone precision 0.62 < 0.85 while configured as warning (set DIMENSION_MAX_SEVERITY['tone'] = 'suggestion')",
-    "access precision 0.85 < 0.85 while configured as warning (set DIMENSION_MAX_SEVERITY['access'] = 'suggestion')",
-    "1 row(s) ran degraded (no LLM)"
-  ],
+  "generated_at": "2026-10-27T08:48:58+00:00",
+  "passed": true,
+  "failed": [],
   "metrics": {
     "dimensions": {
       "claims": {
-        "precision": 0.8823529411764706,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.9375,
-        "predicted": 17,
-        "tp": 15,
-        "labels": 15,
-        "labels_found": 15,
+        "f1": 1.0,
+        "predicted": 16,
+        "tp": 16,
+        "labels": 16,
+        "labels_found": 16,
         "max_severity": "blocker",
         "by_source": {
-          "deterministic": 15,
+          "deterministic": 14,
           "llm": 2
         },
-        "fp_by_source": {
-          "deterministic": 2
-        }
+        "fp_by_source": {}
       },
       "facts": {
         "precision": 0.9047619047619048,
@@ -44,37 +37,34 @@
         }
       },
       "terms": {
-        "precision": 0.7857142857142857,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.88,
-        "predicted": 14,
+        "f1": 1.0,
+        "predicted": 11,
         "tp": 11,
         "labels": 11,
         "labels_found": 11,
         "max_severity": "blocker",
         "by_source": {
-          "deterministic": 14
+          "deterministic": 11
         },
-        "fp_by_source": {
-          "deterministic": 3
-        }
+        "fp_by_source": {}
       },
       "tone": {
-        "precision": 0.6153846153846154,
-        "recall": 0.875,
-        "f1": 0.7225806451612904,
-        "predicted": 13,
-        "tp": 8,
-        "labels": 8,
-        "labels_found": 7,
+        "precision": 0.9,
+        "recall": 0.8888888888888888,
+        "f1": 0.8944099378881988,
+        "predicted": 10,
+        "tp": 9,
+        "labels": 9,
+        "labels_found": 8,
         "max_severity": "warning",
         "by_source": {
-          "deterministic": 8,
-          "llm": 5
+          "llm": 4,
+          "deterministic": 6
         },
         "fp_by_source": {
-          "deterministic": 2,
-          "llm": 3
+          "llm": 1
         }
       },
       "visual": {
@@ -93,45 +83,39 @@
         "fp_by_source": {}
       },
       "access": {
-        "precision": 0.8461538461538461,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1": 0.9166666666666666,
-        "predicted": 13,
+        "f1": 1.0,
+        "predicted": 11,
         "tp": 11,
         "labels": 10,
         "labels_found": 10,
         "max_severity": "warning",
         "by_source": {
-          "llm": 2,
           "deterministic": 11
         },
-        "fp_by_source": {
-          "llm": 2
-        }
+        "fp_by_source": {}
       }
     },
     "overall": {
-      "precision": 0.8352941176470589,
-      "recall": 0.9852941176470589,
-      "f1": 0.9041147961607907,
-      "predicted": 85,
-      "labels": 68
+      "precision": 0.9605263157894737,
+      "recall": 0.9857142857142858,
+      "f1": 0.9729573111840835,
+      "predicted": 76,
+      "labels": 70
     },
     "blocker_recall": 1.0,
-    "blocker_labels": 31,
+    "blocker_labels": 32,
     "uncited_shown": 0,
     "clean_rows": 13,
-    "clean_rows_with_findings": 3,
-    "clean_false_positives": 3,
-    "degraded_rows": [
-      "img-10"
-    ],
+    "clean_rows_with_findings": 0,
+    "clean_false_positives": 0,
+    "degraded_rows": [],
     "gate_drops": {
-      "duplicate_deterministic": 9,
-      "quote_not_found": 1
+      "duplicate_deterministic": 6
     },
     "rewrite_failures": {
-      "meaning_drift": 1,
+      "meaning_drift": 2,
       "new_violation": 1
     }
   },
@@ -438,27 +422,27 @@
         "p95": 1
       },
       "retrieve": {
-        "p50": 25,
-        "p95": 72
+        "p50": 17,
+        "p95": 87
       },
       "llm": {
-        "p50": 11340,
-        "p95": 30245
+        "p50": 2949,
+        "p95": 15095
       },
       "gate": {
         "p50": 0,
-        "p95": 30
+        "p95": 13
       }
     },
     "total": {
-      "p50": 11373,
-      "p95": 30281,
-      "mean": 12927
+      "p50": 2962,
+      "p95": 15172,
+      "mean": 4211
     }
   },
   "cache": {
-    "hits": 5,
-    "live_calls": 63
+    "hits": 67,
+    "live_calls": 0
   },
   "rows": [
     {
@@ -553,19 +537,7 @@
     {
       "id": "hero-03-fixed",
       "labels_found": [],
-      "findings": [
-        {
-          "dimension": "access",
-          "codes": [
-            "A-01"
-          ],
-          "severity": "suggestion",
-          "source": "llm",
-          "tp": false,
-          "cited": true,
-          "quote": "SIP"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "hero-04-linkedin",
@@ -687,17 +659,6 @@
       ],
       "findings": [
         {
-          "dimension": "tone",
-          "codes": [
-            "TV-02"
-          ],
-          "severity": "suggestion",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": "CAGR"
-        },
-        {
           "dimension": "claims",
           "codes": [
             "F-112",
@@ -757,17 +718,6 @@
           "tp": false,
           "cited": true,
           "quote": "9%"
-        },
-        {
-          "dimension": "access",
-          "codes": [
-            "A-01"
-          ],
-          "severity": "suggestion",
-          "source": "llm",
-          "tp": false,
-          "cited": true,
-          "quote": "equity fund"
         }
       ]
     },
@@ -799,6 +749,17 @@
           "tp": true,
           "cited": true,
           "quote": "always beat the market"
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "Sure-shot gains"
         }
       ]
     },
@@ -841,19 +802,7 @@
     {
       "id": "neg-assured-02",
       "labels_found": [],
-      "findings": [
-        {
-          "dimension": "claims",
-          "codes": [
-            "CL-03"
-          ],
-          "severity": "blocker",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": "assured"
-        }
-      ]
+      "findings": []
     },
     {
       "id": "neg-brand-01",
@@ -1275,35 +1224,24 @@
           "source": "llm",
           "tp": true,
           "cited": true,
-          "quote": "Bet on a SIP"
-        },
-        {
-          "dimension": "tone",
-          "codes": [
-            "TV-02"
-          ],
-          "severity": "warning",
-          "source": "llm",
-          "tp": false,
-          "cited": true,
-          "quote": "hit the jackpot"
+          "quote": "Feeling lucky this Diwali? Bet on a SIP and hit the jackpot"
         }
       ]
     },
     {
       "id": "tone-03",
       "labels_found": [
-        false
+        true
       ],
       "findings": [
         {
           "dimension": "tone",
           "codes": [
-            "TV-02"
+            "TV-04"
           ],
-          "severity": "warning",
+          "severity": "suggestion",
           "source": "llm",
-          "tp": false,
+          "tp": true,
           "cited": true,
           "quote": "Lost all your savings on stocks? LOL, happens to the best of us."
         }
@@ -1374,7 +1312,7 @@
           "source": "llm",
           "tp": true,
           "cited": true,
-          "quote": "Investing is just a game."
+          "quote": "Investing is just a game"
         }
       ]
     },
@@ -1399,17 +1337,6 @@
           "tp": true,
           "cited": true,
           "quote": "Click here"
-        },
-        {
-          "dimension": "terms",
-          "codes": [
-            "G-07"
-          ],
-          "severity": "warning",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": "paywise"
         }
       ]
     },
@@ -1429,24 +1356,14 @@
           "tp": true,
           "cited": true,
           "quote": "https://paywise.example/diwali-webinar"
-        },
-        {
-          "dimension": "terms",
-          "codes": [
-            "G-07"
-          ],
-          "severity": "warning",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": "paywise"
         }
       ]
     },
     {
       "id": "access-03",
       "labels_found": [
-        true
+        true,
+        false
       ],
       "findings": [
         {
@@ -1459,17 +1376,6 @@
           "tp": true,
           "cited": true,
           "quote": "Systematic investment plans facilitate disciplined, incremental capital accumulation by automating periodic contributions into diversified mutual fund portfolios, thereby mitigating the behavioural tendency to time market fluctuations. Consequently, investors benefit from rupee-cost averaging, whereby proportionally more units are acquired during corrections and fewer during appreciations, optimising the average acquisition cost over extended horizons. PayWise enables investors to configure contribution frequency, amount and duration independently, accommodating heterogeneous liquidity requirements."
-        },
-        {
-          "dimension": "tone",
-          "codes": [
-            "TV-02"
-          ],
-          "severity": "warning",
-          "source": "llm",
-          "tp": false,
-          "cited": true,
-          "quote": "Systematic investment plans facilitate disciplined, incremental capital accumulation by automating periodic contributions into diversified mutual fund portfolios"
         }
       ]
     },
@@ -1489,17 +1395,6 @@
           "tp": true,
           "cited": true,
           "quote": "Read more"
-        },
-        {
-          "dimension": "terms",
-          "codes": [
-            "G-07"
-          ],
-          "severity": "warning",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": "paywise"
         }
       ]
     },
@@ -1717,6 +1612,7 @@
     {
       "id": "img-09",
       "labels_found": [
+        true,
         true
       ],
       "findings": [
@@ -1727,7 +1623,7 @@
           ],
           "severity": "blocker",
           "source": "deterministic",
-          "tp": false,
+          "tp": true,
           "cited": true,
           "quote": ""
         },
@@ -1748,19 +1644,7 @@
     {
       "id": "img-10",
       "labels_found": [],
-      "findings": [
-        {
-          "dimension": "tone",
-          "codes": [
-            "TV-02"
-          ],
-          "severity": "suggestion",
-          "source": "deterministic",
-          "tp": false,
-          "cited": true,
-          "quote": ""
-        }
-      ]
+      "findings": []
     },
     {
       "id": "pdf-deck",

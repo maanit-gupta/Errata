@@ -25,7 +25,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27; overlay UI per DESIGN §6.11 on ui/P12 (shelved) |
 | P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 (shelved) |
-| P14 | Golden set & eval gate | M | partial | M (Claude) | main (was phase/P14-eval-gate) | checkpoint 2026-10-27: eval blocked on free-tier 429s |
+| P14 | Golden set & eval gate | M | done | M (Claude, /complete) | main | 2026-10-27; eval PASS (0 degraded, all dims ≥ 0.85, blocker recall 1.00); broken-prompt gate shown locally |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 | U0 | Design-system foundation (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; built on ui/* branches; merged to main and then reverted the same day (user); rebuild later on request |
@@ -34,25 +34,13 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI (2026-10-27):** the Terminal Noir UI (U0–U2, from the `ui/*` branches) was merged and deployed, but it didn't match the UI the user runs on localhost. At the user's request, `main`'s web app, `pnpm-lock.yaml` and `CLAUDE.md` were restored to the pre-redesign state (identical to `phase/P14-eval-gate`) and redeployed. The redesign code stays on `ui/U2` (worktree `.claude/worktrees/ui`); `docs/DESIGN.md` and `docs/screens/` are kept for reference. **Don't re-apply it until the user asks for the UI rebuild.**
+- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`; `docs/DESIGN.md` and `docs/screens/` are kept for reference. **Don't re-apply it until the user asks for the UI rebuild.**
 - **Workflow (user rule 2026-10-27):** work and commit directly on `main` in the main checkout. No phase/UI branches and no worktrees.
-- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14), now on `main`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
-- **What exists now:**
-  - `eval/golden/drafts.jsonl` (60 rows: 49 text, 10 images, 1 PDF; 13 clean), with hero variants, bleed cases and the tricky negatives. `eval/golden/rewrites.jsonl` (16 good / 24 bad rewrite pairs).
-  - `eval/run_eval.py` (`make eval`): full pipeline in-process, no DB (vault from `scripts/demo_data.py`, real bge-small retrieval mirroring `match_vault`), committed LLM cache `eval/cache/`, §17 metrics, intent-cosine table, 30-run latency benchmark, `report.md` + `report.json`, and a non-zero exit when a gate fails (including any degraded row). `tests/test_eval.py`.
-  - Precision fixes from the first report (review@1): "Rest assured" isn't CL-03; URLs/emails/domains skip glossary casing (G-07); `NOT_SHOUTING` acronyms and a ≥2-word minimum for TV-02 caps; `prompts/review_v2.md` (cite the specific TV rule; don't report reading level, jargon or link text).
-  - The router checks every provider's cache entry before any live call, so a response recorded from the fallback replays (deterministic CI).
-  - `INTENT_COSINE` 0.82 → 0.74 (SPEC §9/§14 updated).
-  - `.github/workflows/eval.yml`: path-filtered PR job plus `workflow_dispatch`; reads **repository** secrets `GROQ_API_KEY`/`GEMINI_API_KEY` and repo variables for the model IDs (part of the cache key). `ci.yml` points at it.
-- **Last complete report** (`eval/report.md`, 03:58, review@1, before the fixes): FAIL. Blocker recall 1.00, 0 uncited; precision claims 0.88, facts 0.90, terms 0.79, tone 0.62, access 0.85, visual 1.00; 1 degraded row.
-- **Run at 11:05 (review@2 + fixes):** stopped at 41/60 rows. Groq and Gemini both returned 429 through the 65 s retries (likely daily free-tier quotas after the morning's runs); 7 rows degraded (`bleed-03`, `bleed-05`, `terms-03`, `tone-02`, `tone-03`, `tone-05`, `tone-06`). The successful responses are in `eval/cache/` (108 entries), so the next run replays them.
-- **Gotchas:**
-  - **GitHub Actions secrets are missing:** `gh` lists none on `maanit-gupta/BrandLens` (repo, `.env` environment, Dependabot, Codespaces), although the user reported adding them. Until they exist, a CI eval on any prompt change runs degraded and fails.
-  - The repo variable `LLM_PROVIDER` held the `.env` inline comment as its value. Fixed to `groq`. `apps/worker/.env` still has `LLM_PROVIDER=groq   # groq | gemini` (works through `set -a; .`, but don't copy values blindly).
-  - The cache has 14 entries recorded with `gemini-3.6-flash`; `.env` and the repo variables say `gemini-3.5-flash`. They only replay if the model ID matches. `--prune` on a full run removes unused entries.
-  - Don't change `DIMENSION_MAX_SEVERITY` from a run with degraded rows: those rows measure only the deterministic stages.
-- **Exact next step (P14):** once the quotas reset, `make eval` (only the missing rows go live). Then apply the precision gate (`DIMENSION_MAX_SEVERITY` → `suggestion` for any dimension still < 0.85), rerun until PASS, `make eval args=--prune`, commit the cache. Demonstrate the CI failing on a broken prompt on a throwaway branch (needs the secrets), note it here, then finish P14 (Decisions + README "AI assistance").
-- **After P14:** P15, then P16. The UI rebuild happens when the user asks for it.
+- **Phase / status:** P14 / **done** (2026-10-27).
+- **P14 result** (`apps/worker/eval/report.md`, review@2, 67 cache hits, 0 live calls): **PASS**. Blocker recall 1.00 (32 labels), 0 uncited findings shown, 0 degraded rows, overall precision/recall 0.96/0.99; precision claims 1.00, facts 0.90, terms 1.00, tone 0.90, visual 1.00, access 1.00. 0 of 13 clean drafts got a finding. `DIMENSION_MAX_SEVERITY` unchanged. Latency (recorded LLM time): P50 2.96 s, P95 15.2 s. Cache pruned to the 67 entries the golden set uses.
+- **Broken-prompt check:** a temporary `review_v3.md` that told the model to flag every sentence as TV-02 made `run_eval.py --only clean-01 clean-02 clean-03 tone-01 tone-07-ok` exit 1 (tone precision 0.43 < 0.85; 3 of 3 clean drafts flagged). The file was removed. Not shown on GitHub Actions: main-only rule, and the repo still has **no Actions secrets** (`GROQ_API_KEY`/`GEMINI_API_KEY`), so `eval.yml` on a prompt change would run degraded and fail.
+- **Gotchas:** the cache key includes the model ID; `.env` and the repo variables must name the same models as the cache (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `gemini-3.6-flash` per the report's Versions table). Changing a prompt or model means live calls on the free tiers (429s appear after a few full runs a day).
+- **Exact next step:** P15 hardening.
 
 ## Decisions log (append-only)
 
@@ -229,6 +217,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P14 | Glossary skips URLs/emails/domains; "Rest assured" isn't CL-03; TV-02 caps needs ≥2 shouted words and ignores financial acronyms | First report's deterministic false positives (access-01/02/04, neg-assured-02, claims-03) |
 | 2026-10-27 | P14 | `review@2` prompt: cite the specific TV rule; leave reading level, jargon and link text to deterministic checks | review@1 LLM FPs (TV-02 instead of TV-04; A-01 on "SIP"/"equity fund") |
 | 2026-10-27 | P14 | `eval.yml` is a separate path-filtered workflow using repository secrets and repo variables for model IDs | Model IDs are in the cache key; non-worker PRs shouldn't spend quota |
+| 2026-10-27 | P14 | `DIMENSION_MAX_SEVERITY` unchanged: the full run (review@2, 0 degraded) has every dimension ≥ 0.85 (facts 0.90, tone 0.90, rest 1.00) | The precision gate only demotes dimensions under 0.85 |
+| 2026-10-27 | P14 | Broken-prompt gate demonstrated locally, not on a throwaway branch | Main-only rule (no branches) and the repo has no Actions secrets yet; `eval.yml` runs the same `make eval` command |
 | 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
 | 2026-10-27 | UI | Terminal Noir UI reverted on `main` (web, lockfile and CLAUDE.md restored to pre-U0); the code stays on `ui/U2` | User: production didn't match the UI they run locally; they will ask for a rebuild later |
 | 2026-10-27 | all | Work directly on `main`; no phase/UI branches or worktrees (CLAUDE.md and the commands updated) | User rule: what runs on localhost from the main checkout is what ships |
