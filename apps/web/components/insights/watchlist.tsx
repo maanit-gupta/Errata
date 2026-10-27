@@ -28,16 +28,14 @@ export type WatchRow = {
 const STATUS: Record<GcsStatus, { label: string; className: string }> = {
   unclear: { label: "UNCLEAR", className: "bg-blocker text-blocker-fg" },
   watch: { label: "watch", className: "border-warning text-warning border" },
-  clear: { label: "clear", className: "bg-hover text-suggestion" },
-  insufficient: { label: "insufficient data", className: "text-fg-muted" },
+  clear: { label: "clear", className: "text-success" },
+  insufficient: { label: "insufficient data", className: "text-fg-faint italic normal-case" },
 };
 
 export function StatusBadge({ status }: { status: GcsStatus }) {
   const s = STATUS[status];
   return (
-    <span
-      className={cn("rounded-sm px-1.5 py-0.5 font-mono text-xs whitespace-nowrap", s.className)}
-    >
+    <span className={cn("mono-label rounded-sm px-1.5 py-0.5 whitespace-nowrap", s.className)}>
       {s.label}
     </span>
   );

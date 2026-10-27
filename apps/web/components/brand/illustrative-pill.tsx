@@ -10,7 +10,7 @@ export function IllustrativeDataPill({ className }: { className?: string }) {
       )}
       title="Includes simulated review activity (make simulate-activity)"
     >
-      ILLUSTRATIVE DATA
+      Illustrative data
     </span>
   );
 }

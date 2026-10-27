@@ -24,7 +24,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; overlay UI per DESIGN §6.11 on ui/P12 (2026-10-27) |
-| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` (local); not merged |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; tag `v0.11-feature-complete` (local); insights UI per DESIGN §6.7 on ui/P13 |
 | P14 | Golden set & eval gate | M | todo | | | |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
@@ -207,6 +207,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P12-UI | PDFs over 40 pages are rejected in the browser before upload (counting `/Type /Page` objects) with "This PDF has N pages; the limit is 40." | DESIGN §6.11; the worker still enforces it |
 | 2026-10-27 | P12-UI | Resolved findings show who resolved them (`· by Rohan`) | DESIGN §6.3 resolved line; the review e2e relies on it |
 | 2026-10-27 | P12-UI | Contrast/ΔE swatches inside the card aren't rendered; the measured ratio stays in the explanation text | Findings don't persist structured colour values; adding them is a worker change (logged for U2/P15) |
+| 2026-10-27 | P13-UI | KPI row uses KpiTile; chart bars `--accent-soft`, mono codes; chart is `role=img` with `accessibilityLayer={false}` next to its data table | The chart referenced removed CSS vars (`--foreground`); Recharts' focusable surface inside aria-hidden failed axe |
+| 2026-10-27 | P13-UI | Chart and table are shown side by side instead of a "View as table" toggle | The table must stay visible (accessible fallback, e2e); deviation from DESIGN §6.7 |
+| 2026-10-27 | P13-UI | Managers see the KPI row and top issues only; the watchlist is hidden with a one-line note | SPEC §2 footnote 5 / DESIGN §6.7 |
+| 2026-10-27 | P13-UI | IllustrativeDataPill keeps DOM text "Illustrative data" (CSS uppercases it) | Same rule as StateBadge; e2e matches the words |
 
 **Dependencies and licences** (append when adding any dependency):
 
