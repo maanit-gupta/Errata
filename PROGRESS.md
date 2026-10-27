@@ -23,15 +23,15 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
-| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27 |
-| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27 |
+| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged/deployed 2026-10-27 (`c5ce91e`) |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged/deployed 2026-10-27 (`c5ce91e`) |
 | P14 | Golden set & eval gate | M | partial | M (Claude) | phase/P14-eval-gate | checkpoint 2026-10-27: eval blocked on free-tier 429s |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14) on `phase/P14-eval-gate`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
+- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14) on `phase/P14-eval-gate`. Deploy state verified 2026-10-27 12:10: cloud migrations `…100018`/`…100019` were applied, but GitHub `main` was still at P11 (`e8764c3`). With the user's go-ahead, `main` was fast-forwarded to `c5ce91e` (P12 + P13 + this P14 WIP), tag `v0.11-feature-complete` pushed, and Render (`dep-dbg4b0o473hc73fc8sng`) and Vercel production (`brandlens-app.vercel.app`) redeployed from it. Worker `/healthz` 200; `/insights` and `/settings/ai-use` are served. The production e2e wasn't re-run (Groq quota).
 - **What exists now:**
   - `eval/golden/drafts.jsonl` (60 rows: 49 text, 10 images, 1 PDF; 13 clean), with hero variants, bleed cases and the tricky negatives. `eval/golden/rewrites.jsonl` (16 good / 24 bad rewrite pairs).
   - `eval/run_eval.py` (`make eval`): full pipeline in-process, no DB (vault from `scripts/demo_data.py`, real bge-small retrieval mirroring `match_vault`), committed LLM cache `eval/cache/`, §17 metrics, intent-cosine table, 30-run latency benchmark, `report.md` + `report.json`, and a non-zero exit when a gate fails (including any degraded row). `tests/test_eval.py`.
@@ -208,7 +208,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 - [x] Email: Discord webhook alerts only, no Resend (user, 2026-10-27).
 - [x] Merge P11 to `main` (user, 2026-10-26).
 - [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
-- [x] Merged P12/P13 to `main`, migrations `…100018`/`…100019` applied to cloud, redeployed (user, 2026-10-27). Was: **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
+- [x] Migrations `…100018`/`…100019` applied to cloud (user); P12–P14 WIP pushed to `main` and redeployed 2026-10-27 (user approved redeploy). Was: **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
 - [x] Model IDs in `apps/worker/.env` confirmed current (user, 2026-10-27). Was: **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
