@@ -2,8 +2,8 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** UI track U0–U2 done on `ui/U2` (stacked branches, worktree `.claude/worktrees/ui`); backend next is P14 (in progress in the main checkout)
-**Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
+**Current phase:** P14 (partial; P12/P13 and the U0–U2 UI track merged to `main`)
+**Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
 
@@ -23,9 +23,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26; Terminal Noir UI per DESIGN §6.4–6.5, §6.8–6.9 on ui/P09 (2026-10-27) |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
-| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; overlay UI per DESIGN §6.11 on ui/P12 (2026-10-27) |
-| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; tag `v0.11-feature-complete` (local); insights UI per DESIGN §6.7 on ui/P13 |
-| P14 | Golden set & eval gate | M | todo | | | |
+| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27; overlay UI per DESIGN §6.11 on ui/P12 |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 |
+| P14 | Golden set & eval gate | M | partial | M (Claude) | phase/P14-eval-gate | checkpoint 2026-10-27: eval blocked on free-tier 429s |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 | U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; worktree .claude/worktrees/ui |
@@ -34,20 +34,28 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** UI track **U0 → U1 → P02 → P05 → P08 → P09 → P12 → P13 → U2 done** (2026-10-27), each a commit on stacked branches `ui/U0` … `ui/U2` in the worktree `.claude/worktrees/ui` (branched from P13 `a42520c`). Not merged or deployed. The main checkout's uncommitted P14 work was left untouched.
+- **UI track (U0 → U1 → P02 → P05 → P08 → P09 → P12 → P13 → U2):** done 2026-10-27 on stacked `ui/*` branches (worktree `.claude/worktrees/ui`). `main` was merged into `ui/U2` (conflict only in this file), then `main` was fast-forwarded to it and deployed 2026-10-27 (user request).
+  - Terminal Noir tokens in `app/globals.css` (dark default, `bl_theme` cookie), `lib/design/tokens.ts`, contrast test, and a hex-literal ESLint rule. `components/brand/*`, `components/shell/*`, `components/marketing/*`, `components/motion/*`.
+  - Routes: public `/` landing, `/ai-use`, `/dev/kitchen-sink` (non-prod), `/drafts/new`, `/audit`, plus `(app)/loading.tsx` and `error.tsx`. Every existing screen is restyled.
+  - Gates: `e2e/ui.spec.ts` (axe per route × theme, 38/38) and `e2e/keyboard.spec.ts`. Screenshots are in `docs/screens/`.
+  - UI gotchas: specs wait for `networkidle` after `goto('/drafts/new')`. `make check` resets the local DB, so run `make seed-assets-local` and `make simulate-activity` before image or insights work. Re-run `core-loop`, `drafts` and `pdf-check` while the LLM quota is quiet (runs took about 80 s under 429s).
+- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14) on `phase/P14-eval-gate`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
 - **What exists now:**
-  - Terminal Noir tokens in `app/globals.css` (dark default, `bl_theme` cookie), TS mirror `lib/design/tokens.ts`, contrast test `tests/tokens.contrast.test.ts` (33 rows), hex-literal ESLint rule.
-  - `components/brand/*` (IdBadge + SourcePopover, Severity/State badges, ConfidenceChip, SourceTag, IntentCheckTag, RiskMeter, RunPanel, DegradedBanner, DataTable, SegmentedTabs, Drawer, KpiTile, EmptyState, Spinner, ErrorPanel, Forbidden, WordCounter, PixelGlyphs, Wordmark, ThemeToggle), `components/shell/*` (sidebar, top bar, demo strip, ⌘K, shortcuts, worker status), `components/marketing/*`, `components/motion/*`.
-  - Routes: public `/` landing, `/ai-use`, `/dev/kitchen-sink` (non-prod); new `/drafts/new`, `/audit`; `(app)/loading.tsx` + `error.tsx`; restyled login, drafts, editor, review, vault, insights, settings.
-  - Gates: `e2e/ui.spec.ts` (axe per route × theme; `SCREENS=<id>` writes `docs/screens/<id>/`), `e2e/keyboard.spec.ts`. Screenshots in `docs/screens/{U0,U1,P02,P05,P08,P09,P12,P13,U2}`.
-  - Verified 2026-10-27: `make check` green (171 pytest, 107 Vitest, 100 pgTAP); ui.spec 38/38; auth, vault, keyboard e2e green; drafts, image-check and core-loop/PDF flows verified with the worker (see gotchas).
+  - `eval/golden/drafts.jsonl` (60 rows: 49 text, 10 images, 1 PDF; 13 clean), with hero variants, bleed cases and the tricky negatives. `eval/golden/rewrites.jsonl` (16 good / 24 bad rewrite pairs).
+  - `eval/run_eval.py` (`make eval`): full pipeline in-process, no DB (vault from `scripts/demo_data.py`, real bge-small retrieval mirroring `match_vault`), committed LLM cache `eval/cache/`, §17 metrics, intent-cosine table, 30-run latency benchmark, `report.md` + `report.json`, and a non-zero exit when a gate fails (including any degraded row). `tests/test_eval.py`.
+  - Precision fixes from the first report (review@1): "Rest assured" isn't CL-03; URLs/emails/domains skip glossary casing (G-07); `NOT_SHOUTING` acronyms and a ≥2-word minimum for TV-02 caps; `prompts/review_v2.md` (cite the specific TV rule; don't report reading level, jargon or link text).
+  - The router checks every provider's cache entry before any live call, so a response recorded from the fallback replays (deterministic CI).
+  - `INTENT_COSINE` 0.82 → 0.74 (SPEC §9/§14 updated).
+  - `.github/workflows/eval.yml`: path-filtered PR job plus `workflow_dispatch`; reads **repository** secrets `GROQ_API_KEY`/`GEMINI_API_KEY` and repo variables for the model IDs (part of the cache key). `ci.yml` points at it.
+- **Last complete report** (`eval/report.md`, 03:58, review@1, before the fixes): FAIL. Blocker recall 1.00, 0 uncited; precision claims 0.88, facts 0.90, terms 0.79, tone 0.62, access 0.85, visual 1.00; 1 degraded row.
+- **Run at 11:05 (review@2 + fixes):** stopped at 41/60 rows. Groq and Gemini both returned 429 through the 65 s retries (likely daily free-tier quotas after the morning's runs); 7 rows degraded (`bleed-03`, `bleed-05`, `terms-03`, `tone-02`, `tone-03`, `tone-05`, `tone-06`). The successful responses are in `eval/cache/` (108 entries), so the next run replays them.
 - **Gotchas:**
-  - LLM runs took ~80 s (Groq 429 → Gemini) while P14's eval ran in parallel, beyond the specs' 60 s waits; flows were verified with longer temporary timeouts. Re-run `core-loop`, `drafts` and `pdf-check` when the quota is quiet.
-  - The :8000 worker from the main checkout also consumes the **local** queue.
-  - `make check` resets the local DB: run `make seed-assets-local` (logos) and `make simulate-activity` before image/insights work.
-  - Specs must wait for `networkidle` after `goto('/drafts/new')` (typing before hydration is lost).
-- **UI implementation complete (U0–U2).** Final acceptance 2026-10-27: `make check` green; every SPEC route renders with no 404 or error boundary (`/`, `/ai-use`, `/login`, `/drafts`, `/drafts/new`, `/drafts/[id]`, `/review`, `/review/[id]`, `/vault` ×6 tabs, `/insights`, `/audit`, `/settings`, `/settings/ai-use`, `/dev/kitchen-sink`); axe 38/38 (19 routes × 2 themes) with zero serious/critical; the kitchen sink shows every token, brand component, state (§11), FindingCard, DiffView and OverlayCanvas variant.
-- **Exact next step:** review and merge `ui/U2` (it contains U0–P13 UI) into the integration branch after P14 lands; then P15 hardening picks up the U2 follow-ups in Decisions.
+  - **GitHub Actions secrets are missing:** `gh` lists none on `maanit-gupta/BrandLens` (repo, `.env` environment, Dependabot, Codespaces), although the user reported adding them. Until they exist, a CI eval on any prompt change runs degraded and fails.
+  - The repo variable `LLM_PROVIDER` held the `.env` inline comment as its value. Fixed to `groq`. `apps/worker/.env` still has `LLM_PROVIDER=groq   # groq | gemini` (works through `set -a; .`, but don't copy values blindly).
+  - The cache has 14 entries recorded with `gemini-3.6-flash`; `.env` and the repo variables say `gemini-3.5-flash`. They only replay if the model ID matches. `--prune` on a full run removes unused entries.
+  - Don't change `DIMENSION_MAX_SEVERITY` from a run with degraded rows: those rows measure only the deterministic stages.
+- **Exact next step (P14):** once the quotas reset, `make eval` (only the missing rows go live). Then apply the precision gate (`DIMENSION_MAX_SEVERITY` → `suggestion` for any dimension still < 0.85), rerun until PASS, `make eval args=--prune`, commit the cache. Demonstrate the CI failing on a broken prompt on a throwaway branch (needs the secrets), note it here, then finish P14 (Decisions + README "AI assistance").
+- **After P14:** U0–U2 are done and on `main`, so next comes P15 (including the U2 follow-ups in Decisions), then P16.
 
 ## Decisions log (append-only)
 
@@ -217,6 +225,14 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | U2 | PDF page-rail buttons take their name from sr-only text (`Page 3: 1 blocker, 2 warnings`), with the visible `p. 3 · 1B` aria-hidden | axe label-content-name-mismatch; e2e names unchanged |
 | 2026-10-27 | U2 | DiffView shows `−`/`+` markers inside del/ins and `resolves CL-03 · F-112` lines | DESIGN §5: colour is never the only cue |
 | 2026-10-27 | U2 | Open UI follow-ups (deviations): sticky DecisionBar with per-action dialogs, draft version switcher, contrast/ΔE swatches in cards, chart "View as table" toggle, palette empty-state drift, landing LCP not yet measured on Vercel | Logged here for P15; none blocks the core loop |
+| 2026-10-27 | P14 | Eval runs in-process with no DB: vault from `scripts/demo_data.py` at a fixed date, real bge-small, retrieval mirrors `match_vault` | PHASES says "local DB"; in-process is the same pipeline, runs in CI without Supabase, and is deterministic |
+| 2026-10-27 | P14 | A degraded row fails the eval gate | A no-LLM row measures only the deterministic stages and would inflate precision |
+| 2026-10-27 | P14 | `INTENT_COSINE` 0.82 → 0.74 | Golden rewrites: 0.82 kept 10/16 good; 0.74 keeps 15/16 with 0/24 bad (highest bad 0.707) |
+| 2026-10-27 | P14 | Router replays any provider's cache entry before a live call | A fallback-recorded response must replay in CI instead of calling the primary again |
+| 2026-10-27 | P14 | Glossary skips URLs/emails/domains; "Rest assured" isn't CL-03; TV-02 caps needs ≥2 shouted words and ignores financial acronyms | First report's deterministic false positives (access-01/02/04, neg-assured-02, claims-03) |
+| 2026-10-27 | P14 | `review@2` prompt: cite the specific TV rule; leave reading level, jargon and link text to deterministic checks | review@1 LLM FPs (TV-02 instead of TV-04; A-01 on "SIP"/"equity fund") |
+| 2026-10-27 | P14 | `eval.yml` is a separate path-filtered workflow using repository secrets and repo variables for model IDs | Model IDs are in the cache key; non-worker PRs shouldn't spend quota |
+| 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -252,15 +268,15 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Open questions (ask the user; don't guess)
 
-- [ ] Build window Day-1 date?
+- [x] Build window Day-1 date: 2026-10-20 (D7 = 2026-10-26), user 2026-10-27.
 - [x] Worker host: **Render** (Dockerfile + `render.yaml` Blueprint, free tier), user decision 2026-10-26.
 - [x] Cloud Supabase: user approved pushing migrations + demo seed (2026-10-26).
-- [ ] Is Resend email wanted, or Discord only?
+- [x] Email: Discord webhook alerts only, no Resend (user, 2026-10-27).
 - [x] Merge P11 to `main` (user, 2026-10-26).
 - [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
-- [ ] **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
+- [x] Merged P12/P13 to `main`, migrations `…100018`/`…100019` applied to cloud, redeployed (user, 2026-10-27). Was: **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
+- [x] Model IDs in `apps/worker/.env` confirmed current (user, 2026-10-27). Was: **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 - [ ] **Interviewee names on the landing page?** "What we heard" uses role + city only. Confirm consent before adding names or verbatim quotes (DESIGN.md §8.8).
-- [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
 

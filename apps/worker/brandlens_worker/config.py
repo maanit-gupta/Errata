@@ -8,7 +8,7 @@ from typing import Final, Literal
 Severity = Literal["blocker", "warning", "suggestion"]
 Dimension = Literal["tone", "terms", "facts", "claims", "visual", "access"]
 
-INTENT_COSINE: Final = 0.82
+INTENT_COSINE: Final = 0.74  # P14 calibration (eval/report.md): 0.82 dropped 6 of 16 good rewrites
 HUMAN_CONFIDENCE: Final = 0.6
 TOPK: Final = 8
 MAX_WORDS: Final = 2000

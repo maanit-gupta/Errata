@@ -10,6 +10,8 @@ from brandlens_worker.pipeline.filters.base import cap_severity, is_word_char
 from brandlens_worker.pipeline.types import Doc, Finding, GlossaryTerm, Vault
 
 _SUFFIX = re.compile(r"(?:'s|’s|s)?")
+# Web and email addresses: a domain ("paywise.example") isn't brand copy and can't be re-cased.
+_ADDRESS = re.compile(r"\bhttps?://\S+|\bwww\.\S+|\S+@\S+\.\w+|\b[\w-]+(?:\.[\w-]+)+/\S*", re.I)
 
 
 def check_terms(doc: Doc, vault: Vault) -> list[Finding]:
@@ -26,6 +28,7 @@ def check_terms(doc: Doc, vault: Vault) -> list[Finding]:
     auto.make_automaton()
 
     lower = doc.text.lower()
+    addresses = [(m.start(), m.end()) for m in _ADDRESS.finditer(doc.text)]
     candidates: list[tuple[int, int, GlossaryTerm, str]] = []
     for end_idx, entries in auto.iter(lower):
         for term, surface in entries:
@@ -37,6 +40,8 @@ def check_terms(doc: Doc, vault: Vault) -> list[Finding]:
             suffix = _SUFFIX.match(doc.text, end)
             tail = suffix.end() if suffix else end
             if tail < len(doc.text) and is_word_char(doc.text[tail]):
+                continue
+            if any(a <= start < b for a, b in addresses):
                 continue
             candidates.append((start, end, term, surface))
 

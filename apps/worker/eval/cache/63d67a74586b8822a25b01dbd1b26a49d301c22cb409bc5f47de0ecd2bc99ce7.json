@@ -1,0 +1,1 @@
+{"meta": {"cache_hit": false, "input_tokens": 3030, "latency_ms": 458, "model": "qwen/qwen3.8-27b", "output_tokens": 7, "provider": "groq", "validation_retries": 0}, "output": {"findings": []}}

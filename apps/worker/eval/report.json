@@ -1,0 +1,1883 @@
+{
+  "generated_at": "2026-10-26T22:28:07+00:00",
+  "passed": false,
+  "failed": [
+    "terms precision 0.79 < 0.85 while configured as blocker (set DIMENSION_MAX_SEVERITY['terms'] = 'suggestion')",
+    "tone precision 0.62 < 0.85 while configured as warning (set DIMENSION_MAX_SEVERITY['tone'] = 'suggestion')",
+    "access precision 0.85 < 0.85 while configured as warning (set DIMENSION_MAX_SEVERITY['access'] = 'suggestion')",
+    "1 row(s) ran degraded (no LLM)"
+  ],
+  "metrics": {
+    "dimensions": {
+      "claims": {
+        "precision": 0.8823529411764706,
+        "recall": 1.0,
+        "f1": 0.9375,
+        "predicted": 17,
+        "tp": 15,
+        "labels": 15,
+        "labels_found": 15,
+        "max_severity": "blocker",
+        "by_source": {
+          "deterministic": 15,
+          "llm": 2
+        },
+        "fp_by_source": {
+          "deterministic": 2
+        }
+      },
+      "facts": {
+        "precision": 0.9047619047619048,
+        "recall": 1.0,
+        "f1": 0.9500000000000001,
+        "predicted": 21,
+        "tp": 19,
+        "labels": 17,
+        "labels_found": 17,
+        "max_severity": "blocker",
+        "by_source": {
+          "deterministic": 20,
+          "llm": 1
+        },
+        "fp_by_source": {
+          "deterministic": 2
+        }
+      },
+      "terms": {
+        "precision": 0.7857142857142857,
+        "recall": 1.0,
+        "f1": 0.88,
+        "predicted": 14,
+        "tp": 11,
+        "labels": 11,
+        "labels_found": 11,
+        "max_severity": "blocker",
+        "by_source": {
+          "deterministic": 14
+        },
+        "fp_by_source": {
+          "deterministic": 3
+        }
+      },
+      "tone": {
+        "precision": 0.6153846153846154,
+        "recall": 0.875,
+        "f1": 0.7225806451612904,
+        "predicted": 13,
+        "tp": 8,
+        "labels": 8,
+        "labels_found": 7,
+        "max_severity": "warning",
+        "by_source": {
+          "deterministic": 8,
+          "llm": 5
+        },
+        "fp_by_source": {
+          "deterministic": 2,
+          "llm": 3
+        }
+      },
+      "visual": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "predicted": 7,
+        "tp": 7,
+        "labels": 7,
+        "labels_found": 7,
+        "max_severity": "warning",
+        "by_source": {
+          "deterministic": 6,
+          "llm": 1
+        },
+        "fp_by_source": {}
+      },
+      "access": {
+        "precision": 0.8461538461538461,
+        "recall": 1.0,
+        "f1": 0.9166666666666666,
+        "predicted": 13,
+        "tp": 11,
+        "labels": 10,
+        "labels_found": 10,
+        "max_severity": "warning",
+        "by_source": {
+          "llm": 2,
+          "deterministic": 11
+        },
+        "fp_by_source": {
+          "llm": 2
+        }
+      }
+    },
+    "overall": {
+      "precision": 0.8352941176470589,
+      "recall": 0.9852941176470589,
+      "f1": 0.9041147961607907,
+      "predicted": 85,
+      "labels": 68
+    },
+    "blocker_recall": 1.0,
+    "blocker_labels": 31,
+    "uncited_shown": 0,
+    "clean_rows": 13,
+    "clean_rows_with_findings": 3,
+    "clean_false_positives": 3,
+    "degraded_rows": [
+      "img-10"
+    ],
+    "gate_drops": {
+      "duplicate_deterministic": 9,
+      "quote_not_found": 1
+    },
+    "rewrite_failures": {
+      "meaning_drift": 1,
+      "new_violation": 1
+    }
+  },
+  "intent_cosine": {
+    "good": 16,
+    "bad": 24,
+    "table": [
+      {
+        "threshold": 0.7,
+        "good_kept": 16,
+        "bad_kept": 1,
+        "tpr": 1.0,
+        "fpr": 0.041666666666666664
+      },
+      {
+        "threshold": 0.72,
+        "good_kept": 16,
+        "bad_kept": 0,
+        "tpr": 1.0,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.74,
+        "good_kept": 15,
+        "bad_kept": 0,
+        "tpr": 0.9375,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.76,
+        "good_kept": 13,
+        "bad_kept": 0,
+        "tpr": 0.8125,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.78,
+        "good_kept": 11,
+        "bad_kept": 0,
+        "tpr": 0.6875,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.8,
+        "good_kept": 11,
+        "bad_kept": 0,
+        "tpr": 0.6875,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.82,
+        "good_kept": 10,
+        "bad_kept": 0,
+        "tpr": 0.625,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.84,
+        "good_kept": 9,
+        "bad_kept": 0,
+        "tpr": 0.5625,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.86,
+        "good_kept": 8,
+        "bad_kept": 0,
+        "tpr": 0.5,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.88,
+        "good_kept": 6,
+        "bad_kept": 0,
+        "tpr": 0.375,
+        "fpr": 0.0
+      },
+      {
+        "threshold": 0.9,
+        "good_kept": 6,
+        "bad_kept": 0,
+        "tpr": 0.375,
+        "fpr": 0.0
+      }
+    ],
+    "good_min": 0.7237618565559387,
+    "bad_max": 0.7069852352142334,
+    "pairs": [
+      {
+        "id": "rw-01",
+        "good": true,
+        "cosine": 0.965
+      },
+      {
+        "id": "rw-02",
+        "good": true,
+        "cosine": 0.851
+      },
+      {
+        "id": "rw-03",
+        "good": true,
+        "cosine": 0.907
+      },
+      {
+        "id": "rw-04",
+        "good": true,
+        "cosine": 0.918
+      },
+      {
+        "id": "rw-05",
+        "good": true,
+        "cosine": 0.754
+      },
+      {
+        "id": "rw-06",
+        "good": true,
+        "cosine": 0.724
+      },
+      {
+        "id": "rw-07",
+        "good": true,
+        "cosine": 0.823
+      },
+      {
+        "id": "rw-08",
+        "good": true,
+        "cosine": 0.997
+      },
+      {
+        "id": "rw-09",
+        "good": true,
+        "cosine": 0.878
+      },
+      {
+        "id": "rw-10",
+        "good": true,
+        "cosine": 0.815
+      },
+      {
+        "id": "rw-11",
+        "good": true,
+        "cosine": 0.867
+      },
+      {
+        "id": "rw-12",
+        "good": true,
+        "cosine": 0.77
+      },
+      {
+        "id": "rw-13",
+        "good": true,
+        "cosine": 0.963
+      },
+      {
+        "id": "rw-14",
+        "good": true,
+        "cosine": 0.749
+      },
+      {
+        "id": "rw-15",
+        "good": true,
+        "cosine": 0.778
+      },
+      {
+        "id": "rw-16",
+        "good": true,
+        "cosine": 0.971
+      },
+      {
+        "id": "rw-17",
+        "good": false,
+        "cosine": 0.707
+      },
+      {
+        "id": "rw-18",
+        "good": false,
+        "cosine": 0.54
+      },
+      {
+        "id": "rw-19",
+        "good": false,
+        "cosine": 0.516
+      },
+      {
+        "id": "rw-20",
+        "good": false,
+        "cosine": 0.517
+      },
+      {
+        "id": "rw-21",
+        "good": false,
+        "cosine": 0.589
+      },
+      {
+        "id": "rw-22",
+        "good": false,
+        "cosine": 0.514
+      },
+      {
+        "id": "rw-23",
+        "good": false,
+        "cosine": 0.519
+      },
+      {
+        "id": "rw-24",
+        "good": false,
+        "cosine": 0.399
+      },
+      {
+        "id": "rw-25",
+        "good": false,
+        "cosine": 0.506
+      },
+      {
+        "id": "rw-26",
+        "good": false,
+        "cosine": 0.603
+      },
+      {
+        "id": "rw-27",
+        "good": false,
+        "cosine": 0.492
+      },
+      {
+        "id": "rw-28",
+        "good": false,
+        "cosine": 0.559
+      },
+      {
+        "id": "rw-29",
+        "good": false,
+        "cosine": 0.519
+      },
+      {
+        "id": "rw-30",
+        "good": false,
+        "cosine": 0.54
+      },
+      {
+        "id": "rw-31",
+        "good": false,
+        "cosine": 0.647
+      },
+      {
+        "id": "rw-32",
+        "good": false,
+        "cosine": 0.5
+      },
+      {
+        "id": "rw-33",
+        "good": false,
+        "cosine": 0.604
+      },
+      {
+        "id": "rw-34",
+        "good": false,
+        "cosine": 0.491
+      },
+      {
+        "id": "rw-35",
+        "good": false,
+        "cosine": 0.673
+      },
+      {
+        "id": "rw-36",
+        "good": false,
+        "cosine": 0.448
+      },
+      {
+        "id": "rw-37",
+        "good": false,
+        "cosine": 0.656
+      },
+      {
+        "id": "rw-38",
+        "good": false,
+        "cosine": 0.616
+      },
+      {
+        "id": "rw-39",
+        "good": false,
+        "cosine": 0.618
+      },
+      {
+        "id": "rw-40",
+        "good": false,
+        "cosine": 0.617
+      }
+    ]
+  },
+  "latency": {
+    "runs": 30,
+    "stages": {
+      "ingest": {
+        "p50": 0,
+        "p95": 0
+      },
+      "protect": {
+        "p50": 0,
+        "p95": 0
+      },
+      "filters": {
+        "p50": 0,
+        "p95": 1
+      },
+      "retrieve": {
+        "p50": 25,
+        "p95": 72
+      },
+      "llm": {
+        "p50": 11340,
+        "p95": 30245
+      },
+      "gate": {
+        "p50": 0,
+        "p95": 30
+      }
+    },
+    "total": {
+      "p50": 11373,
+      "p95": 30281,
+      "mean": 12927
+    }
+  },
+  "cache": {
+    "hits": 5,
+    "live_calls": 63
+  },
+  "rows": [
+    {
+      "id": "hero-01",
+      "labels_found": [
+        true,
+        true,
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise app"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-048"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "0% exit load"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03",
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "lock in 14.2% assured annual returns"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18 at Hall B, Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "hero-02",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-048"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "0% exit load"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03",
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "lock in 14.2% assured annual returns"
+        }
+      ]
+    },
+    {
+      "id": "hero-03-fixed",
+      "labels_found": [],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "A-01"
+          ],
+          "severity": "suggestion",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "SIP"
+        }
+      ]
+    },
+    {
+      "id": "hero-04-linkedin",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18 at Hall B, Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "hero-05-email",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03",
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "lock in 14.2% assured annual returns"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-048"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "There is no exit load at all"
+        }
+      ]
+    },
+    {
+      "id": "claims-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Guaranteed"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "12% return"
+        }
+      ]
+    },
+    {
+      "id": "claims-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "risk-free"
+        }
+      ]
+    },
+    {
+      "id": "claims-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "CAGR"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "F-112",
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "14.2%"
+        }
+      ]
+    },
+    {
+      "id": "claims-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Double your money"
+        }
+      ]
+    },
+    {
+      "id": "claims-05",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Earn fixed returns"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "9%"
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "A-01"
+          ],
+          "severity": "suggestion",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "equity fund"
+        }
+      ]
+    },
+    {
+      "id": "claims-06",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Sure-shot"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "always beat the market"
+        }
+      ]
+    },
+    {
+      "id": "claims-07",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "No risk"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "will grow 15% every year"
+        }
+      ]
+    },
+    {
+      "id": "neg-assured-01",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "neg-assured-02",
+      "labels_found": [],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "assured"
+        }
+      ]
+    },
+    {
+      "id": "neg-brand-01",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "neg-cagr-01",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "neg-exitload-01",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "neg-guaranteed-seat",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "facts-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-048"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "0.5%"
+        }
+      ]
+    },
+    {
+      "id": "facts-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "6:00 PM IST"
+        }
+      ]
+    },
+    {
+      "id": "facts-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 30"
+        }
+      ]
+    },
+    {
+      "id": "facts-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "F-112"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "16.8%"
+        }
+      ]
+    },
+    {
+      "id": "facts-05-expired",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-11"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-11"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Hall B"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-11"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "bleed-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Hall B, Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "bleed-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18"
+        }
+      ]
+    },
+    {
+      "id": "bleed-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Hall B, Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "bleed-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18, Hall B, Chandigarh"
+        }
+      ]
+    },
+    {
+      "id": "bleed-05",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18 at Hall B"
+        }
+      ]
+    },
+    {
+      "id": "terms-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise app"
+        }
+      ]
+    },
+    {
+      "id": "terms-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Pay Wise"
+        }
+      ]
+    },
+    {
+      "id": "terms-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "PAYWISE"
+        }
+      ]
+    },
+    {
+      "id": "terms-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "PayWise app"
+        }
+      ]
+    },
+    {
+      "id": "terms-05",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "paywise"
+        }
+      ]
+    },
+    {
+      "id": "terms-06",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise"
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise"
+        }
+      ]
+    },
+    {
+      "id": "tone-01",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "The BEST investment app EVER!!! Your money will skyrocket with PayWise!"
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "BEST investment app EVER"
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "skyrocket"
+        }
+      ]
+    },
+    {
+      "id": "tone-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-04"
+          ],
+          "severity": "suggestion",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "Bet on a SIP"
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "hit the jackpot"
+        }
+      ]
+    },
+    {
+      "id": "tone-03",
+      "labels_found": [
+        false
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "Lost all your savings on stocks? LOL, happens to the best of us."
+        }
+      ]
+    },
+    {
+      "id": "tone-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Hurry! Only 2 hours left to start your Diwali SIP, don't miss out, act now!"
+        }
+      ]
+    },
+    {
+      "id": "tone-05",
+      "labels_found": [
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "unbeatable"
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "best ever"
+        }
+      ]
+    },
+    {
+      "id": "tone-06",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-04"
+          ],
+          "severity": "suggestion",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "Investing is just a game."
+        }
+      ]
+    },
+    {
+      "id": "tone-07-ok",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "access-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "WCAG 2.4.4"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Click here"
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "paywise"
+        }
+      ]
+    },
+    {
+      "id": "access-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "WCAG 2.4.4"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "https://paywise.example/diwali-webinar"
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "paywise"
+        }
+      ]
+    },
+    {
+      "id": "access-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "A-01"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Systematic investment plans facilitate disciplined, incremental capital accumulation by automating periodic contributions into diversified mutual fund portfolios, thereby mitigating the behavioural tendency to time market fluctuations. Consequently, investors benefit from rupee-cost averaging, whereby proportionally more units are acquired during corrections and fewer during appreciations, optimising the average acquisition cost over extended horizons. PayWise enables investors to configure contribution frequency, amount and duration independently, accommodating heterogeneous liquidity requirements."
+        },
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": false,
+          "cited": true,
+          "quote": "Systematic investment plans facilitate disciplined, incremental capital accumulation by automating periodic contributions into diversified mutual fund portfolios"
+        }
+      ]
+    },
+    {
+      "id": "access-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "WCAG 2.4.4"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Read more"
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": "paywise"
+        }
+      ]
+    },
+    {
+      "id": "access-05-ok",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "clean-01",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "clean-02",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "mixed-01",
+      "labels_found": [
+        true,
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Guaranteed returns"
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Paywise"
+        },
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Oct 18"
+        }
+      ]
+    },
+    {
+      "id": "img-01",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02",
+            "WCAG 1.1.1"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "(no alt text)"
+        }
+      ]
+    },
+    {
+      "id": "img-02",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-03"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Logo, 64 px wide"
+        }
+      ]
+    },
+    {
+      "id": "img-03",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-03"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Logo clear space"
+        }
+      ]
+    },
+    {
+      "id": "img-04",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-03"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "No PayWise logo found"
+        }
+      ]
+    },
+    {
+      "id": "img-05",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02",
+            "WCAG 1.4.3"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02",
+            "WCAG 1.4.3"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "img-06",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-01"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Fill #1E8C93"
+        }
+      ]
+    },
+    {
+      "id": "img-07",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-02"
+          ],
+          "severity": "warning",
+          "source": "llm",
+          "tp": true,
+          "cited": true,
+          "quote": "Whole image"
+        }
+      ]
+    },
+    {
+      "id": "img-08",
+      "labels_found": [],
+      "findings": []
+    },
+    {
+      "id": "img-09",
+      "labels_found": [
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02",
+            "WCAG 1.4.3"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "img-10",
+      "labels_found": [],
+      "findings": [
+        {
+          "dimension": "tone",
+          "codes": [
+            "TV-02"
+          ],
+          "severity": "suggestion",
+          "source": "deterministic",
+          "tp": false,
+          "cited": true,
+          "quote": ""
+        }
+      ]
+    },
+    {
+      "id": "pdf-deck",
+      "labels_found": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true
+      ],
+      "findings": [
+        {
+          "dimension": "facts",
+          "codes": [
+            "E-19",
+            "E-11"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "terms",
+          "codes": [
+            "G-07"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "A-02",
+            "WCAG 1.4.3"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "access",
+          "codes": [
+            "WCAG 2.4.4"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": ""
+        },
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-03"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Logo, 55 px wide"
+        },
+        {
+          "dimension": "visual",
+          "codes": [
+            "VS-01"
+          ],
+          "severity": "warning",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Fill #1E8C93"
+        },
+        {
+          "dimension": "claims",
+          "codes": [
+            "CL-03"
+          ],
+          "severity": "blocker",
+          "source": "deterministic",
+          "tp": true,
+          "cited": true,
+          "quote": "Assured returns"
+        }
+      ]
+    }
+  ]
+}

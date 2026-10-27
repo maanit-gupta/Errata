@@ -151,3 +151,19 @@ async def test_disabled_cache_never_writes(tmp_path: Path) -> None:
     await r.generate("s", "u", Answer, prompt_version="smoke@1")
     assert primary.calls == 2
     assert list(tmp_path.iterdir()) == []
+
+
+async def test_cached_fallback_response_replays_without_calling_primary(tmp_path: Path) -> None:
+    cache = LLMCache(tmp_path, enabled=True)
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429")] * 3)
+    fallback = ScriptedProvider("gemini", [GOOD])
+    await router(primary, fallback, cache=cache).generate(
+        "s", "u", Answer, prompt_version="smoke@1"
+    )
+    primary.calls = 0
+    _, meta = await router(primary, fallback, cache=cache).generate(
+        "s", "u", Answer, prompt_version="smoke@1"
+    )
+    assert meta.provider == "gemini"
+    assert meta.cache_hit is True
+    assert primary.calls == 0  # eval/CI replay is deterministic even after a fallback

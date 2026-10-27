@@ -1,0 +1,75 @@
+name: Eval
+
+# Golden-set precision gate (SPEC §17, P14). Runs when anything that changes findings changes.
+# LLM responses replay from the committed cache (apps/worker/eval/cache/); a changed prompt or
+# pipeline input misses the cache and calls the provider with the repository secrets.
+#
+# Repository secrets: GROQ_API_KEY, GEMINI_API_KEY.
+# Repository variables (model IDs are part of the cache key; match apps/worker/.env):
+# LLM_PROVIDER, LLM_FALLBACK_PROVIDER, GROQ_MODEL_TEXT, GROQ_MODEL_VISION, GEMINI_MODEL_TEXT,
+# GEMINI_MODEL_VISION.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - apps/worker/brandlens_worker/pipeline/**
+      - apps/worker/brandlens_worker/prompts/**
+      - apps/worker/brandlens_worker/llm/**
+      - apps/worker/brandlens_worker/vision/**
+      - apps/worker/brandlens_worker/config.py
+      - apps/worker/eval/**
+      - scripts/demo_data.py
+      - .github/workflows/eval.yml
+  workflow_dispatch:
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Tesseract (image and PDF rows)
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+
+      - name: Install worker
+        run: cd apps/worker && uv sync
+
+      - name: Embedding model cache
+        uses: actions/cache@v4
+        with:
+          path: apps/worker/.models
+          key: fastembed-bge-small-en-v1.5
+
+      - name: Golden-set eval (fails the build when a gate fails)
+        env:
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'groq' }}
+          LLM_FALLBACK_PROVIDER: ${{ vars.LLM_FALLBACK_PROVIDER || 'gemini' }}
+          GROQ_MODEL_TEXT: ${{ vars.GROQ_MODEL_TEXT }}
+          GROQ_MODEL_VISION: ${{ vars.GROQ_MODEL_VISION }}
+          GEMINI_MODEL_TEXT: ${{ vars.GEMINI_MODEL_TEXT }}
+          GEMINI_MODEL_VISION: ${{ vars.GEMINI_MODEL_VISION }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: make eval
+
+      - name: Report
+        if: always()
+        run: cat apps/worker/eval/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-report
+          path: |
+            apps/worker/eval/report.md
+            apps/worker/eval/report.json

@@ -61,11 +61,4 @@ jobs:
       - name: Build worker image
         run: docker build -t brandlens-worker apps/worker
 
-  # eval:
-  #   # P14: golden-set precision gate (make eval exits non-zero on a failed gate).
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: astral-sh/setup-uv@v6
-  #     - run: cd apps/worker && uv sync
-  #     - run: make eval
+  # The golden-set eval gate lives in eval.yml (path-filtered; needs LLM secrets).
