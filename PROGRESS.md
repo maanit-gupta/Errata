@@ -2,8 +2,8 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P14 (P13 done on `phase/P13-gcs-insights`, stacked on unmerged P12)
-**Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
+**Current phase:** P14 (partial; P12/P13 merged to `main`)
+**Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
 
@@ -23,26 +23,31 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P09 | Review workflow & notifications | J+M | done | M (Claude, /complete) | phase/P09-review-workflow | 2026-10-26 |
 | P10 | Deploy & core-loop E2E 🎯 D7 | Both | done | M (Claude) | phase/P10-deploy → main | 2026-10-26; prod e2e 3/3 green |
 | P11 | Image checks | M | done | M (Claude) | phase/P11-image-checks | 2026-10-26; eval 9/9 logos, 20/20 contrast |
-| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; not merged |
-| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` (local); not merged |
-| P14 | Golden set & eval gate | M | in-progress | M (Claude) | phase/P14-eval-gate | |
+| P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27 |
+| P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27 |
+| P14 | Golden set & eval gate | M | partial | M (Claude) | phase/P14-eval-gate | checkpoint 2026-10-27: eval blocked on free-tier 429s |
 | P15 | Hardening | Both | todo | | | |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P13 / **done** (2026-10-27) on `phase/P13-gcs-insights`, stacked on P12. Neither P12 nor P13 is merged or deployed; cloud migrations `20261026100018` and `20261026100019` aren't applied yet (see Open questions).
+- **Phase / status:** P14 / **partial** (checkpoint 2026-10-27, user asked to pause P14) on `phase/P14-eval-gate`. P12/P13 are merged to `main`, cloud migrations `…100018`/`…100019` applied and redeployed (user).
 - **What exists now:**
-  - SQL (`20261026100019_insights.sql`): `rule_gcs`, `insights_summary`, `flag_unclear_rules`, `decide_example_suggestion`; pgTAP `05_insights` (20 tests).
-  - Worker: `generate_examples` job, `prompts/examples_v1.md`, `pipeline/examples.py`, Discord `notify_unclear_rule`; `review_version` calls `flag_unclear_rules` after every review.
-  - `make simulate-activity` gives TV-04 41/60 UNCLEAR, VS-02 22/73, CL-03 63/97, G-07 88/99 (plan p.19).
-  - Web: `/insights` (KPI tiles, chart + table, watchlist, suggestions drawer), `/settings/ai-use` models list.
-  - Verified 2026-10-27: `make check` green (171 pytest, 74 Vitest, 100 pgTAP). Full Playwright suite on a fresh `db-reset → seed-assets-local → simulate-activity` passes. TV-04 v2 was re-embedded (new `embedding_source_hash`).
-- **Day-11 checklist:** image and PDF overlays (`image-check`, `pdf-check`), risk routing, comments and diff (`review`, `core-loop`), and the GCS dashboard (`insights`) all pass locally. Tagged `v0.11-feature-complete` locally (not pushed).
+  - `eval/golden/drafts.jsonl` (60 rows: 49 text, 10 images, 1 PDF; 13 clean), with hero variants, bleed cases and the tricky negatives. `eval/golden/rewrites.jsonl` (16 good / 24 bad rewrite pairs).
+  - `eval/run_eval.py` (`make eval`): full pipeline in-process, no DB (vault from `scripts/demo_data.py`, real bge-small retrieval mirroring `match_vault`), committed LLM cache `eval/cache/`, §17 metrics, intent-cosine table, 30-run latency benchmark, `report.md` + `report.json`, and a non-zero exit when a gate fails (including any degraded row). `tests/test_eval.py`.
+  - Precision fixes from the first report (review@1): "Rest assured" isn't CL-03; URLs/emails/domains skip glossary casing (G-07); `NOT_SHOUTING` acronyms and a ≥2-word minimum for TV-02 caps; `prompts/review_v2.md` (cite the specific TV rule; don't report reading level, jargon or link text).
+  - The router checks every provider's cache entry before any live call, so a response recorded from the fallback replays (deterministic CI).
+  - `INTENT_COSINE` 0.82 → 0.74 (SPEC §9/§14 updated).
+  - `.github/workflows/eval.yml`: path-filtered PR job plus `workflow_dispatch`; reads **repository** secrets `GROQ_API_KEY`/`GEMINI_API_KEY` and repo variables for the model IDs (part of the cache key). `ci.yml` points at it.
+- **Last complete report** (`eval/report.md`, 03:58, review@1, before the fixes): FAIL. Blocker recall 1.00, 0 uncited; precision claims 0.88, facts 0.90, terms 0.79, tone 0.62, access 0.85, visual 1.00; 1 degraded row.
+- **Run at 11:05 (review@2 + fixes):** stopped at 41/60 rows. Groq and Gemini both returned 429 through the 65 s retries (likely daily free-tier quotas after the morning's runs); 7 rows degraded (`bleed-03`, `bleed-05`, `terms-03`, `tone-02`, `tone-03`, `tone-05`, `tone-06`). The successful responses are in `eval/cache/` (108 entries), so the next run replays them.
 - **Gotchas:**
-  - `e2e/insights.spec.ts` isn't re-runnable: it approves TV-04 v2. Run `make db-reset && make seed-assets-local && make simulate-activity` first.
-  - Local `make dev-local` posts to the real Discord webhook if one is configured.
-- **Exact next step:** P14 (golden set and eval gate).
+  - **GitHub Actions secrets are missing:** `gh` lists none on `maanit-gupta/BrandLens` (repo, `.env` environment, Dependabot, Codespaces), although the user reported adding them. Until they exist, a CI eval on any prompt change runs degraded and fails.
+  - The repo variable `LLM_PROVIDER` held the `.env` inline comment as its value. Fixed to `groq`. `apps/worker/.env` still has `LLM_PROVIDER=groq   # groq | gemini` (works through `set -a; .`, but don't copy values blindly).
+  - The cache has 14 entries recorded with `gemini-3.6-flash`; `.env` and the repo variables say `gemini-3.5-flash`. They only replay if the model ID matches. `--prune` on a full run removes unused entries.
+  - Don't change `DIMENSION_MAX_SEVERITY` from a run with degraded rows: those rows measure only the deterministic stages.
+- **Exact next step (P14):** once the quotas reset, `make eval` (only the missing rows go live). Then apply the precision gate (`DIMENSION_MAX_SEVERITY` → `suggestion` for any dimension still < 0.85), rerun until PASS, `make eval args=--prune`, commit the cache. Demonstrate the CI failing on a broken prompt on a throwaway branch (needs the secrets), note it here, then finish P14 (Decisions + README "AI assistance").
+- **After P14 (user's sequence, 2026-10-27):** U0 + U1 (redesign per `DESIGN.md`, `/next-ui`), then P15, U2, P16.
 
 ## Decisions log (append-only)
 
@@ -158,6 +163,13 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P13 | Suggestions drawer is a native `<dialog>` | Focus trap, Esc and inert background for free; axe-clean |
 | 2026-10-27 | P13 | Simulated history is written as archived contents through `private.apply_transition`, with `simulated: true` audit events driving the "Illustrative data" pill | Never bypasses the state machine; the pill appears only when simulator data is in the window |
 | 2026-10-27 | P13 | Activating a finding (overlay click, keyboard focus) pins it in the draft workspace | The scroll the click causes fired mouseleave on the box and cleared the highlight (flaky image e2e under load) |
+| 2026-10-27 | P14 | Eval runs in-process with no DB: vault from `scripts/demo_data.py` at a fixed date, real bge-small, retrieval mirrors `match_vault` | PHASES says "local DB"; in-process is the same pipeline, runs in CI without Supabase, and is deterministic |
+| 2026-10-27 | P14 | A degraded row fails the eval gate | A no-LLM row measures only the deterministic stages and would inflate precision |
+| 2026-10-27 | P14 | `INTENT_COSINE` 0.82 → 0.74 | Golden rewrites: 0.82 kept 10/16 good; 0.74 keeps 15/16 with 0/24 bad (highest bad 0.707) |
+| 2026-10-27 | P14 | Router replays any provider's cache entry before a live call | A fallback-recorded response must replay in CI instead of calling the primary again |
+| 2026-10-27 | P14 | Glossary skips URLs/emails/domains; "Rest assured" isn't CL-03; TV-02 caps needs ≥2 shouted words and ignores financial acronyms | First report's deterministic false positives (access-01/02/04, neg-assured-02, claims-03) |
+| 2026-10-27 | P14 | `review@2` prompt: cite the specific TV rule; leave reading level, jargon and link text to deterministic checks | review@1 LLM FPs (TV-02 instead of TV-04; A-01 on "SIP"/"equity fund") |
+| 2026-10-27 | P14 | `eval.yml` is a separate path-filtered workflow using repository secrets and repo variables for model IDs | Model IDs are in the cache key; non-worker PRs shouldn't spend quota |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -190,14 +202,14 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Open questions (ask the user; don't guess)
 
-- [ ] Build window Day-1 date?
+- [x] Build window Day-1 date: 2026-10-20 (D7 = 2026-10-26), user 2026-10-27.
 - [x] Worker host: **Render** (Dockerfile + `render.yaml` Blueprint, free tier), user decision 2026-10-26.
 - [x] Cloud Supabase: user approved pushing migrations + demo seed (2026-10-26).
-- [ ] Is Resend email wanted, or Discord only?
+- [x] Email: Discord webhook alerts only, no Resend (user, 2026-10-27).
 - [x] Merge P11 to `main` (user, 2026-10-26).
 - [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
-- [ ] **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
-- [ ] **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
+- [x] Merged P12/P13 to `main`, migrations `…100018`/`…100019` applied to cloud, redeployed (user, 2026-10-27). Was: **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
+- [x] Model IDs in `apps/worker/.env` confirmed current (user, 2026-10-27). Was: **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
 
 ## Known issues / debt
 

@@ -23,6 +23,8 @@ CLEAN_DRAFTS = [
     "Redemptions within 365 days carry a 1% exit load on PayWise.",
     "Light a diya, then light up your savings. Start a small monthly SIP on PayWise today.",
     "Questions about your SIP? Our team is here to help on PayWise, every day, 24/7.",
+    # Golden-set negative (P14): the idiom reassures; it promises nothing about returns.
+    "Rest assured, starting a SIP on PayWise takes two minutes, and you can pause it any time.",
 ]
 
 
@@ -152,11 +154,30 @@ def test_terms_casing_possessive_and_correct_usage() -> None:
     assert findings_for("PayWise's new SIP is here.") == []
     assert findings_for("paywiseapp.com") == []  # not on a token boundary
 
+    # Addresses aren't brand copy (golden set, P14).
+    def terms(text: str) -> list[str]:
+        return [f[3] for f in findings_for(text) if f[0] == "terms"]
+
+    assert terms("Register at https://paywise.example/webinar today.") == []
+    assert terms("Write to help@paywise.example or visit www.paywise.example.") == []
+    assert terms("Paywise: see paywise.example/sip") == ["Paywise"]
+
+
+def test_assured_returns_still_fire_after_the_rest_assured_exception() -> None:
+    assert [c for _, _, c, _ in findings_for("Rest assured: assured returns on every SIP.")] == [
+        ["CL-03"]
+    ]
+
 
 def test_tone_heuristics() -> None:
     hype = findings_for("Our returns will skyrocket! Start now! Don't wait! Join today!")
     assert ("tone", "warning", ["TV-02"], "skyrocket") in hype
     assert any(f[0] == "tone" and f[2] == ["TV-02"] and f[1] == "suggestion" for f in hype)
+    shouting = findings_for("The BEST investment app EVER. Start a SIP on PayWise.")
+    assert [f[3] for f in shouting] == ["BEST investment app EVER"]
+    # Acronyms and a lone capitalised wordmark aren't shouting (golden set, P14).
+    assert findings_for("Flexi-Cap's 3-yr historical CAGR, as of Q3 2026, on PayWise.") == []
+    assert findings_for("Start your Diwali SIP. NORTHFUND") == []
 
 
 def test_access_link_text_and_reading_grade() -> None:

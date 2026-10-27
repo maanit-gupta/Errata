@@ -9,7 +9,8 @@ from brandlens_worker.pipeline.filters.facts import Mention, mentioned_facts
 from brandlens_worker.pipeline.types import Doc, Fact, Finding, Rule, Vault
 
 LEXICON = re.compile(
-    r"\b(?:assured|guaranteed?|risk[- ]free|no[- ]risk|100% safe|zero risk|best returns|"
+    # "Rest assured, ..." reassures the reader; it promises nothing about returns.
+    r"\b(?:(?<!rest )assured|guaranteed?|risk[- ]free|no[- ]risk|100% safe|zero risk|best returns|"
     r"fixed returns?|sure[- ]shot|double your money)\b|#1\b|\block(?:ed)? in\s+\d+(?:\.\d+)?%",
     re.IGNORECASE,
 )

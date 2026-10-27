@@ -367,7 +367,7 @@ Gate drops are counted per reason in `review_runs.timings.gate` and in Langfuse.
 
 Target: under 15 ms per rewrite, all local. A rewrite is kept only if all of these pass:
 
-1. `cosine(bge(original_sentence), bge(rewritten_sentence)) ≥ INTENT_COSINE` (0.82).
+1. `cosine(bge(original_sentence), bge(rewritten_sentence)) ≥ INTENT_COSINE` (0.74, calibrated in P14; was 0.82).
 2. The CTA string from intent is retained (case-insensitive, fuzzy ratio ≥ 0.9) **if** it was present in the original.
 3. Campaign keywords are retained: the campaign name tokens and any glossary preferred terms present in the original.
 4. Re-run stage-3 filters plus the cited rule's deterministic check on the **patched full text**. If any **new** finding appears, or the original finding still fires, the rewrite fails.
@@ -471,7 +471,7 @@ rewrite must keep the CTA and goal; omit rewrite if unsure.
 ## §14 Config & thresholds (`brandlens_worker/config.py`)
 
 ```python
-INTENT_COSINE = 0.82
+INTENT_COSINE = 0.74          # P14 calibration (was 0.82)
 HUMAN_CONFIDENCE = 0.6
 TOPK = 8
 MAX_WORDS = 2000

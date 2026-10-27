@@ -90,8 +90,8 @@ fmt: ## Auto-format and auto-fix
 check: lint test ## lint + types + test. Must be green to finish a phase.
 
 # --- Later phases ------------------------------------------------------------
-eval: ## Golden-set eval (P14)
-	@echo "eval: not implemented until P14 (vision: make eval-vision)"
+eval: ## Golden-set eval → apps/worker/eval/report.md; non-zero exit when a gate fails (P14)
+	@cd $(WORKER) && { [ ! -f .env ] || { set -a && . ./.env && set +a; }; } && uv run python eval/run_eval.py $(args)
 
 eval-vision: ## P11 vision eval on the labelled creatives → apps/worker/eval/vision_report.md
 	$(UV) python eval/vision_eval.py

@@ -16,6 +16,7 @@ from brandlens_worker.pipeline.llm_pass import LLMFinding, build_user_message
 from brandlens_worker.pipeline.protect import protect
 from brandlens_worker.pipeline.run import StagesResult, run_stages_5_6
 from brandlens_worker.pipeline.types import Finding
+from brandlens_worker.prompts import load_prompt
 from tests.fakes import ScriptedProvider
 from tests.vault_fixture import HERO, paywise_vault
 
@@ -278,7 +279,7 @@ async def test_stages_5_6_with_fake_provider_and_confirmation_sample() -> None:
     assert [f.codes for f in out.findings] == [["CL-03"], ["TV-02"]]
     assert out.drops == {"no_valid_citation": 1, "unknown_codes": 1}
     assert out.findings[0].confidence == pytest.approx(0.71)
-    assert out.prompt_version == "review@1"
+    assert out.prompt_version == load_prompt("review")[1]  # the latest review_vN.md
 
 
 async def test_degraded_when_every_provider_fails() -> None:

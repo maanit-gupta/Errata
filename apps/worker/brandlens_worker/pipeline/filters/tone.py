@@ -13,6 +13,11 @@ from brandlens_worker.pipeline.types import Doc, Finding, Rule, Vault
 
 _QUOTED = re.compile(r"[\"“]([^\"”]{3,40})[\"”]")
 MIN_EXCLAMATIONS = 2  # one "!" in a short caption isn't a pattern
+MIN_SHOUTED_WORDS = 2
+# Financial acronyms and the brand in capitals are written that way, not shouted.
+NOT_SHOUTING = frozenset(
+    {"PAYWISE", "CAGR", "SIPS", "ELSS", "SEBI", "AMFI", "NACH", "KYC", "NAV", "IPO", "EMI"}
+)
 
 
 def banned_phrases(rule: Rule) -> list[str]:
@@ -76,8 +81,9 @@ def check_tone(doc: Doc, vault: Vault) -> list[Finding]:
         )
 
     letters = [c for c in text if c.isalpha()]
-    caps_words = [m for m in re.finditer(r"\b[A-Z]{4,}\b", text) if m.group() not in ("PAYWISE",)]
-    if hype and letters and caps_words:
+    caps_words = [m for m in re.finditer(r"\b[A-Z]{4,}\b", text) if m.group() not in NOT_SHOUTING]
+    # One capitalised word (a wordmark, an acronym we don't know) isn't shouting; two are.
+    if hype and letters and len(caps_words) >= MIN_SHOUTED_WORDS:
         ratio = sum(1 for c in letters if c.isupper()) / len(letters)
         if ratio > config.CAPS_RATIO_MAX:
             findings.append(

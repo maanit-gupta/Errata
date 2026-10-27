@@ -68,16 +68,22 @@ class LLMRouter:
             "temperature": temperature,
             "images": [hashlib.sha256(i.data).hexdigest() for i in vision_images or []],
         }
-        failures: list[str] = []
-        for provider in self.providers:
-            model = provider.model_for(vision=bool(vision_images))
-            key = cache_key(provider.name, model, prompt_version, payload)
+        keys = [
+            cache_key(p.name, p.model_for(vision=bool(vision_images)), prompt_version, payload)
+            for p in self.providers
+        ]
+        # Every provider's cache entry is checked before any live call, so a response recorded
+        # from the fallback is replayed instead of calling the primary again (eval/CI determinism).
+        for key in keys:
             cached = self.cache.get(key)
             if cached is not None:
                 parsed = schema.model_validate(cached["output"])
                 meta = Meta.model_validate({**cached["meta"], "cache_hit": True, "latency_ms": 0})
                 return parsed, meta
 
+        failures: list[str] = []
+        for provider, key in zip(self.providers, keys, strict=True):
+            model = provider.model_for(vision=bool(vision_images))
             try:
                 result = await self._call_with_retries(
                     provider, system, user, schema, vision_images, temperature
