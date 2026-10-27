@@ -70,3 +70,10 @@ LLM_CACHE: Final = False  # True in eval/tests
 
 # Queues (SQL migration 20261026100011). Review jobs use PGMQ_QUEUE from env.
 VAULT_QUEUE: Final = "vault_jobs"
+# P15: concurrent review consumers. Text jobs are I/O-bound (LLM calls), so several overlap; image
+# and PDF stages 1-4 (render, OCR, vision) share HEAVY_JOB_SLOTS so the 512 MB worker can't run two
+# 40-page decks at once (P12 peak RSS 484 MB).
+REVIEW_CONSUMERS: Final = 3
+HEAVY_JOB_SLOTS: Final = 1
+LLM_RATE_LIMIT_COOLDOWN_S: Final = 60  # skip a provider this long after it stays 429 (router.py)
+DB_POOL_MAX: Final = 8  # REVIEW_CONSUMERS + 1 vault long-polls, plus per-job queries

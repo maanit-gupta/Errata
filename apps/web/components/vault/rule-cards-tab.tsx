@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { RealtimeRefresh } from "./realtime-refresh";
 import { RuleCardList, type RuleRow } from "./rule-card-list";
 import { RuleCardPanel, type RuleDetail } from "./rule-card-panel";
+import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 const STATUSES = ["all", "draft", "approved", "archived"] as const;
 
@@ -44,7 +45,9 @@ export async function RuleCardsTab({
       let sourceUrl: string | null = null;
       const path = data.brand_guides?.storage_path;
       if (path) {
-        const { data: signed } = await supabase.storage.from("guides").createSignedUrl(path, 3600);
+        const { data: signed } = await supabase.storage
+          .from("guides")
+          .createSignedUrl(path, SIGNED_URL_TTL_S);
         sourceUrl = signed?.signedUrl ?? null;
       }
       detail = {

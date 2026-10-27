@@ -8,6 +8,7 @@ import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import type { Intent } from "@/lib/drafts/intent";
 import { createClient } from "@/lib/supabase/server";
+import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 export const metadata = { title: "Draft" };
 
@@ -111,8 +112,11 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
   // Image versions render from a short-lived signed URL (private bucket, SPEC §3).
   const imageUrl =
     version?.format === "image" && version.storage_path
-      ? ((await supabase.storage.from("drafts").createSignedUrl(version.storage_path, 3600)).data
-          ?.signedUrl ?? null)
+      ? ((
+          await supabase.storage
+            .from("drafts")
+            .createSignedUrl(version.storage_path, SIGNED_URL_TTL_S)
+        ).data?.signedUrl ?? null)
       : null;
 
   // PDF versions: the page renders the worker made for this version's run (P12).

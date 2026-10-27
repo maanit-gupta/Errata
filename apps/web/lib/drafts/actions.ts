@@ -9,6 +9,7 @@ import { requireSession } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/workflow/permissions";
 import type { Json } from "@/types/database";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 import { intentSchema } from "./intent";
 
 export type Result = { ok: true; message?: string } | { ok: false; error: string };
@@ -50,7 +51,6 @@ const submission = z.object({
   intent: intentSchema,
 });
 
-const MAX_UPLOAD = 20 * 1024 * 1024;
 const UPLOAD_FORMATS: Record<string, "docx" | "pdf" | "image"> = {
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
   "application/pdf": "pdf",
@@ -77,7 +77,8 @@ export async function submitForCheck(
     if (file instanceof File && file.size > 0) {
       const kind = UPLOAD_FORMATS[file.type];
       if (!kind) return { ok: false, error: "Upload a DOCX, PDF, PNG, JPEG or WebP file." };
-      if (file.size > MAX_UPLOAD) return { ok: false, error: "Files must be under 20 MB." };
+      if (file.size > MAX_UPLOAD_BYTES)
+        return { ok: false, error: `Files must be under ${MAX_UPLOAD_LABEL}.` };
       storagePath = `${session.orgId}/${contentId}/${crypto.randomUUID()}/${file.name.replace(/[^\w.-]+/g, "_")}`;
       const { error } = await supabase.storage
         .from("drafts")
@@ -103,7 +104,15 @@ export async function submitForCheck(
     if (error) return { ok: false, error: friendly(error.message) };
 
     const { error: qErr } = await supabase.rpc("enqueue_review", { p_version_id: version.id });
-    if (qErr) return { ok: false, error: friendly(qErr.message) };
+    if (qErr) {
+      if (qErr.code === "BL429")
+        return {
+          ok: false,
+          error:
+            "Saved, but you've submitted 10 checks in the last minute. Wait a moment and submit again.",
+        };
+      return { ok: false, error: friendly(qErr.message) };
+    }
     wakeWorker();
     revalidatePath(`/drafts/${contentId}`);
     return { ok: true, message: "Submitted. Findings will appear here in a few seconds." };

@@ -6,6 +6,7 @@ import { requireSession, type Session } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/workflow/permissions";
 import type { Json } from "@/types/database";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 
 /** Vault mutations (P05). Every action re-checks the role; RLS and SQL functions enforce it too. */
 
@@ -26,8 +27,6 @@ const DIMENSIONS = ["tone", "terms", "facts", "claims", "visual", "access"] as c
 const SEVERITIES = ["blocker", "warning", "suggestion"] as const;
 
 // ------------------------------------------------------------------ guides
-
-const MAX_GUIDE_BYTES = 20 * 1024 * 1024;
 
 export async function uploadGuide(
   _prev: ActionResult | null,
@@ -59,7 +58,8 @@ export async function uploadGuide(
       const ext = file.name.toLowerCase().split(".").pop();
       if (ext !== "pdf" && ext !== "docx")
         return { ok: false, error: "Upload a PDF or DOCX file." };
-      if (file.size > MAX_GUIDE_BYTES) return { ok: false, error: "Guides must be under 20 MB." };
+      if (file.size > MAX_UPLOAD_BYTES)
+        return { ok: false, error: `Guides must be under ${MAX_UPLOAD_LABEL}.` };
       const path = `${session.orgId}/${id}/${file.name.replace(/[^\w.-]+/g, "_")}`;
       const { error } = await supabase.storage
         .from("guides")
@@ -330,8 +330,6 @@ export async function savePalette(input: PaletteInput): Promise<ActionResult> {
   }
 }
 
-const MAX_ASSET_BYTES = 10 * 1024 * 1024;
-
 export async function uploadAsset(
   _prev: ActionResult | null,
   formData: FormData,
@@ -345,7 +343,8 @@ export async function uploadAsset(
     if (!/^image\/(png|jpeg|webp|svg\+xml)$/.test(file.type)) {
       return { ok: false, error: "Use a PNG, JPEG, WebP or SVG image." };
     }
-    if (file.size > MAX_ASSET_BYTES) return { ok: false, error: "Images must be under 10 MB." };
+    if (file.size > MAX_UPLOAD_BYTES)
+      return { ok: false, error: `Images must be under ${MAX_UPLOAD_LABEL}.` };
     const spec =
       kind === "logo"
         ? {

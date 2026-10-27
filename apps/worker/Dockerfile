@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
     UV_PROJECT_ENVIRONMENT=/app/.venv \
     MODEL_CACHE_DIR=/app/.models \
     PATH="/app/.venv/bin:$PATH"
@@ -16,21 +17,22 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends libgomp1 tesseract-ocr tesseract-ocr-eng \
  && rm -rf /var/lib/apt/lists/*
 
+# Build as the runtime user so files are owned by it from the start: a final `chown -R` layer
+# would duplicate the ~1 GB venv in the image (P15).
+RUN useradd --create-home --uid 10001 app && mkdir /app && chown app:app /app
+USER app
 WORKDIR /app
 
 # Dependencies first for layer caching.
-COPY pyproject.toml uv.lock ./
+COPY --chown=app:app pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-COPY brandlens_worker ./brandlens_worker
+COPY --chown=app:app brandlens_worker ./brandlens_worker
 RUN uv sync --frozen --no-dev
 
 # Bake the embedding model into the image so cold starts never download it (CLAUDE.md gotcha).
 RUN python -c "from brandlens_worker.embeddings import Embedder; \
 print(Embedder('BAAI/bge-small-en-v1.5', '/app/.models').embed(['warm-up']).shape)"
-
-RUN useradd --create-home --uid 10001 app && chown -R app:app /app
-USER app
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \

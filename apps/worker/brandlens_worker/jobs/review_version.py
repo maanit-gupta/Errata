@@ -9,6 +9,7 @@ page chunk).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import time
 from typing import Any
@@ -176,6 +177,10 @@ def carry_over(rows: list[dict[str, Any]], prior: list[dict[str, Any]]) -> None:
             r["resolved_by"] = match["resolved_by"]
 
 
+# Image/PDF stages 1-4 are memory-heavy; concurrent consumers share these slots (config.py).
+_heavy = asyncio.Semaphore(config.HEAVY_JOB_SLOTS)
+
+
 async def review_version(ctx: JobContext) -> None:
     p = ReviewPayload.model_validate(ctx.message.payload)
     started = time.perf_counter()
@@ -228,21 +233,23 @@ async def review_version(ctx: JobContext) -> None:
         str(p.run_id), org_id=str(p.org_id), version_id=str(p.version_id)
     ) as root:
         try:
+            heavy = _heavy if row["format"] in ("image", "pdf") else contextlib.nullcontext()
             with tracer.trace_run(str(p.run_id), name="stages_1_4"):
-                result = await run_stages_1_to_4(
-                    VersionInput(
-                        format=row["format"],
-                        body=row["body"],
-                        data=data,
-                        intent=row["intent"] or {},
-                        kit=kit,
-                        ocr_engine=ocr_engine,
-                    ),
-                    vault,
-                    embed=embed,
-                    match_vault=match_vault,
-                    topk=config.TOPK,
-                )
+                async with heavy:
+                    result = await run_stages_1_to_4(
+                        VersionInput(
+                            format=row["format"],
+                            body=row["body"],
+                            data=data,
+                            intent=row["intent"] or {},
+                            kit=kit,
+                            ocr_engine=ocr_engine,
+                        ),
+                        vault,
+                        embed=embed,
+                        match_vault=match_vault,
+                        topk=config.TOPK,
+                    )
         except IngestError as exc:
             raise JobError(exc.code) from exc
         except NotImplementedError as exc:

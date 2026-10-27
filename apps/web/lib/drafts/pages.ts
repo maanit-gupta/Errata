@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { createClient } from "@/lib/supabase/server";
+import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 /** `review_runs.pages` (P12): one rendered thumbnail per PDF page; finding boxes are in its pixels. */
 const manifest = z.array(
@@ -22,7 +23,7 @@ export async function signedPages(
   if (!parsed.success || !parsed.data.length) return [];
   const { data } = await supabase.storage.from("renders").createSignedUrls(
     parsed.data.map((p) => p.path),
-    3600,
+    SIGNED_URL_TTL_S,
   );
   const url = new Map((data ?? []).map((d) => [d.path, d.signedUrl]));
   return parsed.data.flatMap((p) => {

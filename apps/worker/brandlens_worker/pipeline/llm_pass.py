@@ -8,6 +8,7 @@ vault, never `never_send` items, which `match_vault` excludes).
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -17,6 +18,16 @@ from brandlens_worker.llm.base import Meta
 from brandlens_worker.pipeline.types import Doc, Finding, RedactedDoc, Vault
 
 CONFIRM_TEMPERATURE = 0.7
+
+# Our message sections. Untrusted text (draft, alt text, intent, quotes) must not be able to open or
+# close one: a lookalike bracket replaces `<` on these tag names (P15 prompt-injection hardening).
+_SECTION_TAG = re.compile(
+    r"<\s*(/?)\s*(intent|rules|facts|already_found|draft|alt_text|image_signals)\b", re.IGNORECASE
+)
+
+
+def fence(text: str) -> str:
+    return _SECTION_TAG.sub(r"‹\1\2", text)
 
 
 class LLMFinding(BaseModel):
@@ -67,7 +78,7 @@ class LLMPassResult:
 def _intent_block(intent: dict[str, Any], campaign_name: str) -> str:
     keep = {k: intent.get(k) for k in ("goal", "audience", "cta", "channel")}
     keep["campaign"] = campaign_name
-    return json.dumps(keep, ensure_ascii=False)
+    return fence(json.dumps(keep, ensure_ascii=False))
 
 
 def build_user_message(
@@ -96,7 +107,8 @@ def build_user_message(
             value = json.dumps(f.value, ensure_ascii=False, sort_keys=True)
             fact_lines.append(f"{f.code} | {f.statement} | {value} | {f.required_disclaimer or ''}")
     found = [
-        f"{f.dimension} | {doc.text[f.start : f.end]!r} | {', '.join(f.codes)}" for f in already
+        f"{f.dimension} | {fence(repr(doc.text[f.start : f.end]))} | {', '.join(f.codes)}"
+        for f in already
     ]
     return "\n".join(
         [
@@ -110,7 +122,7 @@ def build_user_message(
             "<already_found>",
             *found,
             "</already_found>",
-            f"<draft>\n{redacted.text}\n</draft>",
+            f"<draft>\n{fence(redacted.text)}\n</draft>",
         ]
     )
 
@@ -129,14 +141,16 @@ def build_vision_message(
     """The review message plus the alt text and the deterministic image signals."""
     base = build_user_message(redacted, intent, vault, retrieved, already, doc)
     found_image = [
-        f"{f.dimension} | {f.quote!r} | {', '.join(f.codes)}" for f in already if f.target != "text"
+        f"{f.dimension} | {fence(repr(f.quote))} | {', '.join(f.codes)}"
+        for f in already
+        if f.target != "text"
     ]
     if found_image:
         base = base.replace("</already_found>", "\n".join([*found_image, "</already_found>"]))
     return "\n".join(
         [
             base,
-            f"<alt_text>{alt_text.strip() if alt_text else ''}</alt_text>",
+            f"<alt_text>{fence(alt_text.strip()) if alt_text else ''}</alt_text>",
             f"<image_signals>{json.dumps(signals, sort_keys=True)}</image_signals>",
         ]
     )

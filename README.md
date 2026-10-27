@@ -68,6 +68,24 @@ To load the same data into the cloud project: `make seed-demo url=<SUPABASE_URL>
 
 Image checks need the Tesseract binary (`brew install tesseract`, or `apt-get install tesseract-ocr`; the worker Docker image includes it). `make eval-vision` re-measures them on the 10 labelled creatives in `fixtures/paywise/creatives/` and writes `apps/worker/eval/vision_report.md`.
 
+## Security and reliability
+
+The full checklist with evidence is in [`docs/SECURITY.md`](docs/SECURITY.md): RLS on every table (pgTAP), no secrets in client bundles, 15-minute signed URLs, private buckets with size limits, prompt-injection tests, a 10-per-minute submit limit enforced in SQL, 4 MB upload limits, and CSP plus security headers.
+
+**Degraded mode.** If both LLM providers fail (bad key, outage, or free-tier 429s after retries), a review still finishes with every deterministic finding (glossary, facts, campaign bleed, claims lexicon, tone heuristics, readability, contrast, ΔE, logo). The run is stored with `degraded = true`, and the draft page says only the deterministic checks ran. With invalid keys on the golden hero, claims and tone rows, blocker recall stayed at 1.00. A provider that stays rate-limited is skipped for 60 s, so queued jobs don't each wait through the same backoff.
+
+**Worker restarts.** Jobs are pgmq messages with a 120 s visibility timeout. If the worker dies mid-job, the message becomes visible again and the next read reruns it. Runs are idempotent: a finished run is skipped, and a rerun replaces its own findings. After 3 reads the message is archived and the run marked failed. `scripts/redelivery_test.py` shows this: an abandoned run was picked up after the timeout and finished.
+
+**Load test** (`scripts/load_test.py`, 2026-10-27, local Supabase plus one local worker with 3 review consumers; 50 concurrent submissions of a 524-word draft with one blocker):
+
+| Run | Finished | Failed | With LLM | Wall | Throughput | P50 | P95 |
+|---|---|---|---|---|---|---|---|
+| Before the router cool-down (35-draft burst; snapshot when 32 had finished, then lost to a local DB reset) | 32 | 0 | 4 | ≥ 14 min | ≤ 2.3/min | mean 7.0 min | max 14.1 min |
+| After the cool-down (50 drafts) | 50 | 0 | 0 | 58 s | 51.6/min | 49.5 s | 57.5 s |
+
+The bottleneck is the free LLM tiers, not the pipeline. Groq and Gemini rate limits were already spent by the day's eval runs, so in the second run every review came back degraded (deterministic findings only, flagged in the UI) and none failed. Without rate limits, an LLM review takes P50 2.9 s and P95 15.2 s (recorded provider latency, `apps/worker/eval/report.md`). A paid tier or a per-org LLM budget is the fix for sustained bursts. We didn't load-test the deployed stack, so the live demo's quota stays intact; pass the cloud session-pooler `DATABASE_URL` to the same script to do it.
+
+
 ## Changes since Round 1
 
 See the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md). It is mirrored here before submission.
@@ -93,6 +111,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P12 | PDF decks: page spans and word boxes, hidden-text detection, page renders, per-chunk LLM pass, embedded-image checks, page overlays and page navigation, 40-page benchmark |
 | P13 | Guideline Clarity Score SQL, insights summary, UNCLEAR-rule example generation and approval flow, activity simulator, insights dashboard, AI-use models list |
 | P14 | Golden set (60 rows, 40 rewrite pairs), in-process eval runner with committed LLM cache, precision gate, `INTENT_COSINE` calibration, latency benchmark, eval CI workflow, precision fixes from the reports |
+| P15 | Security review and `docs/SECURITY.md`, submit rate limit, CSP/headers, upload and storage limits, prompt-injection fence and tests, router cool-down, consumer concurrency, load and restart test scripts, a11y sweep and keyboard test |
 
 ## Licence
 

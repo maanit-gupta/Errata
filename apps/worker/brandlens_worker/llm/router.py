@@ -2,7 +2,9 @@
 
 Each provider gets up to 3 attempts with exponential backoff on 429/5xx/timeouts, honouring
 Retry-After. Non-retryable errors (bad model, invalid output after the validation retry) move
-straight to the fallback.
+straight to the fallback. A provider that is still rate-limited after its retries cools down: calls
+skip it until the cool-down ends (P15 load test: without this, every queued job sat through the
+same backoff before going degraded).
 """
 
 from __future__ import annotations
@@ -10,12 +12,22 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import time
 from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from tenacity import AsyncRetrying, RetryCallState, retry_if_exception, stop_after_attempt
 
-from brandlens_worker.llm.base import DegradedError, Image, LLMProvider, Meta, ProviderError, T
+from brandlens_worker import config
+from brandlens_worker.llm.base import (
+    DegradedError,
+    Image,
+    LLMProvider,
+    Meta,
+    ProviderError,
+    RateLimited,
+    T,
+)
 from brandlens_worker.llm.cache import LLMCache, cache_key
 
 log = logging.getLogger(__name__)
@@ -36,6 +48,8 @@ class LLMRouter:
         max_attempts: int = 3,
         max_wait_s: float = 20.0,
         sleep: Sleep = asyncio.sleep,
+        cooldown_s: float = 0.0,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if not providers:
             raise ValueError("at least one provider is required")
@@ -44,6 +58,9 @@ class LLMRouter:
         self.max_attempts = max_attempts
         self.max_wait_s = max_wait_s
         self._sleep = sleep
+        self.cooldown_s = cooldown_s
+        self._clock = clock
+        self._cooling_until: dict[str, float] = {}
 
     def _wait(self, state: RetryCallState) -> float:
         exc = state.outcome.exception() if state.outcome else None
@@ -84,12 +101,18 @@ class LLMRouter:
         failures: list[str] = []
         for provider, key in zip(self.providers, keys, strict=True):
             model = provider.model_for(vision=bool(vision_images))
+            if self._clock() < self._cooling_until.get(provider.name, 0.0):
+                failures.append(f"{provider.name}: rate-limited (cooling down)")
+                continue
             try:
                 result = await self._call_with_retries(
                     provider, system, user, schema, vision_images, temperature
                 )
             except ProviderError as exc:
                 failures.append(str(exc))
+                if isinstance(exc, RateLimited) and self.cooldown_s > 0:
+                    wait = max(self.cooldown_s, exc.retry_after or 0.0)
+                    self._cooling_until[provider.name] = self._clock() + wait
                 log.warning(
                     "llm provider failed; trying next",
                     extra={"provider": provider.name, "model": model, "error": type(exc).__name__},
@@ -152,4 +175,6 @@ def build_router(settings: Any, *, cache: LLMCache | None = None) -> LLMRouter:
     names = [settings.llm_provider]
     if settings.llm_fallback_provider not in ("none", settings.llm_provider):
         names.append(settings.llm_fallback_provider)
-    return LLMRouter([make(n) for n in names], cache=cache)
+    return LLMRouter(
+        [make(n) for n in names], cache=cache, cooldown_s=config.LLM_RATE_LIMIT_COOLDOWN_S
+    )

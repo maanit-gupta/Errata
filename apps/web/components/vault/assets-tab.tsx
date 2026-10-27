@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { AssetUpload, PaletteEditor } from "./asset-forms";
+import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 type Spec = Record<string, unknown>;
 
@@ -14,8 +15,8 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
   const signed = await Promise.all(
     images.map(async (a) =>
       a.storage_path
-        ? (await supabase.storage.from("assets").createSignedUrl(a.storage_path, 3600)).data
-            ?.signedUrl
+        ? (await supabase.storage.from("assets").createSignedUrl(a.storage_path, SIGNED_URL_TTL_S))
+            .data?.signedUrl
         : null,
     ),
   );

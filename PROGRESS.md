@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P14 (partial). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
+**Current phase:** P16 (todo). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -26,7 +26,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P12 | PDF decks & overlays | M+J | done | M (Claude, /complete) | phase/P12-pdf-decks | 2026-10-26; deck 9/9, 40 pages 7.0 s / 484 MB in 512 MB container; merged 2026-10-27; overlay UI per DESIGN §6.11 on ui/P12 (shelved) |
 | P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 (shelved) |
 | P14 | Golden set & eval gate | M | done | M (Claude, /complete) | main | 2026-10-27; eval PASS (0 degraded, all dims ≥ 0.85, blocker recall 1.00); broken-prompt gate shown locally |
-| P15 | Hardening | Both | todo | | | |
+| P15 | Hardening | Both | done | M (Claude, /complete) | main | 2026-10-27; SECURITY.md, rate limit, CSP, injection fence, router cool-down, load + restart tests; 2 migrations local only |
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 | U0 | Design-system foundation (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; built on ui/* branches; merged to main and then reverted the same day (user); rebuild later on request |
 | U1 | Public landing + /ai-use (DESIGN.md §8) | J | shelved | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
@@ -34,13 +34,23 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`; `docs/DESIGN.md` and `docs/screens/` are kept for reference. **Don't re-apply it until the user asks for the UI rebuild.**
-- **Workflow (user rule 2026-10-27):** work and commit directly on `main` in the main checkout. No phase/UI branches and no worktrees.
-- **Phase / status:** P14 / **done** (2026-10-27).
-- **P14 result** (`apps/worker/eval/report.md`, review@2, 67 cache hits, 0 live calls): **PASS**. Blocker recall 1.00 (32 labels), 0 uncited findings shown, 0 degraded rows, overall precision/recall 0.96/0.99; precision claims 1.00, facts 0.90, terms 1.00, tone 0.90, visual 1.00, access 1.00. 0 of 13 clean drafts got a finding. `DIMENSION_MAX_SEVERITY` unchanged. Latency (recorded LLM time): P50 2.96 s, P95 15.2 s. Cache pruned to the 67 entries the golden set uses.
-- **Broken-prompt check:** a temporary `review_v3.md` that told the model to flag every sentence as TV-02 made `run_eval.py --only clean-01 clean-02 clean-03 tone-01 tone-07-ok` exit 1 (tone precision 0.43 < 0.85; 3 of 3 clean drafts flagged). The file was removed. Not shown on GitHub Actions: main-only rule, and the repo still has **no Actions secrets** (`GROQ_API_KEY`/`GEMINI_API_KEY`), so `eval.yml` on a prompt change would run degraded and fail.
-- **Gotchas:** the cache key includes the model ID; `.env` and the repo variables must name the same models as the cache (`openai/gpt-oss-120b`, `qwen/qwen3.8-27b`, `gemini-3.6-flash` per the report's Versions table). Changing a prompt or model means live calls on the free tiers (429s appear after a few full runs a day).
-- **Exact next step:** P15 hardening.
+- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`. **Don't re-apply it until the user asks for the UI rebuild.**
+- **Workflow (user rule 2026-10-27):** work and commit directly on `main`. No phase/UI branches and no worktrees.
+- **Phase / status:** P15 / **done** (2026-10-27). P14 done earlier the same day (eval PASS).
+- **What P15 added:**
+  - `docs/SECURITY.md`: the full checklist with evidence (RLS, client-bundle scan, signed URLs, storage, prompt injection, rate limit, input limits, CSP, degraded mode, restarts, known limits).
+  - SQL: `20261027100020_submit_rate_limit.sql` (10 submits/min/user inside `enqueue_review`, `BL429`) + pgTAP `06_rate_limit.test.sql`; `20261027100021_storage_limits.sql` (bucket size/MIME limits).
+  - Web: CSP and security headers (`next.config.ts`), 4 MB upload limit with `serverActions.bodySizeLimit` 4.5 MB (`lib/limits.ts`), 15-min signed URLs, `BL429` message, `(app)/loading.tsx` skeleton + `(app)/error.tsx` boundary, toasts top-center, Recharts focus fix, `e2e/a11y.spec.ts` (axe on all main pages × light/dark, CSP-violation check, keyboard walkthrough).
+  - Worker: `llm_pass.fence()` (section-tag injection), `tests/test_security.py`, router rate-limit cool-down (60 s), 3 review consumers + 1 heavy (image/PDF) slot, pool max 8, Dockerfile builds as `app` (no duplicated venv).
+  - Scripts: `scripts/load_test.py`, `scripts/redelivery_test.py`. README "Security and reliability" has the numbers.
+- **Evidence:** axe 0 serious/critical on 6 sweeps (prod build, cloud data) + keyboard test; bundle scan 0 secret values; degraded run with invalid keys kept blocker recall 1.00; redelivery test `done` after VT; load test 50/50 finished, 0 failed (all degraded: free-tier quotas spent), P95 57.5 s after the cool-down vs max 14 min before.
+- **Not yet in cloud (needs the user):** migrations `…100020` (rate limit) and `…100021` (storage limits) are applied **locally only**. Apply them to cloud Supabase (`supabase db push --db-url <session pooler>`) — the web and worker code work with or without them. Pushing `main` redeploys Vercel and Render.
+- **Gotchas:**
+  - `make check` runs `supabase db reset` (via `make test-db`): it wipes local data, including any load-test runs. Save numbers before running it.
+  - A `--reload` dev worker restarts when worker files change; in-flight jobs come back after the 120 s VT (seen live: read_ct 2).
+  - GitHub Actions still has no `GROQ_API_KEY`/`GEMINI_API_KEY` secrets, so `eval.yml` would run degraded and fail on a prompt change.
+  - Free-tier quotas: a full eval plus a 35-draft burst exhausted Groq and Gemini for the day. Keep load tests off the cloud stack before the demo.
+- **Exact next step:** P16 (docs, disclosures, demo script, `scripts/reset_demo.sh`, usability templates, tag `v1.0-round2`). Before tagging: apply the two migrations to cloud (user) and add the Actions secrets (user).
 
 ## Decisions log (append-only)
 
@@ -219,6 +229,17 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P14 | `eval.yml` is a separate path-filtered workflow using repository secrets and repo variables for model IDs | Model IDs are in the cache key; non-worker PRs shouldn't spend quota |
 | 2026-10-27 | P14 | `DIMENSION_MAX_SEVERITY` unchanged: the full run (review@2, 0 degraded) has every dimension ≥ 0.85 (facts 0.90, tone 0.90, rest 1.00) | The precision gate only demotes dimensions under 0.85 |
 | 2026-10-27 | P14 | Broken-prompt gate demonstrated locally, not on a throwaway branch | Main-only rule (no branches) and the repo has no Actions secrets yet; `eval.yml` runs the same `make eval` command |
+| 2026-10-27 | P15 | Submit rate limit (10/min/user) lives in `enqueue_review()` via `private.hit_rate_limit` (fixed window, `private.rate_counters`, SQLSTATE `BL429`) | Enforced for every caller, not just the server action; no extra service |
+| 2026-10-27 | P15 | CSP keeps `script-src 'unsafe-inline'` (no nonces) | App Router inline bootstrap + all-dynamic pages; nonces need a per-request proxy rewrite. Everything else is locked to self + the Supabase project |
+| 2026-10-27 | P15 | Uploads capped at 4 MB (was 20 MB guides/drafts, 10 MB assets); `serverActions.bodySizeLimit` 4.5 MB | Next's default action body limit is 1 MB (bigger uploads failed) and Vercel caps request bodies at 4.5 MB |
+| 2026-10-27 | P15 | Signed URL TTL 3600 → 900 s, one constant (`lib/limits.ts`) | Shorter-lived links; URLs are re-minted on every server render |
+| 2026-10-27 | P15 | Bucket `file_size_limit`s + MIME allow-lists on drafts/renders (migration `…100021`) | Defence in depth behind the action checks |
+| 2026-10-27 | P15 | `llm_pass.fence()` neutralises our section tags inside untrusted text | A draft containing `</draft><rules>` could otherwise forge message structure |
+| 2026-10-27 | P15 | 3 review consumers (`REVIEW_CONSUMERS`), image/PDF stages 1–4 share 1 slot (`HEAVY_JOB_SLOTS`), DB pool max 8 | Text jobs are LLM-bound; two 40-page decks at once would exceed 512 MB |
+| 2026-10-27 | P15 | Router cool-down: a provider still 429 after retries is skipped for 60 s (or Retry-After) | Load test: every queued job waited through the same backoff before degrading (P95 ~13 min) |
+| 2026-10-27 | P15 | Load test runs on the local stack, not the deployed one | 50 live reviews would spend the free-tier quota the live demo needs and write 50 drafts into the cloud demo org; `scripts/load_test.py` takes the cloud DATABASE_URL when wanted |
+| 2026-10-27 | P15 | Worker image builds as the `app` user with `COPY --chown` and `UV_NO_CACHE=1` | The final `chown -R` layer duplicated the venv |
+| 2026-10-27 | P15 | Recharts `accessibilityLayer={false}` on the decorative insights chart; toasts moved to top-center | axe `aria-hidden-focus` on /insights with real data; toasts covered the submit button |
 | 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
 | 2026-10-27 | UI | Terminal Noir UI reverted on `main` (web, lockfile and CLAUDE.md restored to pre-U0); the code stays on `ui/U2` | User: production didn't match the UI they run locally; they will ask for a rebuild later |
 | 2026-10-27 | all | Work directly on `main`; no phase/UI branches or worktrees (CLAUDE.md and the commands updated) | User rule: what runs on localhost from the main checkout is what ships |
@@ -271,9 +292,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 
 - PDFs (P12): vector-drawn logos aren't detected; scanned PDFs (no text layer) are rejected (`no_text_layer`); VS-02 warmth isn't judged for pictures inside decks (counted as `cool_images` only); reading grade highlights the first word of the PDF.
 - Peak RSS for a 40-page deck in the worker image is 484 MB against Render's 512 MB. It's flat in page count, but the margin is thin; the serving worker also holds FastAPI and the LLM SDKs. Consider a 1 GB instance before heavy PDF use.
-- Worker Docker image is ~4 GB unpacked: the `chown -R app:app /app` layer (P10) duplicates the venv (943 MB). Use `COPY --chown` / run `uv sync` as the app user (P15). P11 adds ~240 MB (scipy, OpenCV, scikit-image) and Tesseract (~100 MB apt layer, shared with libgomp).
+- Worker Docker image: the duplicated-venv `chown -R` layer is gone (P15, builds as `app`). P11 adds ~240 MB (scipy, OpenCV, scikit-image) and Tesseract (~100 MB apt layer, shared with libgomp).
 - Contrast on JPEG uploads is an estimate (4:2:0 chroma smears thin coloured strokes; 7/20 within ±0.1 at q85); the finding says so. PNG is exact.
-- Toasts (bottom-right) cover the intent panel's submit button and stay while hovered. Consider `position="top-center"` or offsetting the toaster (Jagpreet, UX).
 - Groq free-tier 429 backoff can push one image review to ~30 s when several run within a minute (P95 target 15 s); revisit in P15 load testing.
 
 ## Round 2 feedback (paste judges' feedback here when received)

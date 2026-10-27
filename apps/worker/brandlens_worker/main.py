@@ -114,7 +114,7 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
     from brandlens_worker.queue import PgmqBackend, consume
     from brandlens_worker.tracing import Tracer
 
-    pool = create_pool(settings.database_url.get_secret_value())
+    pool = create_pool(settings.database_url.get_secret_value(), max_size=config.DB_POOL_MAX)
     await pool.open(wait=False)
     state["pool"] = pool
     tracer = Tracer.from_settings(settings, enabled=settings.env.lower() != "test")
@@ -123,7 +123,8 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
 
     registry = build_registry()
     backend = PgmqBackend(pool)
-    for queue in (settings.pgmq_queue, config.VAULT_QUEUE):
+    consumers = [settings.pgmq_queue] * config.REVIEW_CONSUMERS + [config.VAULT_QUEUE]
+    for i, queue in enumerate(consumers):
         state["tasks"].append(
             asyncio.create_task(
                 consume(
@@ -134,7 +135,7 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
                     pool=pool,
                     services=services,
                 ),
-                name=f"consume:{queue}",
+                name=f"consume:{queue}:{i}",
             )
         )
 

@@ -15,6 +15,7 @@ import { signedPages } from "@/lib/drafts/pages";
 import { spanBox, spanPage } from "@/lib/drafts/span";
 import { createClient } from "@/lib/supabase/server";
 import { can as canDo } from "@/lib/workflow/permissions";
+import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 export const metadata = { title: "Review" };
 
@@ -159,8 +160,11 @@ export default async function ReviewContentPage({ params }: PageProps<"/review/[
   // Image versions render from a short-lived signed URL (private bucket, SPEC §3).
   const imageUrl =
     current?.format === "image" && current.storage_path
-      ? ((await supabase.storage.from("drafts").createSignedUrl(current.storage_path, 3600)).data
-          ?.signedUrl ?? null)
+      ? ((
+          await supabase.storage
+            .from("drafts")
+            .createSignedUrl(current.storage_path, SIGNED_URL_TTL_S)
+        ).data?.signedUrl ?? null)
       : null;
   const altText = (current?.intent as { alt_text?: string } | null)?.alt_text;
   const markers = findings.flatMap((f) => {

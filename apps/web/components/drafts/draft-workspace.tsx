@@ -9,6 +9,7 @@ import { StateBadge, type ContentState } from "@/components/state-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 import { revise } from "@/lib/review/actions";
 import { CHANNELS, intentSchema, type Intent } from "@/lib/drafts/intent";
 import {
@@ -284,6 +285,10 @@ export function DraftWorkspace({
     setErrors({});
     start(async () => {
       let upload: FormData | undefined;
+      if (file && file.size > MAX_UPLOAD_BYTES) {
+        toast.error(`Files must be under ${MAX_UPLOAD_LABEL}.`);
+        return;
+      }
       if (file) {
         upload = new FormData();
         upload.set("file", file);

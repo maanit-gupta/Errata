@@ -93,6 +93,43 @@ async def test_both_fail_raises_degraded() -> None:
     assert "groq" in str(exc.value) and "gemini" in str(exc.value)
 
 
+async def test_rate_limited_provider_cools_down_then_recovers() -> None:
+    now = [0.0]
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429")] * 3 + [GOOD])
+    fallback = ScriptedProvider("gemini", [GOOD, GOOD])
+    r = LLMRouter(
+        [primary, fallback],
+        cache=LLMCache(enabled=False),
+        sleep=Sleeps(),
+        cooldown_s=60,
+        clock=lambda: now[0],
+    )
+    assert (await r.generate("s", "u", Answer, prompt_version="smoke@1"))[1].provider == "gemini"
+    now[0] = 30  # still cooling: the next job goes straight to the fallback
+    assert (await r.generate("s", "u2", Answer, prompt_version="smoke@1"))[1].provider == "gemini"
+    assert primary.calls == 3
+    now[0] = 61  # cool-down over: the primary is tried again
+    assert (await r.generate("s", "u3", Answer, prompt_version="smoke@1"))[1].provider == "groq"
+    assert primary.calls == 4
+
+
+async def test_all_providers_cooling_degrades_without_calls() -> None:
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429", retry_after=90)] * 3)
+    fallback = ScriptedProvider("gemini", [RateLimited("gemini", "429")] * 3)
+    r = LLMRouter(
+        [primary, fallback],
+        cache=LLMCache(enabled=False),
+        sleep=Sleeps(),
+        cooldown_s=60,
+        clock=lambda: 0.0,
+    )
+    with pytest.raises(DegradedError):
+        await r.generate("s", "u", Answer, prompt_version="smoke@1")
+    with pytest.raises(DegradedError, match="cooling down"):
+        await r.generate("s", "u2", Answer, prompt_version="smoke@1")
+    assert (primary.calls, fallback.calls) == (3, 3)
+
+
 async def test_validation_retry_appends_error_and_succeeds() -> None:
     provider = RawProvider(
         ['{"brand": "PayWise"}', '```json\n{"brand": "PayWise", "word_count": 7}\n```']

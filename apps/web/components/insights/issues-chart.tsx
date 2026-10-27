@@ -15,7 +15,14 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
   return (
     <div aria-hidden className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, bottom: 4, left: 8 }}>
+        {/* accessibilityLayer off: Recharts would make the aria-hidden SVG focusable (axe
+            aria-hidden-focus); keyboard and screen-reader users get the table instead. */}
+        <BarChart
+          data={data}
+          layout="vertical"
+          margin={{ top: 4, right: 40, bottom: 4, left: 8 }}
+          accessibilityLayer={false}
+        >
           <XAxis type="number" hide domain={[0, "dataMax"]} />
           <YAxis
             type="category"
