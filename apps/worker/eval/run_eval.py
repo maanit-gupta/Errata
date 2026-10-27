@@ -722,7 +722,7 @@ def main() -> int:
     }
     out_json = args.out.with_suffix(".json")
     out_json.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n")
-    print(f"eval: wrote {args.out.relative_to(WORKER)}")
+    print(f"eval: wrote {args.out}")
     if args.prune:
         print(f"eval: pruned {cache.prune()} unused cache entries")
     for dim, row in m["dimensions"].items():
