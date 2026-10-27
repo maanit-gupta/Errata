@@ -19,19 +19,25 @@ export function VersionDiff({
   const parts = diffWords(previous, current);
   return (
     <div className="space-y-3">
-      <p className="text-muted-foreground text-sm">
+      <p className="text-fg-muted text-sm">
         Version {previousN} → version {currentN}.{" "}
-        <span className="text-foreground font-medium">Removed</span> text is struck through;{" "}
-        <span className="text-foreground font-medium">added</span> text is underlined.
+        <span className="text-fg font-medium">Removed</span> text is struck through;{" "}
+        <span className="text-fg font-medium">added</span> text is underlined.
       </p>
-      <p className="border-border bg-card rounded-md border p-3 leading-7 whitespace-pre-wrap">
+      <p className="border-line bg-code rounded-md border p-4 leading-7 whitespace-pre-wrap">
         {parts.map((p, i) =>
           p.added ? (
-            <ins key={i} className="bg-success/15 decoration-success underline decoration-2">
+            <ins key={i} className="bg-success-bg decoration-success underline decoration-2">
+              <span aria-hidden className="text-success font-mono text-xs">
+                +
+              </span>
               {p.value}
             </ins>
           ) : p.removed ? (
-            <del key={i} className="bg-blocker/10 text-muted-foreground decoration-accent-text">
+            <del key={i} className="bg-blocker-bg text-fg-muted decoration-blocker">
+              <span aria-hidden className="text-blocker font-mono text-xs">
+                −
+              </span>
               {p.value}
             </del>
           ) : (
@@ -41,12 +47,12 @@ export function VersionDiff({
       </p>
       {resolved.length ? (
         <div>
-          <h3 className="mb-1 font-sans text-sm font-medium">Findings these changes resolved</h3>
+          <h3 className="mono-label text-fg-faint mb-1.5">Findings these changes resolved</h3>
           <ul className="space-y-1 text-sm">
             {resolved.map((r) => (
               <li key={r.id}>
-                <span className="font-mono text-xs">{r.codes}</span> “{r.quote}” ·{" "}
-                <span className="text-muted-foreground">{r.status}</span>
+                <span className="mono-id text-accent-soft">resolves {r.codes}</span> “{r.quote}” ·{" "}
+                <span className="text-fg-muted">{r.status}</span>
               </li>
             ))}
           </ul>

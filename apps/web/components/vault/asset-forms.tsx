@@ -2,7 +2,7 @@
 
 import { useActionState, useId, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { fieldClass, Input } from "@/components/ui/input";
 import { savePalette, uploadAsset, type ActionResult } from "@/lib/vault/actions";
 import { toastResult, useActionToast } from "./use-action-toast";
 
@@ -22,7 +22,7 @@ export function AssetUpload() {
           name="kind"
           value={kind}
           onChange={(e) => setKind(e.target.value)}
-          className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
+          className={fieldClass}
         >
           <option value="logo">Logo</option>
           <option value="reference_image">Reference image</option>
@@ -44,7 +44,7 @@ export function AssetUpload() {
           type="file"
           accept="image/png,image/jpeg,image/webp,image/svg+xml"
           required
-          className="block text-sm"
+          className="file:border-control file:text-fg block text-sm file:mr-3 file:rounded-md file:border file:bg-transparent file:px-3 file:py-1.5"
         />
       </div>
       {kind === "logo" ? (
@@ -90,6 +90,7 @@ export function PaletteEditor({
   const id = useId();
   const [name, setName] = useState(palette?.name ?? "Brand palette");
   const [colours, setColours] = useState<Colour[]>(
+    // eslint-disable-next-line no-restricted-syntax -- palette data default, not a UI colour
     palette?.colours ?? [{ name: "Ink", hex: "#141414" }],
   );
   const [maxDeltaE, setMaxDeltaE] = useState(palette?.max_delta_e ?? 10);
@@ -120,63 +121,82 @@ export function PaletteEditor({
           <label htmlFor={`${id}-de`} className="text-sm font-medium">
             Max colour difference (ΔE CIEDE2000)
           </label>
-          <Input
-            id={`${id}-de`}
-            type="number"
-            min={1}
-            max={50}
-            value={maxDeltaE}
-            onChange={(e) => setMaxDeltaE(Number(e.target.value))}
-          />
+          <div className="flex items-center gap-3">
+            <input
+              id={`${id}-de`}
+              type="range"
+              min={1}
+              max={50}
+              value={maxDeltaE}
+              onChange={(e) => setMaxDeltaE(Number(e.target.value))}
+              className="h-9 flex-1 accent-(--accent)"
+            />
+            <output htmlFor={`${id}-de`} className="mono-id w-14 text-right">
+              ΔE {maxDeltaE}
+            </output>
+          </div>
         </div>
       </div>
       <ul className="space-y-2">
-        {colours.map((c, i) => (
-          <li key={i} className="flex flex-wrap items-center gap-2">
-            <span
-              aria-hidden
-              className="border-border size-8 rounded-md border"
-              style={{ background: /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : "transparent" }}
-            />
-            <label className="sr-only" htmlFor={`${id}-cn-${i}`}>
-              Colour {i + 1} name
-            </label>
-            <Input
-              id={`${id}-cn-${i}`}
-              className="w-40"
-              value={c.name}
-              onChange={(e) => update(i, { name: e.target.value })}
-            />
-            <label className="sr-only" htmlFor={`${id}-ch-${i}`}>
-              Colour {i + 1} hex
-            </label>
-            <Input
-              id={`${id}-ch-${i}`}
-              className="w-28 font-mono"
-              value={c.hex}
-              onChange={(e) => update(i, { hex: e.target.value })}
-              pattern="#[0-9a-fA-F]{6}"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setColours((cs) => cs.filter((_, j) => j !== i))}
-            >
-              Remove <span className="sr-only">colour {c.name}</span>
-            </Button>
-          </li>
-        ))}
+        {colours.map((c, i) => {
+          const valid = /^#[0-9a-f]{6}$/i.test(c.hex);
+          return (
+            <li key={i} className="flex flex-wrap items-center gap-2">
+              <span
+                aria-hidden
+                className="border-line-strong size-9 rounded-md border"
+                style={{ background: /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : "transparent" }}
+              />
+              <label className="sr-only" htmlFor={`${id}-cn-${i}`}>
+                Colour {i + 1} name
+              </label>
+              <Input
+                id={`${id}-cn-${i}`}
+                className="w-40"
+                value={c.name}
+                onChange={(e) => update(i, { name: e.target.value })}
+              />
+              <label className="sr-only" htmlFor={`${id}-ch-${i}`}>
+                Colour {i + 1} hex
+              </label>
+              <Input
+                id={`${id}-ch-${i}`}
+                className="w-28 font-mono"
+                value={c.hex}
+                onChange={(e) => update(i, { hex: e.target.value })}
+                pattern="#[0-9a-fA-F]{6}"
+                aria-invalid={valid ? undefined : true}
+                aria-describedby={valid ? undefined : `${id}-ch-${i}-err`}
+              />
+              {valid ? null : (
+                <span id={`${id}-ch-${i}-err`} className="text-danger text-xs">
+                  Use #RRGGBB
+                </span>
+              )}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setColours((cs) => cs.filter((_, j) => j !== i))}
+              >
+                Remove <span className="sr-only">colour {c.name}</span>
+              </Button>
+            </li>
+          );
+        })}
       </ul>
       <div className="flex gap-2">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           onClick={() => setColours((cs) => [...cs, { name: "", hex: "#" }])}
         >
           Add colour
         </Button>
-        <Button type="submit" disabled={pending}>
+        <Button
+          type="submit"
+          disabled={pending || colours.some((c) => !/^#[0-9a-f]{6}$/i.test(c.hex))}
+        >
           Save palette
         </Button>
       </div>

@@ -1,30 +1,45 @@
-import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono, Newsreader } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
 import { Toaster } from "sonner";
+import { Providers } from "@/components/providers";
 import { serverEnv } from "@/lib/env";
+import { getThemeChoice } from "@/lib/theme";
 import "./globals.css";
 
 // Fail the build / server render if any env var is missing or malformed.
 serverEnv();
-
-const display = Newsreader({ variable: "--font-display", subsets: ["latin"], display: "swap" });
-const body = DM_Sans({ variable: "--font-body", subsets: ["latin"], display: "swap" });
-const code = JetBrains_Mono({ variable: "--font-code", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "BrandLens", template: "%s · BrandLens" },
   description: "Pre-publication brand governance with cited findings.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
+};
+
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = await getThemeChoice();
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${code.variable} h-full antialiased`}
+      data-theme={theme === "system" ? undefined : theme}
+      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        {children}
-        <Toaster position="top-center" richColors closeButton />
+        <Providers>{children}</Providers>
+        <Toaster
+          position="top-right"
+          offset={{ top: 64 }}
+          theme={theme === "system" ? "system" : theme}
+          closeButton
+          toastOptions={{ classNames: { title: "text-sm", description: "text-fg-muted text-xs" } }}
+        />
       </body>
     </html>
   );

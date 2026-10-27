@@ -1,9 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { clientEnv } from "@/lib/env";
+import { SKIP_LANDING_COOKIE } from "@/lib/ui-prefs";
 import type { Database } from "@/types/database";
 
 const PUBLIC_PATHS = ["/login"];
+/** Open to everyone, signed in or not: the landing page, public AI-use page and the dev kitchen sink. */
+const OPEN_PATHS = ["/ai-use", "/dev"];
 
 /**
  * Refresh the Supabase session cookie on every request and apply the optimistic auth redirects:
@@ -39,6 +42,16 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isOpen =
+    pathname === "/" || OPEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+
+  if (isOpen) {
+    // "Skip this page next time?" (DESIGN.md §8): signed-in visitors who opted out go to the app.
+    if (pathname === "/" && signedIn && request.cookies.get(SKIP_LANDING_COOKIE)?.value === "1") {
+      return redirectKeepingCookies(request, response, "/drafts");
+    }
+    return response;
+  }
 
   if (!signedIn && !isPublic) {
     return redirectKeepingCookies(request, response, "/login", pathname);

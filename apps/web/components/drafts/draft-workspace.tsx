@@ -5,9 +5,17 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { StateBadge, type ContentState } from "@/components/state-badge";
+import { DegradedBanner } from "@/components/brand/degraded-banner";
+import { EmptyState } from "@/components/brand/empty-state";
+import { ErrorPanel } from "@/components/brand/error-panel";
+import { RunPanel, type RunStatus } from "@/components/brand/run-panel";
+import { Spinner } from "@/components/brand/spinner";
+import { StateBadge, type ContentState } from "@/components/brand/state-badge";
+import { WordCounter } from "@/components/brand/word-counter";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { fieldClass, Input } from "@/components/ui/input";
+import { countWords, MAX_WORDS, PDF_MAX_PAGES } from "@/lib/drafts/limits";
+import { cn } from "@/lib/utils";
 import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 import { revise } from "@/lib/review/actions";
@@ -27,8 +35,15 @@ import type { PdfPageView } from "@/lib/drafts/pages";
 const SEVERITY_ORDER = { blocker: 0, warning: 1, suggestion: 2 } as const;
 
 type Props = {
-  content: { id: string; title: string; state: ContentState; channel: string; campaignId: string };
-  campaigns: { id: string; name: string }[];
+  content: {
+    id: string;
+    title: string;
+    state: ContentState;
+    routeTo?: string | null;
+    channel: string;
+    campaignId: string;
+  };
+  campaigns: { id: string; name: string; status?: string }[];
   version: {
     id: string;
     n: number;
@@ -36,7 +51,16 @@ type Props = {
     intent: Partial<Intent>;
     format: string;
   } | null;
-  run: { id: string; status: string; degraded: boolean; error_code: string | null } | null;
+  run: {
+    id: string;
+    status: string;
+    degraded: boolean;
+    error_code: string | null;
+    provider: string | null;
+    model: string | null;
+    prompt: string | null;
+    timings: Record<string, unknown> | null;
+  } | null;
   findings: FindingView[];
   /** Signed URL of the current version's image (image versions only). */
   imageUrl: string | null;
@@ -44,6 +68,8 @@ type Props = {
   pdfPages?: PdfPageView[];
   canEdit: boolean;
   canAct: boolean;
+  /** Agency viewers: citations show rule summaries only. */
+  summaryView?: boolean;
 };
 
 export function DraftWorkspace({
@@ -56,6 +82,7 @@ export function DraftWorkspace({
   pdfPages = [],
   canEdit,
   canAct,
+  summaryView = false,
 }: Props) {
   const router = useRouter();
   const id = useId();
@@ -67,6 +94,20 @@ export function DraftWorkspace({
   // resulting mouseleave must not clear the box it just pointed at.
   const [pinned, setPinned] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  // Reject over-long PDFs before uploading (SPEC §14); the worker enforces it too.
+  const pickFile = async (f: File | null) => {
+    setFileError(null);
+    setFile(f);
+    if (f?.type === "application/pdf") {
+      const text = new TextDecoder("latin1").decode(await f.arrayBuffer());
+      const pages = (text.match(/\/Type\s*\/Page(?!s)/g) ?? []).length;
+      if (pages > PDF_MAX_PAGES) {
+        setFile(null);
+        setFileError(`This PDF has ${pages} pages; the limit is ${PDF_MAX_PAGES}.`);
+      }
+    }
+  };
   const [errors, setErrors] = useState<Partial<Record<keyof Intent, string>>>({});
   const [intent, setIntent] = useState<Partial<Intent>>({
     goal: "",
@@ -77,7 +118,9 @@ export function DraftWorkspace({
     campaign_id: version?.intent.campaign_id ?? content.campaignId,
   });
 
+  const [words, setWords] = useState(() => countWords(version?.body ?? ""));
   const editor = useEditor({
+    onUpdate: ({ editor: e }) => setWords(countWords(docToText(e.state.doc))),
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -198,6 +241,39 @@ export function DraftWorkspace({
     document.getElementById(`${id}-editor`)?.scrollIntoView({ block: "start" });
   };
 
+  // DESIGN.md §7.4: j/k move between findings; a/e/x act on the focused one when allowed.
+  useEffect(() => {
+    const onKey = (e: Event) => {
+      const key = (e as CustomEvent<string>).detail;
+      const cards = [...document.querySelectorAll<HTMLElement>("li[data-finding]")];
+      if (!cards.length) return;
+      const current = cards.findIndex((c) => c.contains(document.activeElement));
+      if (key === "j" || key === "k") {
+        const next =
+          current < 0 ? 0 : (current + (key === "j" ? 1 : -1) + cards.length) % cards.length;
+        cards[next].querySelector<HTMLElement>("h3 button")?.focus();
+        return;
+      }
+      if (current < 0) return;
+      const label = { a: /^Accept fix$|^Mark fixed/, e: /^Edit$/, x: /^Dismiss$/ }[key];
+      if (!label) return;
+      const card = cards[current];
+      const header = card.querySelector<HTMLElement>('h3 button[aria-expanded="false"]');
+      header?.click();
+      requestAnimationFrame(() => {
+        const btn = [...card.querySelectorAll<HTMLButtonElement>("button")].find(
+          (b) =>
+            label.test(b.textContent?.trim() ?? "") &&
+            !b.disabled &&
+            b.getAttribute("aria-disabled") !== "true",
+        );
+        btn?.click();
+      });
+    };
+    window.addEventListener("bl-finding-key", onKey);
+    return () => window.removeEventListener("bl-finding-key", onKey);
+  }, []);
+
   const removeHighlight = (fid: string) => {
     if (!editor) return;
     const ranges = (findingsKey.getState(editor.state)?.ranges ?? []).filter((r) => r.id !== fid);
@@ -307,7 +383,54 @@ export function DraftWorkspace({
     });
   };
 
-  const field = (key: keyof Intent, label: string, placeholder = "") => (
+  const overLimit = !fileVersion && !file && words > MAX_WORDS;
+  const missing = (
+    [
+      ["goal", "goal"],
+      ["audience", "audience"],
+      ["cta", "call to action"],
+      ["channel", "channel"],
+      ["campaign_id", "campaign"],
+    ] as const
+  )
+    .filter(([k]) => !String(intent[k] ?? "").trim())
+    .map(([, label]) => label);
+  const campaign = campaigns.find((c) => c.id === intent.campaign_id);
+  const channelLabel = CHANNELS.find((c) => c.value === (intent.channel ?? content.channel))?.label;
+  const kindLabel = pdfVersion ? "PDF" : imageVersion ? "Image" : "Draft";
+  const counts = {
+    blocker: visible.filter((f) => f.status === "open" && f.severity === "blocker").length,
+    warning: visible.filter((f) => f.status === "open" && f.severity === "warning").length,
+    suggestion: visible.filter((f) => f.status === "open" && f.severity === "suggestion").length,
+  };
+  const submitDisabled = pending || checking || resubmitBlocked || missing.length > 0 || overLimit;
+  const submitWhy = checking
+    ? "A check is running."
+    : missing.length
+      ? `Intent is required. Missing: ${missing.join(", ")}.`
+      : overLimit
+        ? `This draft has ${words.toLocaleString("en-IN")} words; the limit is ${MAX_WORDS.toLocaleString("en-IN")}.`
+        : resubmitBlocked
+          ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} still open: accept, edit, dismiss with a reason, or route each one.`
+          : (imageVersion || pdfVersion) && !file
+            ? `Upload the corrected ${pdfVersion ? "PDF" : "image"}, then resubmit. Nothing is ever published automatically.`
+            : "Saves a new version and checks it. Nothing is ever published automatically.";
+  const submitLabel =
+    content.state === "needs_revision" ? "Resubmit for check" : "Submit for check";
+
+  const submitButton = (
+    <Button
+      size="lg"
+      disabled={submitDisabled}
+      focusableWhenDisabled
+      onClick={submit}
+      aria-describedby={`${id}-submit-help`}
+    >
+      {pending ? "Submitting…" : submitLabel}
+    </Button>
+  );
+
+  const field = (key: keyof Intent, label: string, help: string, placeholder = "") => (
     <div className="space-y-1">
       <label htmlFor={`${id}-${key}`} className="text-sm font-medium">
         {label}
@@ -318,30 +441,157 @@ export function DraftWorkspace({
         placeholder={placeholder}
         disabled={!canEdit}
         aria-invalid={errors[key] ? true : undefined}
-        aria-describedby={errors[key] ? `${id}-${key}-err` : undefined}
+        aria-describedby={`${id}-${key}-help${errors[key] ? ` ${id}-${key}-err` : ""}`}
         onChange={(e) => setIntent((s) => ({ ...s, [key]: e.target.value }))}
       />
+      <p id={`${id}-${key}-help`} className="text-fg-faint text-xs">
+        {help}
+      </p>
       {errors[key] ? (
-        <p id={`${id}-${key}-err`} className="text-accent-text text-xs">
+        <p id={`${id}-${key}-err`} className="text-danger text-xs">
           {errors[key]}
         </p>
       ) : null}
     </div>
   );
 
+  const intentPanel = (
+    <section
+      aria-labelledby={`${id}-intent`}
+      className="border-line bg-elevated space-y-4 rounded-md border p-4"
+    >
+      <h2 id={`${id}-intent`} className="mono-label text-accent-soft">
+        Intent · required
+      </h2>
+      {field("goal", "Goal", "What should this content achieve?", "webinar sign-ups")}
+      {field(
+        "audience",
+        "Audience",
+        "Who is this for? e.g. first-time investors",
+        "first-time investors",
+      )}
+      {field("cta", "Call to action", "Rewrites must keep it.", "Register now")}
+      <div className="space-y-1">
+        <label htmlFor={`${id}-channel`} className="text-sm font-medium">
+          Channel
+        </label>
+        <select
+          id={`${id}-channel`}
+          disabled={!canEdit}
+          value={intent.channel ?? ""}
+          onChange={(e) => setIntent((s) => ({ ...s, channel: e.target.value }))}
+          className={fieldClass}
+        >
+          {CHANNELS.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={`${id}-campaign`} className="text-sm font-medium">
+          Campaign
+        </label>
+        <select
+          id={`${id}-campaign`}
+          disabled
+          value={intent.campaign_id ?? ""}
+          className={fieldClass}
+          aria-describedby={`${id}-campaign-help`}
+        >
+          {campaigns.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} · {(c.status ?? "").toUpperCase()}
+            </option>
+          ))}
+        </select>
+        <p
+          id={`${id}-campaign-help`}
+          className={cn("text-xs", campaign?.status === "ended" ? "text-warning" : "text-fg-faint")}
+        >
+          {campaign?.status === "ended"
+            ? "This campaign has ended. Its facts may be out of date."
+            : "Facts are checked against this campaign."}
+        </p>
+      </div>
+      <div className="space-y-1">
+        <label htmlFor={`${id}-notes`} className="text-sm font-medium">
+          Notes <span className="text-fg-faint font-normal">(optional)</span>
+        </label>
+        <textarea
+          id={`${id}-notes`}
+          rows={2}
+          value={intent.notes ?? ""}
+          disabled={!canEdit}
+          onChange={(e) => setIntent((s) => ({ ...s, notes: e.target.value }))}
+          className={fieldClass}
+        />
+      </div>
+      {showAlt ? (
+        <div className="space-y-1">
+          <label htmlFor={`${id}-alt`} className="text-sm font-medium">
+            Alt text
+          </label>
+          <textarea
+            id={`${id}-alt`}
+            rows={3}
+            value={intent.alt_text ?? ""}
+            disabled={!canEdit}
+            aria-describedby={`${id}-alt-help`}
+            onChange={(e) => setIntent((s) => ({ ...s, alt_text: e.target.value }))}
+            className={fieldClass}
+          />
+          <p id={`${id}-alt-help`} className="text-fg-faint text-xs">
+            What the image says, including its call to action. Missing alt text fails WCAG 1.1.1.
+          </p>
+        </div>
+      ) : null}
+    </section>
+  );
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-      <div className="min-w-0 space-y-6">
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-center gap-3">
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="mono-label text-fg-faint">{campaign?.name ?? "Draft"}</p>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-[1.75rem] leading-tight tracking-[-0.015em]">{content.title}</h1>
+            <StateBadge state={content.state} routeTo={content.routeTo} />
+            {version ? <span className="mono-id text-fg-faint">v{version.n}</span> : null}
+          </div>
+        </div>
+        {canEdit && content.state !== "needs_revision" ? submitButton : null}
+      </header>
+      {canEdit && content.state !== "needs_revision" ? (
+        <p id={`${id}-submit-help`} className="text-fg-muted -mt-2 text-xs" aria-live="polite">
+          {submitWhy}
+        </p>
+      ) : null}
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[280px_minmax(0,1fr)_400px]">
+        <div className="lg:col-span-2 xl:sticky xl:top-20 xl:col-span-1 xl:self-start">
+          {intentPanel}
+        </div>
+
         <section
           aria-labelledby={`${id}-editor`}
-          className="border-border bg-card rounded-lg border"
+          className="border-line bg-code min-w-0 self-start rounded-md border"
         >
-          <div className="border-border flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2">
-            <h2 id={`${id}-editor`} className="font-sans text-sm font-medium">
-              {pdfVersion ? "PDF" : imageVersion ? "Image" : "Draft"}{" "}
-              {version ? `· version ${version.n}` : ""}
+          <div className="border-line flex flex-wrap items-center gap-2 border-b px-3 py-2">
+            <span aria-hidden className="flex gap-1">
+              <span className="bg-blocker size-2" />
+              <span className="bg-line-strong size-2" />
+              <span className="bg-line-strong size-2" />
+            </span>
+            <h2 id={`${id}-editor`} className="mono-label text-fg-muted">
+              {kindLabel} {version ? `· version ${version.n}` : ""}
+              <span className="text-fg-faint">
+                {channelLabel ? ` · ${channelLabel}` : ""}
+                {campaign ? ` · ${campaign.name}` : ""}
+                {run && !run.degraded && run.status === "done" ? " · LLM-assisted" : ""}
+              </span>
             </h2>
-            <StateBadge state={content.state} />
           </div>
           {pdfVersion ? (
             <div className="px-4 py-3">
@@ -360,11 +610,15 @@ export function DraftWorkspace({
                   onFocus={focus}
                 />
               ) : (
-                <p className="text-muted-foreground text-sm">
-                  {checking
-                    ? "Reading the PDF and rendering its pages…"
-                    : "The PDF's pages appear here after its check."}
-                </p>
+                <div className="py-10">
+                  {checking ? (
+                    <Spinner centered label="Reading the PDF and rendering its pages…" />
+                  ) : (
+                    <p className="text-fg-muted text-center text-sm">
+                      The PDF&apos;s pages appear here after its check.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           ) : imageVersion ? (
@@ -378,75 +632,141 @@ export function DraftWorkspace({
               />
             </div>
           ) : (
-            <div className="draft-editor px-4 py-3">
+            <div className="draft-editor px-5 py-4">
               <EditorContent editor={editor} />
             </div>
           )}
-          {canEdit ? (
-            <div className="border-border border-t px-4 py-3 text-sm">
-              <label htmlFor={`${id}-file`} className="font-medium">
-                {imageVersion
-                  ? "Upload the corrected image (PNG, JPEG or WebP)"
-                  : pdfVersion
-                    ? "Upload the corrected PDF"
-                    : "Or upload a file (DOCX, PDF or image)"}
-              </label>
-              <input
-                id={`${id}-file`}
-                type="file"
-                accept=".docx,.pdf,.png,.jpg,.jpeg,.webp"
-                className="mt-1 block"
-                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              />
-              {fileKind === "pdf" ? (
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Up to 40 pages. Every text rule runs on the PDF&apos;s text, plus contrast, hidden
-                  text, link text, the logo and the pictures on each page.
-                </p>
-              ) : fileKind === "image" ? (
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Images are checked for logo use, palette, text contrast, hidden fine print, alt
-                  text and image style, plus every text rule on the words in the picture.
-                </p>
-              ) : null}
-            </div>
-          ) : null}
+          <div className="border-line flex flex-wrap items-start justify-between gap-3 border-t px-4 py-2.5">
+            {!fileVersion ? <WordCounter count={words} max={MAX_WORDS} /> : <span />}
+            {canEdit ? (
+              <div className="min-w-0 text-sm">
+                <label htmlFor={`${id}-file`} className="text-fg-muted text-xs">
+                  {imageVersion
+                    ? "Upload the corrected image (PNG, JPEG or WebP)"
+                    : pdfVersion
+                      ? "Upload the corrected PDF"
+                      : "Or upload a file (DOCX, PDF or image)"}
+                </label>
+                <input
+                  id={`${id}-file`}
+                  type="file"
+                  accept=".docx,.pdf,.png,.jpg,.jpeg,.webp"
+                  className="file:border-control file:text-fg mt-1 block max-w-full text-xs file:mr-2 file:rounded-md file:border file:bg-transparent file:px-2 file:py-1"
+                  onChange={(e) => void pickFile(e.target.files?.[0] ?? null)}
+                  aria-describedby={fileError ? `${id}-file-err` : undefined}
+                  aria-invalid={fileError ? true : undefined}
+                />
+                {fileError ? (
+                  <p id={`${id}-file-err`} role="alert" className="text-danger mt-1 text-xs">
+                    {fileError}
+                  </p>
+                ) : null}
+                {fileKind === "pdf" ? (
+                  <p className="text-fg-faint mt-1 text-xs">
+                    Up to {PDF_MAX_PAGES} pages. Text rules run on the PDF&apos;s text, plus
+                    contrast, hidden text, link text, the logo and pictures.
+                  </p>
+                ) : fileKind === "image" ? (
+                  <p className="text-fg-faint mt-1 text-xs">
+                    Checked for logo use, palette, text contrast, hidden fine print, alt text and
+                    image style, plus every text rule on the words in it.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </section>
 
-        <section aria-labelledby={`${id}-findings`} aria-live="polite">
-          <h2 id={`${id}-findings`} className="font-heading mb-3 text-xl">
-            Findings{" "}
+        <section
+          aria-labelledby={`${id}-findings`}
+          className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:self-start"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <h2 id={`${id}-findings`} className="text-xl">
+              Findings
+              {visible.length ? (
+                <span className="mono-id text-fg-faint ml-2">({visible.length})</span>
+              ) : null}
+            </h2>
             {visible.length ? (
-              <span className="text-muted-foreground font-mono text-sm">({visible.length})</span>
+              <p className="mono-id flex gap-2">
+                <span className="sr-only">
+                  {counts.blocker} blockers, {counts.warning} warnings, {counts.suggestion}{" "}
+                  suggestions open
+                </span>
+                <span aria-hidden className="text-blocker">
+                  {counts.blocker}B
+                </span>
+                <span aria-hidden className="text-warning">
+                  {counts.warning}W
+                </span>
+                <span aria-hidden className="text-suggestion">
+                  {counts.suggestion}S
+                </span>
+              </p>
             ) : null}
-          </h2>
-          {run?.degraded ? (
-            <p
-              role="status"
-              className="border-warning bg-warning-surface text-warning mb-3 rounded-md border p-3 text-sm"
-            >
-              The AI check was unavailable, so only deterministic checks ran. Resubmit later for
-              tone and claims review.
-            </p>
+          </div>
+          <p className="sr-only" aria-live="polite">
+            {run?.status === "done" && !checking
+              ? `Check finished: ${counts.blocker} blockers, ${counts.warning} warnings, ${counts.suggestion} suggestions.`
+              : checking
+                ? "Check running."
+                : ""}
+          </p>
+
+          {run?.degraded && !checking ? (
+            <DegradedBanner
+              action={
+                canEdit ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={submitDisabled}
+                    focusableWhenDisabled
+                    onClick={submit}
+                  >
+                    Re-run
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : null}
+          {run ? (
+            <RunPanel
+              defaultOpen={checking || run.status === "failed"}
+              run={{
+                id: run.id,
+                status: (checking && run.status === "done" ? "queued" : run.status) as RunStatus,
+                provider: run.provider,
+                model: run.model,
+                promptVersion: run.prompt,
+                timings: run.timings,
+                degraded: run.degraded,
+                errorCode: run.error_code,
+                findings: findings.length,
+              }}
+            />
           ) : null}
           {run?.status === "failed" ? (
-            <p
-              role="alert"
-              className="border-accent-text text-accent-text mb-3 rounded-md border p-3 text-sm"
+            <ErrorPanel
+              title={`The check failed (${run.error_code ?? "unknown error"})`}
+              reference={`run ${run.id.slice(0, 8)}`}
+              onRetry={canEdit ? submit : undefined}
             >
-              The check failed ({run.error_code}). Your draft is back in your hands; try again.
-            </p>
+              Your draft is back in your hands. Try again; if it keeps failing, share the run id.
+            </ErrorPanel>
           ) : null}
+
           {pdfVersion && pdfPages.length && visible.length && !checking ? (
-            <div className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-              <p className="m-0">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <p className="text-fg-muted m-0">
                 {allPages
                   ? `All ${pdfPages.length} pages`
                   : `Page ${page}: ${pageSummary(pdfMarkers, page)}`}
               </p>
               <Button
-                variant="outline"
-                size="sm"
+                variant="secondary"
+                size="xs"
                 aria-pressed={allPages}
                 onClick={() => setAllPages((v) => !v)}
               >
@@ -454,166 +774,99 @@ export function DraftWorkspace({
               </Button>
             </div>
           ) : null}
-          {checking ? (
-            <p className="text-muted-foreground text-sm">Checking against your brand vault…</p>
-          ) : shown.length ? (
-            <ul className="space-y-3">
-              {shown.map((f) => (
-                <FindingCard
-                  key={f.id}
-                  finding={f}
-                  active={active === f.id}
-                  canAct={canAct}
-                  imageMode={fileVersion}
-                  marker={markerNumber.get(f.id)}
-                  onFocus={focus}
-                  onShow={pdfVersion ? showOnPage : undefined}
-                  onApply={apply}
-                  onResolve={resolve}
-                />
-              ))}
-            </ul>
-          ) : visible.length ? (
-            <p className="text-sm">
-              No findings on page {page}.{" "}
-              <button type="button" className="underline" onClick={() => setAllPages(true)}>
-                Show all pages
-              </button>
-            </p>
-          ) : run?.status === "done" ? (
-            <p className="text-sm">
-              No findings. This draft follows every approved rule BrandLens checked.
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">Submit the draft to check it.</p>
-          )}
-        </section>
-      </div>
 
-      <aside
-        aria-labelledby={`${id}-intent`}
-        className="space-y-4 lg:sticky lg:top-6 lg:self-start"
-      >
-        <section className="border-border bg-card space-y-3 rounded-lg border p-4">
-          <h2 id={`${id}-intent`} className="font-heading text-lg">
-            What is it for?
-          </h2>
-          {field("goal", "Goal", "webinar sign-ups")}
-          {field("audience", "Audience", "first-time investors")}
-          {field("cta", "Call to action", "Register now")}
-          <div className="space-y-1">
-            <label htmlFor={`${id}-channel`} className="text-sm font-medium">
-              Channel
-            </label>
-            <select
-              id={`${id}-channel`}
-              disabled={!canEdit}
-              value={intent.channel ?? ""}
-              onChange={(e) => setIntent((s) => ({ ...s, channel: e.target.value }))}
-              className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
-            >
-              {CHANNELS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {checking ? (
+              <Spinner centered label="Checking against your brand vault…" />
+            ) : shown.length ? (
+              <ul className="space-y-2">
+                {shown.map((f, i) => (
+                  <FindingCard
+                    key={f.id}
+                    index={i}
+                    finding={f}
+                    active={active === f.id}
+                    canAct={canAct}
+                    imageMode={fileVersion}
+                    summaryView={summaryView}
+                    marker={markerNumber.get(f.id)}
+                    onFocus={focus}
+                    onShow={pdfVersion ? showOnPage : undefined}
+                    onApply={apply}
+                    onResolve={resolve}
+                  />
+                ))}
+              </ul>
+            ) : visible.length ? (
+              <p className="text-sm">
+                No findings on page {page}.{" "}
+                <button
+                  type="button"
+                  className="text-accent-soft underline-offset-4 hover:underline"
+                  onClick={() => setAllPages(true)}
+                >
+                  Show all pages
+                </button>
+              </p>
+            ) : run?.status === "done" ? (
+              <EmptyState glyph="shield-check" title="No findings" headingLevel={3}>
+                This draft follows every approved rule BrandLens checked.
+              </EmptyState>
+            ) : (
+              <EmptyState glyph="lens" title="Not checked yet" headingLevel={3}>
+                Fill in the intent and submit: findings cite the rule or fact they were checked
+                against.
+              </EmptyState>
+            )}
           </div>
-          <div className="space-y-1">
-            <label htmlFor={`${id}-campaign`} className="text-sm font-medium">
-              Campaign
-            </label>
-            <select
-              id={`${id}-campaign`}
-              disabled
-              value={intent.campaign_id ?? ""}
-              className="border-input bg-card h-8 w-full rounded-md border px-2 text-sm"
-            >
-              {campaigns.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-muted-foreground text-xs">
-              Facts are checked against this campaign.
-            </p>
-          </div>
-          {showAlt ? (
-            <div className="space-y-1">
-              <label htmlFor={`${id}-alt`} className="text-sm font-medium">
-                Alt text
-              </label>
-              <textarea
-                id={`${id}-alt`}
-                rows={3}
-                value={intent.alt_text ?? ""}
-                disabled={!canEdit}
-                aria-describedby={`${id}-alt-help`}
-                onChange={(e) => setIntent((s) => ({ ...s, alt_text: e.target.value }))}
-                className="border-input bg-card w-full rounded-md border px-2 py-1.5 text-sm"
-              />
-              <p id={`${id}-alt-help`} className="text-muted-foreground text-xs">
-                What the image says, including its call to action. Missing alt text fails WCAG
-                1.1.1.
+
+          {canEdit && content.state === "needs_revision" ? (
+            <div className="border-line bg-elevated sticky bottom-0 space-y-2 rounded-md border p-3">
+              <p className={cn("mono-label", openBlockers ? "text-blocker" : "text-success")}>
+                {openBlockers
+                  ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} left`
+                  : "✓ all blockers handled"}
+              </p>
+              <div className="[&>button]:w-full">{submitButton}</div>
+              <p id={`${id}-submit-help`} className="text-fg-muted text-xs" aria-live="polite">
+                {submitWhy}
               </p>
             </div>
+          ) : !canEdit && canAct && content.state === "changes_requested" ? (
+            <div className="border-warning bg-warning-bg space-y-2 rounded-md border p-3 text-sm">
+              <p>A reviewer asked for changes. See their reason on the review page.</p>
+              <Button
+                className="w-full"
+                disabled={pending}
+                onClick={() =>
+                  start(async () => {
+                    const r = await revise(content.id);
+                    if (r.ok) toast.success(r.message);
+                    else toast.error(r.error);
+                    router.refresh();
+                  })
+                }
+              >
+                Start revising
+              </Button>
+            </div>
+          ) : !canEdit ? (
+            <p className="border-line text-fg-muted rounded-md border p-3 text-sm">
+              {content.state === "ai_check"
+                ? "Checking…"
+                : content.state === "publish_ready"
+                  ? "Publish-ready. Post it in your own channel."
+                  : "This draft is with reviewers and can't be edited right now."}{" "}
+              <a
+                href={`/review/${content.id}`}
+                className="text-accent-soft underline underline-offset-4"
+              >
+                Review status
+              </a>
+            </p>
           ) : null}
         </section>
-
-        {canEdit ? (
-          <div className="space-y-2">
-            <Button
-              className="h-10 w-full"
-              disabled={pending || checking || resubmitBlocked}
-              onClick={submit}
-              aria-describedby={`${id}-submit-help`}
-            >
-              {content.state === "needs_revision" ? "Resubmit for check" : "Submit for check"}
-            </Button>
-            <p
-              id={`${id}-submit-help`}
-              className="text-muted-foreground text-xs"
-              aria-live="polite"
-            >
-              {resubmitBlocked
-                ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} still open: accept, edit, dismiss with a reason, or route each one.`
-                : checking
-                  ? "A check is running."
-                  : (imageVersion || pdfVersion) && !file
-                    ? `Upload the corrected ${pdfVersion ? "PDF" : "image"} above, then resubmit. Nothing is ever published automatically.`
-                    : "Saves a new version and checks it. Nothing is ever published automatically."}
-            </p>
-          </div>
-        ) : canAct && content.state === "changes_requested" ? (
-          <div className="border-accent-text space-y-2 rounded-md border p-3 text-sm">
-            <p>A reviewer asked for changes. See their reason on the review page.</p>
-            <Button
-              className="w-full"
-              disabled={pending}
-              onClick={() =>
-                start(async () => {
-                  const r = await revise(content.id);
-                  if (r.ok) toast.success(r.message);
-                  else toast.error(r.error);
-                  router.refresh();
-                })
-              }
-            >
-              Start revising
-            </Button>
-          </div>
-        ) : (
-          <p className="bg-muted rounded-md p-3 text-sm">
-            {content.state === "ai_check"
-              ? "Checking…"
-              : "This draft is with reviewers and can't be edited right now."}{" "}
-            <a href={`/review/${content.id}`} className="underline">
-              Review status
-            </a>
-          </p>
-        )}
-      </aside>
+      </div>
     </div>
   );
 }

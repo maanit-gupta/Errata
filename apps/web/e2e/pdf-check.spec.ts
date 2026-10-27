@@ -2,6 +2,9 @@ import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
+// Overlays and findings animate in (DESIGN §4); axe audits settled frames.
+test.use({ reducedMotion: "reduce" });
+
 // P12 PDF decks: upload the seeded 4-page deck, see per-page findings with overlays on the page
 // renders, hidden text flagged, and "Show on page N" jumping to the finding's page and box.
 // Needs web + worker against the seeded local DB with logo files uploaded
@@ -34,8 +37,10 @@ test("a seeded deck shows page findings with overlays, hidden text and page jump
   test.skip(!RUN, "set E2E_WORKER=1 (local) or E2E_BASE_URL (deployed)");
   test.setTimeout(240_000);
   await signInAs(page, "Creator");
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(TITLE);
-  await page.getByRole("button", { name: "New draft" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   const contentId = page.url().split("/").pop()!;
   await page.getByLabel("Goal").fill("webinar sign-ups");
@@ -74,7 +79,7 @@ test("a seeded deck shows page findings with overlays, hidden text and page jump
   await e19.getByRole("button", { name: "Show on page 2" }).click();
   await expect(page.getByText(/^Page 2 of 4/)).toBeVisible();
   await expect(page.getByRole("button", { name: /^Finding \d+, blocker, E-19/ })).toBeVisible();
-  await expect(e19).toHaveClass(/border-ring/);
+  await expect(e19).toHaveClass(/border-focus/);
 
   // Page 4: the picture's claim (read by OCR), its off-palette fill and the too-small logo.
   await pages(page)

@@ -1,11 +1,9 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
-import { EmptyState } from "@/components/empty-state";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { ErrorPanel } from "@/components/brand/error-panel";
 
-// P15: a failed server render shows a recoverable message instead of the framework error page.
-// The digest lets us find the server log line without exposing the error text.
+/** Route error state (DESIGN.md §11): what failed, Try again, and a reference for support. */
 export default function AppError({
   error,
   reset,
@@ -13,17 +11,19 @@ export default function AppError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[app] route error", error.digest ?? error.message);
+  }, [error]);
   return (
-    <EmptyState
-      icon={TriangleAlert}
-      title="This page couldn't load"
-      action={<Button onClick={reset}>Try again</Button>}
+    <ErrorPanel
+      title="Something went wrong loading this page"
+      onRetry={reset}
+      reference={error.digest ?? null}
+      className="mx-auto max-w-2xl"
     >
-      <p>
-        Something went wrong on our side. Your drafts and decisions are saved. Try again, or reload
-        the page in a minute.
-      </p>
-      {error.digest ? <p className="mt-2 font-mono text-xs">Ref {error.digest}</p> : null}
-    </EmptyState>
+      {error.message && !error.digest
+        ? error.message
+        : "The server couldn't load this view. Your work is saved."}
+    </ErrorPanel>
   );
 }

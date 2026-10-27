@@ -5,11 +5,15 @@ import { toast } from "sonner";
 import type { ActionResult } from "@/lib/vault/actions";
 
 /** Toast the outcome of a `useActionState` server action once per result. */
-export function useActionToast(state: ActionResult | null) {
+export function useActionToast(state: ActionResult | null, onOk?: () => void) {
   useEffect(() => {
     if (!state) return;
-    if (state.ok) toast.success(state.message ?? "Saved.");
-    else toast.error(state.error);
+    if (state.ok) {
+      toast.success(state.message ?? "Saved.");
+      onOk?.();
+    } else toast.error(state.error);
+    // Fire once per result, not when the callback identity changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 }
 

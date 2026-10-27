@@ -1,6 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import path from "node:path";
+import { switchDemoRole } from "./helpers";
 import { expect, test, type Page } from "@playwright/test";
+
+// Overlays and findings animate in (DESIGN §4); axe audits settled frames.
+test.use({ reducedMotion: "reduce" });
 
 // P11 image checks: upload a creative, see bbox overlays synced with findings, fix and re-upload.
 // Needs web + worker against the seeded local DB with logo files uploaded
@@ -39,8 +43,10 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   test.skip(!RUN, "set E2E_WORKER=1 (local) or E2E_BASE_URL (deployed)");
   test.setTimeout(180_000);
   await signInAs(page, "Creator");
+  await page.goto("/drafts/new");
+  await page.waitForLoadState("networkidle");
   await page.getByLabel("Title").fill(TITLE);
-  await page.getByRole("button", { name: "New draft" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await page.waitForURL(/\/drafts\/[0-9a-f-]{36}$/);
   const draftUrl = page.url();
   const contentId = draftUrl.split("/").pop()!;
@@ -57,7 +63,7 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
   const overlay = page.getByRole("button", { name: /^Finding \d+, warning, VS-03/ });
   await expect(overlay).toBeVisible();
   await overlay.click();
-  await expect(card(page, "VS-03")).toHaveClass(/border-ring/);
+  await expect(card(page, "VS-03")).toHaveClass(/border-focus/);
 
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
@@ -72,22 +78,18 @@ test("cramped logo is flagged with a VS-03 overlay; the corrected upload clears 
 
   // An open visual warning routes to Brand review (SPEC §10), so the creator can't re-upload until
   // the brand admin sends it back.
-  await expect(page.getByText("Specialist review", { exact: true })).toBeVisible();
-  await page.getByLabel("Switch demo role").selectOption({ label: "Brand admin" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Brand admin");
+  await expect(page.getByText("Brand review", { exact: true })).toBeVisible();
+  await switchDemoRole(page, "Brand admin");
   await page.goto(`/review/${contentId}`);
   // The creator marked it fixed, so the reviewer sees it listed as edited, not boxed as open.
   const row = page.getByRole("region", { name: "Findings" }).getByRole("listitem").first();
   await expect(row).toContainText("VS-03");
-  await expect(row).toContainText("edited by");
+  await expect(row).toContainText(/Edited fix applied.*by /);
   await page.getByLabel("What needs to change (required)").fill("Give the logo its clear space.");
   await page.getByRole("button", { name: "Request changes" }).click();
   await expect(page.getByText("Changes requested", { exact: true }).first()).toBeVisible();
 
-  await page.getByLabel("Switch demo role").selectOption({ label: "Creator" });
-  await page.getByRole("button", { name: "Switch" }).click();
-  await expect(page.getByTestId("role-pill")).toHaveText("Creator");
+  await switchDemoRole(page, "Creator");
   await page.goto(draftUrl);
   await page.getByRole("button", { name: "Start revising" }).click();
   // Its toast sits over the submit button and stays while hovered (sonner pauses on hover).
