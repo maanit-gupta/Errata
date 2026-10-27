@@ -83,7 +83,7 @@ export function PdfFindings({
   if (!current) return null;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-[5.5rem_minmax(0,1fr)]">
+    <div className="grid gap-4 sm:grid-cols-[6.5rem_minmax(0,1fr)]">
       <nav aria-label="Pages" className="min-w-0">
         <ol className="flex gap-2 overflow-x-auto pb-1 sm:max-h-[75vh] sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:pr-1">
           {pages.map((p) => {
@@ -94,7 +94,6 @@ export function PdfFindings({
                 <button
                   type="button"
                   aria-current={p.n === page ? "page" : undefined}
-                  aria-label={`Page ${p.n}: ${pageSummary(markers, p.n)}`}
                   onClick={() => setPage(p.n)}
                   className={cn(
                     "block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus) sm:w-full",
@@ -110,17 +109,22 @@ export function PdfFindings({
                     height={p.height}
                     className="border-line block h-auto w-full rounded-sm border"
                   />
-                  <span className="mt-1 flex items-center justify-between gap-1 font-mono text-xs">
+                  <span className="sr-only">{`Page ${p.n}: ${pageSummary(markers, p.n)}`}</span>
+                  <span
+                    aria-hidden
+                    className="mt-1 flex items-center justify-between gap-1 font-mono text-xs"
+                  >
                     <span>p. {p.n}</span>
                     {sev ? (
                       <span
                         aria-hidden
                         className={cn(
-                          "rounded-sm px-1 text-[0.65rem] leading-4 uppercase",
+                          "rounded-sm px-1 text-[0.65rem] leading-4 whitespace-nowrap uppercase",
                           DOT[sev],
                         )}
                       >
-                        {count} · {sev.slice(0, 1)}
+                        {count}
+                        {sev.slice(0, 1)}
                       </span>
                     ) : null}
                   </span>

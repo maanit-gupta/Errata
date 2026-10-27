@@ -65,6 +65,8 @@ type Props = {
   onFocus: (id: string | null, scroll?: boolean) => void;
   /** PDFs: turn to the finding's page and bring its box into view. */
   onShow?: (finding: FindingView) => void;
+  /** Read-only views: a link (e.g. `#show-<id>`) that turns the PDF viewer to the finding. */
+  showHref?: string;
   onApply: (finding: FindingView, text: string, status: "accepted" | "edited") => Promise<void>;
   onResolve: (
     finding: FindingView,
@@ -111,6 +113,7 @@ export function FindingCard({
   marker,
   summaryView = false,
   index = 0,
+  showHref,
   onFocus,
   onShow,
   onApply,
@@ -241,6 +244,11 @@ export function FindingCard({
         <div id={`${id}-body`} className="border-line space-y-3 border-t p-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <SourceTag source={f.source} />
+            {f.page && showHref ? (
+              <a href={showHref} className="text-accent-soft text-xs underline underline-offset-4">
+                Show on page {f.page}
+              </a>
+            ) : null}
             {f.page && onShow ? (
               <Button size="xs" variant="secondary" onClick={() => onShow(f)}>
                 Show on page {f.page}

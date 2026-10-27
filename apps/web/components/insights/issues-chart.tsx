@@ -13,9 +13,18 @@ export type Issue = { code: string; label: string; dimension: string; n: number 
 export function IssuesChart({ issues }: { issues: Issue[] }) {
   const data = issues.map((i) => ({ ...i, name: i.code }));
   return (
-    <div role="img" aria-label="Bar chart of findings per cited rule, fact or WCAG criterion. The table beside it lists the same numbers." className="h-64 w-full">
+    <div
+      role="img"
+      aria-label="Bar chart of findings per cited rule, fact or WCAG criterion. The table beside it lists the same numbers."
+      className="h-64 w-full"
+    >
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart accessibilityLayer={false} data={data} layout="vertical" margin={{ top: 4, right: 40, bottom: 4, left: 8 }}>
+        <BarChart
+          accessibilityLayer={false}
+          data={data}
+          layout="vertical"
+          margin={{ top: 4, right: 40, bottom: 4, left: 8 }}
+        >
           <XAxis type="number" hide domain={[0, "dataMax"]} />
           <YAxis
             type="category"

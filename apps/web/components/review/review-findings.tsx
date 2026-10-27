@@ -23,6 +23,7 @@ export function ReviewFindings({
           active={false}
           canAct={false}
           summaryView={summaryView}
+          showHref={f.page ? `#show-${f.id}` : undefined}
           onFocus={() => {}}
           onApply={noop}
           onResolve={noop}

@@ -51,7 +51,7 @@ function Onboarding() {
       </div>
       <div
         aria-hidden
-        className="border-line bg-canvas space-y-2 self-center rounded-md border p-4 opacity-80"
+        className="border-line bg-canvas space-y-2 self-center rounded-md border p-4"
       >
         <p className="flex items-center gap-2">
           <SeverityBadge severity="blocker" />

@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P14 (P13 done on `phase/P13-gcs-insights`, stacked on unmerged P12)
+**Current phase:** UI track U0–U2 done on `ui/U2` (stacked branches, worktree `.claude/worktrees/ui`); backend next is P14 (in progress in the main checkout)
 **Build window:** Day 1 = `YYYY-MM-DD` (fill in). Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -30,22 +30,23 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P16 | Docs & submission 🎯 D14 | J | todo | | | |
 | U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; worktree .claude/worktrees/ui |
 | U1 | Public landing + /ai-use (DESIGN.md §8) | J | done | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
-| U2 | UI polish and audit (DESIGN.md §12) | J | todo | | | |
+| U2 | UI polish and audit (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | ui/U2 | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Phase / status:** P13 / **done** (2026-10-27) on `phase/P13-gcs-insights`, stacked on P12. Neither P12 nor P13 is merged or deployed; cloud migrations `20261026100018` and `20261026100019` aren't applied yet (see Open questions).
+- **Phase / status:** UI track **U0 → U1 → P02 → P05 → P08 → P09 → P12 → P13 → U2 done** (2026-10-27), each a commit on stacked branches `ui/U0` … `ui/U2` in the worktree `.claude/worktrees/ui` (branched from P13 `a42520c`). Not merged or deployed. The main checkout's uncommitted P14 work was left untouched.
 - **What exists now:**
-  - SQL (`20261026100019_insights.sql`): `rule_gcs`, `insights_summary`, `flag_unclear_rules`, `decide_example_suggestion`; pgTAP `05_insights` (20 tests).
-  - Worker: `generate_examples` job, `prompts/examples_v1.md`, `pipeline/examples.py`, Discord `notify_unclear_rule`; `review_version` calls `flag_unclear_rules` after every review.
-  - `make simulate-activity` gives TV-04 41/60 UNCLEAR, VS-02 22/73, CL-03 63/97, G-07 88/99 (plan p.19).
-  - Web: `/insights` (KPI tiles, chart + table, watchlist, suggestions drawer), `/settings/ai-use` models list.
-  - Verified 2026-10-27: `make check` green (171 pytest, 74 Vitest, 100 pgTAP). Full Playwright suite on a fresh `db-reset → seed-assets-local → simulate-activity` passes. TV-04 v2 was re-embedded (new `embedding_source_hash`).
-- **Day-11 checklist:** image and PDF overlays (`image-check`, `pdf-check`), risk routing, comments and diff (`review`, `core-loop`), and the GCS dashboard (`insights`) all pass locally. Tagged `v0.11-feature-complete` locally (not pushed).
+  - Terminal Noir tokens in `app/globals.css` (dark default, `bl_theme` cookie), TS mirror `lib/design/tokens.ts`, contrast test `tests/tokens.contrast.test.ts` (33 rows), hex-literal ESLint rule.
+  - `components/brand/*` (IdBadge + SourcePopover, Severity/State badges, ConfidenceChip, SourceTag, IntentCheckTag, RiskMeter, RunPanel, DegradedBanner, DataTable, SegmentedTabs, Drawer, KpiTile, EmptyState, Spinner, ErrorPanel, Forbidden, WordCounter, PixelGlyphs, Wordmark, ThemeToggle), `components/shell/*` (sidebar, top bar, demo strip, ⌘K, shortcuts, worker status), `components/marketing/*`, `components/motion/*`.
+  - Routes: public `/` landing, `/ai-use`, `/dev/kitchen-sink` (non-prod); new `/drafts/new`, `/audit`; `(app)/loading.tsx` + `error.tsx`; restyled login, drafts, editor, review, vault, insights, settings.
+  - Gates: `e2e/ui.spec.ts` (axe per route × theme; `SCREENS=<id>` writes `docs/screens/<id>/`), `e2e/keyboard.spec.ts`. Screenshots in `docs/screens/{U0,U1,P02,P05,P08,P09,P12,P13,U2}`.
+  - Verified 2026-10-27: `make check` green (171 pytest, 107 Vitest, 100 pgTAP); ui.spec 38/38; auth, vault, keyboard e2e green; drafts, image-check and core-loop/PDF flows verified with the worker (see gotchas).
 - **Gotchas:**
-  - `e2e/insights.spec.ts` isn't re-runnable: it approves TV-04 v2. Run `make db-reset && make seed-assets-local && make simulate-activity` first.
-  - Local `make dev-local` posts to the real Discord webhook if one is configured.
-- **Exact next step:** P14 (golden set and eval gate).
+  - LLM runs took ~80 s (Groq 429 → Gemini) while P14's eval ran in parallel, beyond the specs' 60 s waits; flows were verified with longer temporary timeouts. Re-run `core-loop`, `drafts` and `pdf-check` when the quota is quiet.
+  - The :8000 worker from the main checkout also consumes the **local** queue.
+  - `make check` resets the local DB: run `make seed-assets-local` (logos) and `make simulate-activity` before image/insights work.
+  - Specs must wait for `networkidle` after `goto('/drafts/new')` (typing before hydration is lost).
+- **Exact next step:** review and merge `ui/U2` (it contains U0–P13 UI) into the integration branch after P14 lands; then P15 hardening picks up the U2 follow-ups in Decisions.
 
 ## Decisions log (append-only)
 
@@ -211,6 +212,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P13-UI | Chart and table are shown side by side instead of a "View as table" toggle | The table must stay visible (accessible fallback, e2e); deviation from DESIGN §6.7 |
 | 2026-10-27 | P13-UI | Managers see the KPI row and top issues only; the watchlist is hidden with a one-line note | SPEC §2 footnote 5 / DESIGN §6.7 |
 | 2026-10-27 | P13-UI | IllustrativeDataPill keeps DOM text "Illustrative data" (CSS uppercases it) | Same rule as StateBadge; e2e matches the words |
+| 2026-10-27 | U2 | `e2e/keyboard.spec.ts`: skip link first, visible focus ring on 25 tab stops, ⌘K open/close, `?` sheet, `g d`, and no running animations under reduced motion | DESIGN §7.4–7.5 gate, automated |
+| 2026-10-27 | U2 | PDF page-rail buttons take their name from sr-only text (`Page 3: 1 blocker, 2 warnings`), with the visible `p. 3 · 1B` aria-hidden | axe label-content-name-mismatch; e2e names unchanged |
+| 2026-10-27 | U2 | DiffView shows `−`/`+` markers inside del/ins and `resolves CL-03 · F-112` lines | DESIGN §5: colour is never the only cue |
+| 2026-10-27 | U2 | Open UI follow-ups (deviations): sticky DecisionBar with per-action dialogs, draft version switcher, contrast/ΔE swatches in cards, chart "View as table" toggle, palette empty-state drift, landing LCP not yet measured on Vercel | Logged here for P15; none blocks the core loop |
 
 **Dependencies and licences** (append when adding any dependency):
 

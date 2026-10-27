@@ -24,7 +24,15 @@ import { Wordmark } from "@/components/brand/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
-import { DrawerDemo, FindingCardsDemo, TableDemo, TabsDemo, ToastDemo } from "./interactive";
+import {
+  DrawerDemo,
+  FindingCardsDemo,
+  OverlayDemo,
+  TableDemo,
+  TabsDemo,
+  ToastDemo,
+} from "./interactive";
+import { VersionDiff } from "@/components/review/version-diff";
 
 export const metadata = { title: "Kitchen sink" };
 
@@ -214,6 +222,28 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
 
       <Section title="Finding cards">
         <FindingCardsDemo />
+      </Section>
+
+      <Section title="Diff view">
+        <VersionDiff
+          previous="Lock in 14.2% assured annual returns. Registration closes Oct 18 at Hall B."
+          current="Earn market-linked returns (14.2% 3-yr historical CAGR*). Registration closes Oct 28, 7:00 PM IST (online)."
+          resolved={[
+            {
+              id: "r1",
+              codes: "CL-03 · F-112",
+              quote: "assured annual returns",
+              status: "accepted",
+            },
+            { id: "r2", codes: "E-19", quote: "Oct 18 at Hall B", status: "accepted" },
+          ]}
+          previousN={1}
+          currentN={2}
+        />
+      </Section>
+
+      <Section title="Overlay canvas">
+        <OverlayDemo />
       </Section>
 
       <Section title="Run panel">

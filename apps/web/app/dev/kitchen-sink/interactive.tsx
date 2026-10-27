@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/brand/data-table";
 import { FindingCard, type FindingView } from "@/components/drafts/finding-card";
+import { ImageFindings } from "@/components/drafts/image-findings";
 import { Drawer } from "@/components/brand/drawer";
 import { IdCode } from "@/components/brand/id-badge";
 import { RiskMeter } from "@/components/brand/risk-meter";
@@ -231,5 +232,32 @@ export function FindingCardsDemo() {
         />
       ))}
     </ul>
+  );
+}
+
+export function OverlayDemo() {
+  return (
+    <div className="max-w-xs">
+      <ImageFindings
+        src="/icon.svg"
+        alt="Pixel lens test image"
+        markers={[
+          {
+            id: "o1",
+            severity: "blocker",
+            codes: "CL-03",
+            label: "assured returns",
+            box: { x0: 1, y0: 1, x1: 5, y1: 3 },
+          },
+          {
+            id: "o2",
+            severity: "warning",
+            codes: "VS-03",
+            label: "logo clear space",
+            box: { x0: 5, y0: 6, x1: 9, y1: 9 },
+          },
+        ]}
+      />
+    </div>
   );
 }
