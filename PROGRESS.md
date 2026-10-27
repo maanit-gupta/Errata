@@ -46,6 +46,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   - The :8000 worker from the main checkout also consumes the **local** queue.
   - `make check` resets the local DB: run `make seed-assets-local` (logos) and `make simulate-activity` before image/insights work.
   - Specs must wait for `networkidle` after `goto('/drafts/new')` (typing before hydration is lost).
+- **UI implementation complete (U0–U2).** Final acceptance 2026-10-27: `make check` green; every SPEC route renders with no 404 or error boundary (`/`, `/ai-use`, `/login`, `/drafts`, `/drafts/new`, `/drafts/[id]`, `/review`, `/review/[id]`, `/vault` ×6 tabs, `/insights`, `/audit`, `/settings`, `/settings/ai-use`, `/dev/kitchen-sink`); axe 38/38 (19 routes × 2 themes) with zero serious/critical; the kitchen sink shows every token, brand component, state (§11), FindingCard, DiffView and OverlayCanvas variant.
 - **Exact next step:** review and merge `ui/U2` (it contains U0–P13 UI) into the integration branch after P14 lands; then P15 hardening picks up the U2 follow-ups in Decisions.
 
 ## Decisions log (append-only)

@@ -19,12 +19,11 @@ type Route = {
 
 const firstLink = (prefix: string) => async (page: import("@playwright/test").Page) => {
   await page.goto(prefix);
-  const href = await page
-    .locator(`main a[href^="${prefix}/"]:not([href$="/new"])`)
-    .first()
-    .getAttribute("href")
-    .catch(() => null);
-  return href ?? prefix;
+  await page.waitForLoadState("networkidle").catch(() => {});
+  const links = page.locator(`main a[href^="${prefix}/"]:not([href$="/new"])`);
+  // An empty DB (fresh `make db-reset`) has nothing to open: audit the list page instead.
+  if ((await links.count()) === 0) return prefix;
+  return (await links.first().getAttribute("href")) ?? prefix;
 };
 
 const ROUTES: Route[] = [
