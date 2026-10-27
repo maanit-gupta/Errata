@@ -25,6 +25,10 @@ for p in gsk_ AIza service_role GROQ_API_KEY LANGFUSE_SECRET; do grep -rlF "$p" 
 
 The names `SUPABASE_SECRET_KEY` and `DISCORD_WEBHOOK_URL` and the string `sb_secret_` do appear in one chunk: they're the **names** in the zod env schema (`lib/env-schema.ts`, shared with the client for public vars) and supabase-js's own `startsWith("sb_secret_")` key-type check. No values. The server schema is only parsed on the server.
 
+## Git history scan
+
+`gitleaks` isn't installed here, so the history was grepped (`git log --all -p`) for Supabase secret keys (`sb_secret_…`), Groq (`gsk_…`), Google (`AIza…`), Langfuse (`sk-lf-`/`pk-lf-`), Resend (`re_…`), Postgres URIs with passwords, JWTs and Discord webhook URLs. Nothing real was found: the one webhook match is the fixture `https://discord.com/api/webhooks/1/x` in `apps/web/lib/__tests__/env.test.ts`. No `.env` file (other than `.env.example`) was ever committed. Run `gitleaks detect` before making the repo public for a second opinion.
+
 ## Prompt injection
 
 | Vector | Defence | Test |

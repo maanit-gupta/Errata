@@ -2,7 +2,72 @@
 
 **Pre-publication brand governance.** Every draft (text, doc, image, PDF) is checked against an organisation's approved rule cards, facts and assets, and every flag cites the rule or fact ID it was checked against. Humans approve; BrandLens never publishes.
 
-> 🚧 **Under construction.** This is a hackathon build (Inkloom AI brand-governance problem statement, Round 2). Live status is in [`PROGRESS.md`](PROGRESS.md); the build spec is [`docs/SPEC.md`](docs/SPEC.md).
+Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") by Maanit Gupta and Jagpreet Singh (SRMIST).
+
+- **Live app:** https://brandlens-app.vercel.app. On the login page, pick a role under "Try a demo role" (no password needed). All data is the fictional PayWise brand.
+- **Demo script:** [`docs/DEMO.md`](docs/DEMO.md) (3–4 minutes, storyboard F01–F06).
+- **Build spec:** [`docs/SPEC.md`](docs/SPEC.md) · **Security review:** [`docs/SECURITY.md`](docs/SECURITY.md) · **Build log:** [`PROGRESS.md`](PROGRESS.md)
+
+## The problem, and what BrandLens does
+
+Marketing teams in regulated categories (PayWise is a fictional Indian mutual-fund app) publish under brand guides and compliance rules that live in PDFs nobody re-reads. Mistakes are cheap to make and expensive to ship: a "guaranteed returns" claim, last campaign's event date, a misspelt brand name, an inaccessible colour pair.
+
+BrandLens turns the guide into **rule cards** and a **Fact Vault**, checks each draft before it goes out, and **cites** the rule or fact behind every flag. A creator states the draft's intent (goal, audience, CTA, channel, campaign) and gets findings with suggested rewrites that keep that intent. Blockers route to the right reviewer (Legal or Accessibility), every decision needs a reason, and nothing is published automatically. Over time, the **Guideline Clarity Score** shows which rules reviewers keep overriding, so the brand team can fix the rule rather than blame the writer.
+
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph Web["Next.js 16 on Vercel"]
+    E[Editor + intent] -->|submit| A[server action]
+    UI[Findings, review, insights]
+  end
+  subgraph DB["Supabase: Postgres + RLS"]
+    Q[(pgmq review_jobs)]
+    T[(contents · versions · findings · audit_events)]
+    V[(rule cards · facts · glossary · assets<br/>pgvector)]
+    F["enqueue_review()<br/>transition_content()"]
+  end
+  subgraph Worker["FastAPI worker on Render"]
+    S1[1 Ingest] --> S2[2 Protect<br/>PII, secrets, hidden text]
+    S2 --> S3[3 Deterministic filters<br/>glossary, facts, claims, tone,<br/>contrast, ΔE, logo]
+    S3 --> S4[4 Retrieve<br/>bge-small top-k]
+    S4 --> S5[5 One LLM call<br/>Groq → Gemini]
+    S5 --> S6[6 Citation gate<br/>+ intent check]
+  end
+  A --> F --> Q --> S1
+  S4 <--> V
+  S6 --> T
+  T -->|Realtime| UI
+  UI -->|decisions| F
+```
+
+Key decisions:
+
+- **Deterministic first.** Anything checkable without a model (brand terms, fees, dates, venues, campaign bleed, contrast, colour ΔE, logo placement) never goes to the LLM. The LLM judges only tone and claims nuance, in **one call per draft**.
+- **The LLM is untrusted.** The draft is redacted and delimited data; output is schema-bound (Pydantic); quotes are matched and offsets computed locally. A finding survives the **citation gate** only if it cites a rule or fact retrieved for this run, in the matching dimension, with a quote that is really in the draft.
+- **Humans decide.** Every state change goes through one SQL function (`transition_content`) that enforces the state machine and permissions and writes the audit log. Blockers and low-confidence findings can't be one-click accepted; overrides need a reason.
+- **Measured, then gated.** A 60-row golden set runs in CI. Any dimension under 85% precision is demoted to suggestion-only.
+
+## Results
+
+**Golden set** (`make eval`, [`apps/worker/eval/report.md`](apps/worker/eval/report.md); 60 drafts: 49 text, 10 images, 1 PDF, 13 clean; LLM responses replayed from a committed cache):
+
+| Metric | Result | Target |
+|---|---|---|
+| Blocker recall | **1.00** (32 seeded blockers) | ≥ 0.80 |
+| Uncited findings shown | **0** | 0 |
+| Precision by dimension | claims 1.00 · facts 0.90 · terms 1.00 · tone 0.90 · visual 1.00 · access 1.00 | ≥ 0.85 each |
+| Overall precision / recall | 0.96 / 0.99 | |
+| Clean drafts with any finding | 0 of 13 | |
+| Rewrite intent check (`INTENT_COSINE` 0.74) | keeps 15/16 good rewrites, 0/24 bad | |
+| Latency (30 text drafts) | P50 3.0 s · P95 15.2 s (LLM time as recorded) | P95 ≤ 15 s |
+
+A deliberately broken prompt drops tone precision to 0.43, and the gate fails the build ([`PROGRESS.md`](PROGRESS.md), P14).
+
+**Images** ([`vision_report.md`](apps/worker/eval/vision_report.md)): logo found in 9/9 creatives with 0 false positives; WCAG contrast within ±0.1 of WebAIM on 40/40 PNG colour pairs; 1.1 s per creative. **PDF decks** ([`pdf_report.md`](apps/worker/eval/pdf_report.md)): 9/9 seeded issues found on the right page, including two hidden-text injections; a 40-page deck stays under 512 MB.
+
+**Usability:** A/B benchmark (manual guideline check vs BrandLens) and SUS templates are in [`docs/usability/`](docs/usability/). _Results pending: sessions are run by Jagpreet._
 
 ## Quick start
 
@@ -88,7 +153,19 @@ The bottleneck is the free LLM tiers, not the pipeline. Groq and Gemini rate lim
 
 ## Changes since Round 1
 
-See the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md). It is mirrored here before submission.
+Mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
+
+| Area | Round 1 plan said | We built | Why |
+|---|---|---|---|
+| Auth | Google sign-in | Supabase email/password, plus a demo role switcher when `NEXT_PUBLIC_DEMO_MODE=true` | No OAuth setup; judges get one-click roles |
+| LLM | Claude or Gemini | **Groq** primary, **Gemini** fallback, both free tiers, chosen by `LLM_PROVIDER` | Free APIs; the provider switch still avoids lock-in |
+| Notifications | Slack + email | Discord webhook (email via Resend is optional and off) | Team uses Discord |
+| Tracing | Self-hosted Langfuse | Langfuse Cloud | Faster to set up; traces contain only fictional demo data |
+| Web framework | Next.js 15 | Next.js 16 (App Router) | Current stable |
+| Confidence | Two-sample agreement on every LLM finding | Second sample only for blocker-severity LLM findings | Resolves the plan's "one LLM call per draft" vs "two samples" contradiction |
+| Embeddings | bge-small via sentence-transformers | Same model via fastembed (ONNX) | No torch; smaller worker image |
+| Data training | "No training on our data" | True for Groq and paid tiers; the Gemini free tier may use prompts, so the demo uses fictional data only, and the Services and AI-use page says so | Honesty |
+| Hosting | Worker on Railway or Fly; Supabase in Mumbai | Worker on **Render** (free tier, Docker); Supabase in **Singapore** | Free tier available to us at build time |
 
 ## AI assistance
 
@@ -112,7 +189,60 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P13 | Guideline Clarity Score SQL, insights summary, UNCLEAR-rule example generation and approval flow, activity simulator, insights dashboard, AI-use models list |
 | P14 | Golden set (60 rows, 40 rewrite pairs), in-process eval runner with committed LLM cache, precision gate, `INTENT_COSINE` calibration, latency benchmark, eval CI workflow, precision fixes from the reports |
 | P15 | Security review and `docs/SECURITY.md`, submit rate limit, CSP/headers, upload and storage limits, prompt-injection fence and tests, router cool-down, consumer concurrency, load and restart test scripts, a11y sweep and keyboard test |
+| P16 | README (pitch, architecture, results, licences, contributions), demo script, demo reset script, usability templates |
+
+## Models, services, data and libraries
+
+**Models**
+
+| Model | Use | Licence / terms |
+|---|---|---|
+| `openai/gpt-oss-120b` via Groq | Review pass (text), rule-card extraction, example generation | Apache-2.0 weights; Groq API terms |
+| `qwen/qwen3.8-27b` via Groq | Vision review pass (images) | See the model card on Groq; Groq API terms |
+| Gemini Flash (`gemini-3.6-flash`) via Google AI Studio | Fallback for both passes | Google Gemini API terms (free tier may use prompts; demo data is fictional) |
+| `BAAI/bge-small-en-v1.5` via fastembed | Embeddings for retrieval and the intent check | MIT |
+| Tesseract OCR (PaddleOCR optional) | Text in images | Apache-2.0 |
+
+Model IDs come from env (`GROQ_MODEL_*`, `GEMINI_MODEL_*`). The table lists the ones recorded in the latest eval report.
+
+**Services:** Supabase (Postgres, Auth, Storage, Realtime, pgvector, pgmq), Vercel (web), Render (worker), Groq and Google AI Studio (LLM APIs), Langfuse Cloud (tracing), Discord webhooks (notifications), GitHub Actions (CI). All are on free tiers.
+
+**Data:** no external datasets. The PayWise brand kit (guide, facts, glossary, logos, creatives, deck) and the golden set are fictional and written by the team (`fixtures/paywise/`, `apps/worker/eval/golden/`).
+
+**Templates and assets:** shadcn/ui components (MIT, copied into `apps/web/components/ui`); fonts Newsreader, DM Sans and JetBrains Mono (SIL OFL 1.1, via `next/font`); lucide icons (ISC).
+
+**Libraries**
+
+| Package | Licence |
+|---|---|
+| PyMuPDF | AGPL-3.0 |
+| psycopg (binary, pool) | LGPL-3.0 |
+| fastapi, pydantic, pydantic-settings, supabase-py, langfuse, python-docx, textstat | MIT |
+| uvicorn, numpy, httpx, pyahocorasick, scikit-image, scipy, diff (JS) | BSD-3-Clause |
+| tenacity, fastembed, groq, google-genai, trafilatura, opencv-python-headless, pytesseract, paddleocr (optional) | Apache-2.0 |
+| next, react, react-dom, zod, tailwindcss, @base-ui/react, cn, shadcn, tw-animate-css, @supabase/ssr, @supabase/supabase-js, server-only, sonner, @tiptap/*, recharts | MIT |
+| lucide-react | ISC |
+| class-variance-authority | Apache-2.0 |
+| Dev: pytest, ruff, mypy, eslint, prettier, vitest (MIT); pytest-asyncio, typescript, @playwright/test (Apache-2.0); @axe-core/playwright (MPL-2.0) | as listed |
+
+The source of truth is the dependency table in [`PROGRESS.md`](PROGRESS.md) (Decisions log), updated whenever a dependency is added.
+
+## Limitations and roadmap
+
+- **Free-tier LLMs are the throughput limit.** Under a burst, Groq and Gemini rate limits push reviews into degraded mode (deterministic findings only, clearly flagged). Next: a paid tier or a per-org LLM budget, and a queue-aware "LLM pass pending" state that fills in later.
+- **PDFs:** vector-drawn logos aren't detected; scanned PDFs (no text layer) are rejected; picture warmth inside decks is counted, not judged.
+- **Images:** contrast on JPEG uploads is an estimate (chroma subsampling); PNG is exact.
+- **Worker memory:** a 40-page deck peaks at 484 MB on the 512 MB instance. Heavy jobs are serialised, but a 1 GB instance is safer for heavy PDF use.
+- **CSP** keeps `'unsafe-inline'` for scripts (see `docs/SECURITY.md`).
+- **Roadmap:** Google sign-in, Slack notifications, a CMS publishing hand-off (still human-approved), multilingual rule cards, and per-channel rule scoping.
+
+## Team and contributions
+
+| Member | Role | Contribution |
+|---|---|---|
+| **Maanit Gupta** | AI and backend lead | Worker pipeline (ingest, redaction, deterministic filters, retrieval, LLM pass, citation gate, intent check), vision and PDF checks, schema, RLS and workflow SQL, eval golden set and CI gate, deployment, security hardening. Ran the Claude Code sessions for every phase, including the web UI phases. As of 2026-10-27, every commit in the git history is authored from Maanit's account (`maanit-gupta`). |
+| **Jagpreet Singh** | Product, frontend and UX lead | Co-author of the Round 1 plan and storyboard. Owns product and UX direction, usability testing (`docs/usability/`) and the live demo. _Jagpreet to add specifics before submission._ |
 
 ## Licence
 
-[AGPL-3.0](LICENSE), because PyMuPDF is AGPL. A dependency licence table will be generated from `PROGRESS.md` before submission.
+[AGPL-3.0](LICENSE), because PyMuPDF is AGPL.

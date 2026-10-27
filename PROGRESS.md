@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P16 (todo). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
+**Current phase:** P16 (partial, waiting on team items). All work is on `main`; the U0–U2 Terminal Noir UI is shelved on `ui/U2`
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -27,30 +27,31 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | P13 | GCS & insights 🎯 D11 | J+M | done | M (Claude, /complete) | phase/P13-gcs-insights | 2026-10-27; stacked on P12; tag `v0.11-feature-complete` pushed; merged to main 2026-10-27; insights UI per DESIGN §6.7 on ui/P13 (shelved) |
 | P14 | Golden set & eval gate | M | done | M (Claude, /complete) | main | 2026-10-27; eval PASS (0 degraded, all dims ≥ 0.85, blocker recall 1.00); broken-prompt gate shown locally |
 | P15 | Hardening | Both | done | M (Claude, /complete) | main | 2026-10-27; SECURITY.md, rate limit, CSP, injection fence, router cool-down, load + restart tests; 2 migrations local only |
-| P16 | Docs & submission 🎯 D14 | J | todo | | | |
+| P16 | Docs & submission 🎯 D14 | J | partial | M (Claude, /complete) | main | 2026-10-27; README, DEMO.md, reset_demo.sh, usability templates done; waiting on team: usability sessions, contributions, cloud migrations, repo public, tag |
 | U0 | Design-system foundation (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U0 | 2026-10-27; built on ui/* branches; merged to main and then reverted the same day (user); rebuild later on request |
 | U1 | Public landing + /ai-use (DESIGN.md §8) | J | shelved | M (Claude, /complete-ui) | ui/U1 | 2026-10-27; landing + /ai-use public |
 | U2 | UI polish and audit (DESIGN.md §12) | J | shelved | M (Claude, /complete-ui) | ui/U2 | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`. **Don't re-apply it until the user asks for the UI rebuild.**
+- **UI (2026-10-27):** `main` runs the pre-redesign UI. The Terminal Noir redesign (U0–U2) is shelved on `ui/U2`. **Don't re-apply it until the user asks.**
 - **Workflow (user rule 2026-10-27):** work and commit directly on `main`. No phase/UI branches and no worktrees.
-- **Phase / status:** P15 / **done** (2026-10-27). P14 done earlier the same day (eval PASS).
-- **What P15 added:**
-  - `docs/SECURITY.md`: the full checklist with evidence (RLS, client-bundle scan, signed URLs, storage, prompt injection, rate limit, input limits, CSP, degraded mode, restarts, known limits).
-  - SQL: `20261027100020_submit_rate_limit.sql` (10 submits/min/user inside `enqueue_review`, `BL429`) + pgTAP `06_rate_limit.test.sql`; `20261027100021_storage_limits.sql` (bucket size/MIME limits).
-  - Web: CSP and security headers (`next.config.ts`), 4 MB upload limit with `serverActions.bodySizeLimit` 4.5 MB (`lib/limits.ts`), 15-min signed URLs, `BL429` message, `(app)/loading.tsx` skeleton + `(app)/error.tsx` boundary, toasts top-center, Recharts focus fix, `e2e/a11y.spec.ts` (axe on all main pages × light/dark, CSP-violation check, keyboard walkthrough).
-  - Worker: `llm_pass.fence()` (section-tag injection), `tests/test_security.py`, router rate-limit cool-down (60 s), 3 review consumers + 1 heavy (image/PDF) slot, pool max 8, Dockerfile builds as `app` (no duplicated venv).
-  - Scripts: `scripts/load_test.py`, `scripts/redelivery_test.py`. README "Security and reliability" has the numbers.
-- **Evidence:** axe 0 serious/critical on 6 sweeps (prod build, cloud data) + keyboard test; bundle scan 0 secret values; degraded run with invalid keys kept blocker recall 1.00; redelivery test `done` after VT; load test 50/50 finished, 0 failed (all degraded: free-tier quotas spent), P95 57.5 s after the cool-down vs max 14 min before.
-- **Not yet in cloud (needs the user):** migrations `…100020` (rate limit) and `…100021` (storage limits) are applied **locally only**. Apply them to cloud Supabase (`supabase db push --db-url <session pooler>`) — the web and worker code work with or without them. Pushing `main` redeploys Vercel and Render.
-- **Gotchas:**
-  - `make check` runs `supabase db reset` (via `make test-db`): it wipes local data, including any load-test runs. Save numbers before running it.
-  - A `--reload` dev worker restarts when worker files change; in-flight jobs come back after the 120 s VT (seen live: read_ct 2).
-  - GitHub Actions still has no `GROQ_API_KEY`/`GEMINI_API_KEY` secrets, so `eval.yml` would run degraded and fail on a prompt change.
-  - Free-tier quotas: a full eval plus a 35-draft burst exhausted Groq and Gemini for the day. Keep load tests off the cloud stack before the demo.
-- **Exact next step:** P16 (docs, disclosures, demo script, `scripts/reset_demo.sh`, usability templates, tag `v1.0-round2`). Before tagging: apply the two migrations to cloud (user) and add the Actions secrets (user).
+- **Phase / status:** P16 / **partial** (2026-10-27). Everything Claude can do is done; the rest needs the team (below). P14 and P15 are done (see their rows; P15 details are in `docs/SECURITY.md` and README "Security and reliability").
+- **What P16 added:**
+  - `README.md` restructured: pitch and problem, Mermaid architecture and key decisions, Results (golden set, images, PDFs, usability pending), Changes since Round 1 (full table, including the Render/Singapore hosting change), models/services/data/templates/libraries with licences, limitations and roadmap, team and contributions, AI assistance through P16.
+  - `docs/DEMO.md`: a 3:40 script over F01–F06 with exact clicks and lines to say, a pre-session checklist, and a fallback table (LLM rate-limited → the four hero findings are all deterministic; worker asleep; insights not reset).
+  - `scripts/reset_demo.sh <SUPABASE_URL> --yes` + `scripts/sql/reset_demo.sql`: clears every PayWise content, rolls rule cards back to v1 (undoing F06's TV-04 v2), sets example suggestions back to pending, re-seeds, re-simulates. The SQL was tested locally (157 contents → 0; TV-04 v2 → v1 approved). **Not run against cloud.**
+  - `docs/usability/`: consent note, moderator script (A/B manual vs BrandLens with two captions that each carry the same four deterministic issues, verified in-process; tasks T1–T4), SUS form with scoring, results tables.
+  - `docs/SECURITY.md`: git history secret scan (clean; the one webhook match is a test fixture).
+- **Waiting on the team (P16 acceptance):**
+  1. **Cloud migrations** `…100020` (submit rate limit) and `…100021` (storage limits): apply with `supabase db push --db-url <session pooler>`. The code works without them.
+  2. **Usability sessions** (Jagpreet): run `docs/usability/tasks.md`, fill in `results.md`, then replace "Results pending" in README → Results.
+  3. **Contributions** (Jagpreet): add specifics to README → Team and contributions. Git shows every commit from `maanit-gupta`.
+  4. **Make the repo public** (currently PRIVATE) after a `gitleaks detect` pass; **tag `v1.0-round2`**; confirm the live link in README.
+  5. Optional: add `GROQ_API_KEY`/`GEMINI_API_KEY` as GitHub Actions secrets so `eval.yml` can run live on prompt changes.
+  6. Before judging: `scripts/reset_demo.sh`, then a recorded dry run per `docs/DEMO.md`.
+- **Gotchas:** `make check` resets the local DB (`make test-db`). Free-tier LLM quotas run out after a full eval plus a burst; keep load tests off the cloud stack on demo day.
+- **Exact next step:** the team items above, then tag `v1.0-round2`.
 
 ## Decisions log (append-only)
 
@@ -240,6 +241,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | P15 | Load test runs on the local stack, not the deployed one | 50 live reviews would spend the free-tier quota the live demo needs and write 50 drafts into the cloud demo org; `scripts/load_test.py` takes the cloud DATABASE_URL when wanted |
 | 2026-10-27 | P15 | Worker image builds as the `app` user with `COPY --chown` and `UV_NO_CACHE=1` | The final `chown -R` layer duplicated the venv |
 | 2026-10-27 | P15 | Recharts `accessibilityLayer={false}` on the decorative insights chart; toasts moved to top-center | axe `aria-hidden-focus` on /insights with real data; toasts covered the submit button |
+| 2026-10-27 | P16 | Demo reset deletes every PayWise content and rolls rule cards back to v1, then re-seeds and re-simulates | A known clean state for live judging; F06 (approving TV-04 examples) is repeatable |
+| 2026-10-27 | P16 | Usability captions use only deterministic issues | A/B results can't be skewed by LLM quota on test day |
+| 2026-10-27 | P16 | Not tagged `v1.0-round2` and repo left private | Usability results and contributions are pending, and making the repo public is the user's call |
 | 2026-10-27 | UI | `ui/U2` merged to `main` (fast-forward after merging `main` into it) without PR review and deployed (user request) | Same deploy-from-main flow as P10/P11; Jagpreet can review after the fact |
 | 2026-10-27 | UI | Terminal Noir UI reverted on `main` (web, lockfile and CLAUDE.md restored to pre-U0); the code stays on `ui/U2` | User: production didn't match the UI they run locally; they will ask for a rebuild later |
 | 2026-10-27 | all | Work directly on `main`; no phase/UI branches or worktrees (CLAUDE.md and the commands updated) | User rule: what runs on localhost from the main checkout is what ships |
