@@ -404,3 +404,8 @@ html [data-sonner-toaster] [data-sonner-toast] {
   border-radius: 6px;
   font-family: var(--font-sans);
 }
+/* Toasts are keyboard-focusable (alt+T); sonner removes the outline, so restore the focus ring. */
+html [data-sonner-toaster] [data-sonner-toast]:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
