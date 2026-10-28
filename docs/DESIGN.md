@@ -499,6 +499,12 @@ Every development decision has a visible home in the UI. If you add a decision t
 |---|---|
 | R0 Study | Done (`docs/ui-redesign/STUDY.md`) |
 | R1 Direction, tokens, fonts, lint | Done: this file, `globals.css`, `tokens.ts`, contrast test, ESLint bans, DM Sans/Mono |
-| R2–R11 | See STUDY.md §7 (R3 adds the illustration set before the landing rebuild in R5) |
+| R2 Primitives and shared components | Restyled in place (21st.dev ports still to come): buttons incl. `highlight` and `inverse`, inputs, cards, menus, tables, tabs, chips, modal, drawer, empty state |
+| R3 Illustrations and wordmark | Done: `components/illustrations/`, `LensMark`/`Wordmark`, favicon |
+| R4 App shell | Restyled; preview at `/dev/shell` (dev only, in the axe gate) |
+| R5 Landing and `/ai-use` | Done |
+| R6 Sign-in | `/login` done; system states use the new EmptyState/Forbidden |
+| R7–R10 Feature screens | First pass: panels, window cards, tables and chips restyled through shared components; page-level layouts and copy trims still to do |
+| R11 Polish | To do |
 
 Until each phase lands, older components keep their structure and pick up these tokens: ink and yellow replace violet, outlines replace hairlines where they use `border-line-strong`/`border-control`, labels are sans, and no shadows or grid remain.

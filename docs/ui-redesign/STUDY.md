@@ -341,6 +341,8 @@ Each phase: one session, on `UI/UX_jagpreet`, small conventional commits. **Gate
 
 R2 must land before R4–R10, and R3 before R5 and R6 (they use the illustrations). R7 → R8 share FindingCard, so do them in order.
 
+**Status 2026-10-28:** R1 done; R2–R6 done as a first pass (shared components restyled in place, illustrations, wordmark, shell, landing, `/ai-use`, `/login`); R7–R10 have a first pass through the shared components only. Signed-in routes are unverified on this machine (no local stack); see PROGRESS.md → Handoff.
+
 ---
 
 ## 8. Open questions
