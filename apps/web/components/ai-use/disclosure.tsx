@@ -77,19 +77,19 @@ export const SERVICES: Service[] = [
 /** One bordered cell per external service (DESIGN.md §6.10). */
 export function ServiceCells() {
   return (
-    <ul className="border-line bg-line grid gap-px border md:grid-cols-2">
+    <ul className="grid gap-5 md:grid-cols-2">
       {SERVICES.map((s) => (
-        <li key={s.name} className="bg-elevated space-y-3 p-5">
-          <h3 className="text-lg">{s.name}</h3>
+        <li key={s.name} className="bg-elevated border-outline space-y-3 rounded-lg border-2 p-6">
+          <h3 className="text-xl font-bold">{s.name}</h3>
           <p className="text-fg-muted text-sm">{s.purpose}</p>
           <dl className="grid gap-2 text-sm sm:grid-cols-[9rem_1fr]">
-            <dt className="mono-label text-fg-faint pt-0.5">Receives</dt>
+            <dt className="label text-fg-muted pt-0.5 font-semibold">Receives</dt>
             <dd>{s.receives}</dd>
-            <dt className="mono-label text-fg-faint pt-0.5">Retention / training</dt>
+            <dt className="label text-fg-muted pt-0.5 font-semibold">Retention / training</dt>
             <dd>{s.stance}</dd>
           </dl>
           {s.warning ? (
-            <p className="border-warning bg-warning-bg text-warning border px-3 py-2 text-sm">
+            <p className="border-warning bg-warning-bg text-warning rounded-sm border-2 px-3 py-2 text-sm">
               {s.warning}
             </p>
           ) : null}
@@ -97,7 +97,7 @@ export function ServiceCells() {
             href={s.policy}
             target="_blank"
             rel="noreferrer"
-            className="text-accent-soft inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
+            className="text-fg inline-flex items-center gap-1 text-sm font-semibold underline underline-offset-4"
           >
             {s.name} policy <ExternalLink aria-hidden className="size-3" />
             <span className="sr-only">(opens in a new tab)</span>
@@ -146,27 +146,30 @@ const STAGES: [string, string, "LOCAL" | "EXTERNAL", string][] = [
 export function HowAiWorks() {
   return (
     <div className="space-y-6">
-      <ol className="border-line bg-line grid gap-px border sm:grid-cols-2 lg:grid-cols-3">
+      <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {STAGES.map(([n, name, where, body]) => (
-          <li key={n} className="bg-elevated space-y-2 p-4">
+          <li key={n} className="bg-elevated border-outline space-y-2 rounded-lg border-2 p-5">
             <p className="flex items-center justify-between">
-              <span className="mono-label text-fg-faint">
-                {n} {name}
+              <span className="font-bold">
+                <span className="mono-id text-fg-muted mr-1.5">{n}</span>
+                {name}
               </span>
               <span
                 className={cn(
-                  "mono-label border px-1.5 py-0.5",
-                  where === "LOCAL" ? "border-success text-success" : "border-warning text-warning",
+                  "label rounded-sm border-2 px-1.5 py-0.5 font-semibold",
+                  where === "LOCAL"
+                    ? "border-success bg-success-bg text-success"
+                    : "border-outline bg-accent-deep text-fg",
                 )}
               >
-                {where}
+                {where === "LOCAL" ? "Local" : "External"}
               </span>
             </p>
             <p className="text-fg-muted text-sm">{body}</p>
           </li>
         ))}
       </ol>
-      <ul className="text-fg-muted list-disc space-y-2 pl-5 text-sm">
+      <ul className="text-fg list-disc space-y-2 pl-5 text-[0.9375rem]">
         <li>
           Anything checkable without a model is checked deterministically and never sent to an LLM.
         </li>
@@ -174,8 +177,8 @@ export function HowAiWorks() {
           One LLM call per draft (per page chunk for PDFs). A second sample only confirms blockers.
         </li>
         <li>
-          LLM findings carry an <span className="mono-label text-accent-soft">AI-ASSISTED</span>{" "}
-          label and record the model and prompt version.
+          LLM findings carry an <span className="font-semibold">AI-assisted</span> label and record
+          the model and prompt version.
         </li>
         <li>No uncited finding is ever shown.</li>
         <li>Nothing is published automatically. People approve; BrandLens never publishes.</li>
@@ -188,26 +191,26 @@ export function HowAiWorks() {
 export function QualityTable({ report }: { report: EvalSummary | null }) {
   if (!report)
     return (
-      <p className="text-fg-muted border-line border p-4 text-sm">
+      <p className="text-fg-muted bg-band-grey rounded-lg p-5 text-sm">
         The golden-set evaluation (P14) hasn&apos;t been committed to this build yet. Dimensions
         under 85% precision will ship as suggestions only.
       </p>
     );
   return (
     <div className="space-y-2">
-      <div className="border-line overflow-x-auto border">
+      <div className="border-outline bg-elevated overflow-x-auto rounded-lg border-2">
         <table className="w-full text-sm">
           <caption className="text-fg-faint px-4 py-2 text-left text-xs">
             Golden set of {report.rows} drafts, {report.generatedAt.slice(0, 10)}
           </caption>
-          <thead className="bg-elevated">
-            <tr className="border-line border-y">
+          <thead className="bg-band-grey">
+            <tr className="border-outline border-y-2">
               {["Dimension", "Precision", "Recall", "Max severity"].map((h, i) => (
                 <th
                   key={h}
                   scope="col"
                   className={cn(
-                    "mono-label text-fg-faint h-9 px-4 font-medium",
+                    "label text-fg h-11 px-4 font-semibold",
                     i && i < 3 ? "text-right" : "text-left",
                   )}
                 >
@@ -219,18 +222,18 @@ export function QualityTable({ report }: { report: EvalSummary | null }) {
           <tbody>
             {report.dimensions.map((d) => (
               <tr key={d.dimension} className="border-line border-b last:border-0">
-                <th scope="row" className="mono-label px-4 py-2 text-left font-medium">
+                <th scope="row" className="px-4 py-2 text-left font-semibold capitalize">
                   {d.dimension}
                 </th>
                 <td className="mono-id px-4 py-2 text-right">{d.precision.toFixed(2)}</td>
                 <td className="mono-id px-4 py-2 text-right">{d.recall.toFixed(2)}</td>
                 <td className="px-4 py-2">
                   {d.capped ? (
-                    <span className="mono-label border-warning text-warning border px-1.5 py-0.5">
-                      CAPPED · precision {d.precision.toFixed(2)}
+                    <span className="label border-warning bg-warning-bg text-warning rounded-sm border-2 px-1.5 py-0.5 font-semibold">
+                      Capped · precision {d.precision.toFixed(2)}
                     </span>
                   ) : (
-                    <span className="mono-label text-fg-muted">{d.maxSeverity}</span>
+                    <span className="text-fg-muted capitalize">{d.maxSeverity}</span>
                   )}
                 </td>
               </tr>

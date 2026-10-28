@@ -11,7 +11,7 @@ export default function NoAccessPage() {
       className="blueprint-grid flex min-h-dvh flex-1 items-center justify-center px-6"
     >
       <EmptyState
-        glyph="lock"
+        glyph="shield"
         className="w-full max-w-xl"
         title="You're not in an organisation yet"
         action={

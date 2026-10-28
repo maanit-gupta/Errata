@@ -1,36 +1,33 @@
-import { ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/**
- * Marketing buttons (DESIGN.md §4.1, §5): 44px, square, left-to-right violet wipe on hover with
- * a 2px chevron nudge. Reduced motion falls back to a colour change.
- */
+/** Marketing link-buttons (DESIGN.md §7.1): 48px, the product button variants, arrow on primary. */
 export function Cta({
   href,
   children,
   variant = "primary",
   external = false,
+  className,
 }: {
   href: string;
-  children: React.ReactNode;
-  variant?: "primary" | "secondary";
+  children: ReactNode;
+  variant?: "primary" | "highlight" | "outline" | "inverse";
   external?: boolean;
+  className?: string;
 }) {
-  const cls = cn(
-    "group relative inline-flex h-11 items-center gap-1.5 overflow-hidden px-5 text-sm font-medium",
-    "before:absolute before:inset-0 before:origin-left before:scale-x-0 before:bg-(--accent) before:transition-transform before:duration-200 before:ease-[cubic-bezier(.2,.8,.2,1)] hover:before:scale-x-100 focus-visible:before:scale-x-100",
-    variant === "primary"
-      ? "bg-fg text-canvas hover:text-accent-fg"
-      : "border-control text-fg hover:text-accent-fg border",
-  );
+  const cls = cn(buttonVariants({ variant, size: "lg" }), "group", className);
   const inner = (
     <>
-      <span className="relative">{children}</span>
-      <ChevronRight
-        aria-hidden
-        className="relative size-4 transition-transform duration-200 group-hover:translate-x-0.5"
-      />
+      {children}
+      {variant === "primary" || variant === "inverse" ? (
+        <ArrowRight
+          aria-hidden
+          className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transition-none"
+        />
+      ) : null}
     </>
   );
   return external ? (

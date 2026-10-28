@@ -4,7 +4,6 @@ export const SIDEBAR_COOKIE = "bl_sidebar";
 export const TIPCARD_COOKIE = "bl_tipcard";
 export const FLASH_COOKIE = "bl_flash";
 export const SKIP_LANDING_COOKIE = "bl_skip_landing";
-export const ANNOUNCE_COOKIE = "bl_announce";
 export const SHORTCUTS_KEY = "bl_shortcuts";
 
 export type ThemeChoice = "dark" | "light" | "system";

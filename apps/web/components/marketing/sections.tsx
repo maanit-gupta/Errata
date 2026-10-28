@@ -1,41 +1,63 @@
+import { FileCheck2, Lock, Quote, ShieldCheck, Stamp, UserCheck } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
-import { PixelGlyph, type GlyphName } from "@/components/brand/pixel-glyphs";
+import { IconTile } from "@/components/brand/icon-tile";
+import { SeverityBadge } from "@/components/brand/severity-badge";
+import {
+  HeroScene,
+  StepApproveScene,
+  StepCheckScene,
+  StepRulesScene,
+} from "@/components/illustrations";
 import { Cta } from "@/components/marketing/cta";
-import { README } from "@/components/marketing/links";
 import { Reveal } from "@/components/motion/reveal";
-import type { EvalSummary } from "@/lib/eval-report";
 import { cn } from "@/lib/utils";
 
-/** Marketing section shell: 128/80/64px vertical rhythm, 1280px grid, hairline top. */
+/** Marketing section shell (DESIGN.md §5.2): band colour, 1200px container, 96px rhythm. */
 export function Section({
   id,
-  eyebrow,
   title,
+  intro,
+  band = "white",
+  angled = false,
   children,
   className,
 }: {
   id?: string;
-  eyebrow?: string;
   title?: ReactNode;
+  intro?: ReactNode;
+  band?: "white" | "grey" | "pink";
+  angled?: boolean;
   children: ReactNode;
   className?: string;
 }) {
   return (
     <section
       id={id}
-      aria-labelledby={id ? `${id}-h` : undefined}
-      className={cn("border-line relative scroll-mt-20 border-t", className)}
+      aria-labelledby={id && title ? `${id}-h` : undefined}
+      className={cn(
+        "scroll-mt-24",
+        band === "grey" && "bg-band-grey",
+        band === "pink" && "bg-band-pink",
+        angled && "band-angled",
+        className,
+      )}
     >
-      <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6 md:py-20 lg:py-32">
-        {eyebrow ? <p className="mono-label text-accent-soft mb-4">{eyebrow}</p> : null}
+      <div
+        className={cn(
+          "mx-auto max-w-[1200px] px-4 py-16 sm:px-6 md:py-24",
+          angled && "pt-[calc(var(--angle)+4rem)] md:pt-[calc(var(--angle)+6rem)]",
+        )}
+      >
         {title ? (
-          <Reveal>
+          <Reveal className="mb-12 max-w-2xl space-y-4">
             <h2
               id={id ? `${id}-h` : undefined}
-              className="mb-12 max-w-4xl text-[clamp(32px,4vw,52px)] leading-[1.08] font-light tracking-[-0.02em]"
+              className="text-[clamp(30px,3.6vw,48px)] leading-[1.1] font-semibold tracking-[-0.02em]"
             >
               {title}
             </h2>
+            {intro ? <p className="text-fg-muted text-lg">{intro}</p> : null}
           </Reveal>
         ) : null}
         {children}
@@ -44,314 +66,214 @@ export function Section({
   );
 }
 
-/** §8.4 left: the one multicolour sentence in the product. */
-export function DimensionSentence() {
-  const span = (c: string, t: string) => <span style={{ color: `var(--dim-${c})` }}>{t}</span>;
-  return (
-    <p id="checks" className="scroll-mt-24 text-[clamp(24px,2.6vw,34px)] leading-snug font-light">
-      Checks {span("tone", "tone of voice")}, {span("terms", "product terms")},{" "}
-      {span("facts", "dates, venues and fees")}, {span("claims", "return claims")},{" "}
-      <span className="opacity-80">
-        {span("visual", "logos and palette")}, and {span("access", "contrast and alt text")}
-      </span>
-      <span className="text-fg-muted">
-        . Against your approved rules, not a model&apos;s taste.
-      </span>
-    </p>
-  );
-}
-
-/** §8.4 right: plan p.5's real failure trace as a mini UI. */
-export function BleedCard() {
-  return (
-    <figure className="border-line-strong bg-elevated border">
-      <div className="border-line flex items-center gap-1.5 border-b px-3 py-2">
-        <span aria-hidden className="bg-blocker size-2" />
-        <span aria-hidden className="bg-line-strong size-2" />
-        <span aria-hidden className="bg-line-strong size-2" />
-        <span className="mono-label text-fg-faint ml-2">Instagram caption · Diwali SIP · v1</span>
-      </div>
-      <div className="space-y-4 p-4 text-sm">
-        <p className="bg-code font-mono text-[0.8125rem] leading-relaxed">
-          …registrations for the webinar{" "}
-          <mark className="bg-blocker-bg text-fg decoration-blocker underline decoration-2 underline-offset-4">
-            close Oct 18 at Hall B, Chandigarh
-          </mark>
-          .
-        </p>
-        <div className="border-line space-y-1 border-l-2 pl-3 font-mono text-[0.78125rem]">
-          <p className="text-fg-faint">[03 filters] fact vault match</p>
-          <p className="text-fg-muted">E-19 · Diwali SIP webinar · Oct 28, online</p>
-          <p className="text-fg-muted">E-11 · Navratri Savings 2026 · Oct 18, Hall B (ended)</p>
-        </div>
-        <p className="flex flex-wrap items-center gap-2">
-          <span className="mono-label bg-blocker text-blocker-fg px-1.5 py-0.5">BLOCKER</span>
-          <span className="mono-id text-accent-soft border-line-strong border px-1.5">E-19</span>
-          <span className="text-fg-muted">value belongs to Navratri Savings 2026</span>
-        </p>
-      </div>
-      <figcaption className="border-line text-fg-muted border-t px-4 py-2.5 text-xs">
-        Caught at Stage 3, with no AI judgement needed.
-      </figcaption>
-    </figure>
-  );
-}
-
-function Snippet({ children }: { children: ReactNode }) {
-  return (
-    <pre className="bg-code border-line text-fg-muted overflow-x-auto border p-4 font-mono text-[0.78125rem] leading-[1.6] whitespace-pre-wrap">
-      {children}
-    </pre>
-  );
-}
-
-const FEATURES: {
-  id?: string;
-  eyebrow: string;
-  title: string;
-  body: string;
-  anchor: string;
-  snippet: ReactNode;
-}[] = [
-  {
-    eyebrow: "CITATION GATE",
-    title: "No uncited finding is ever shown",
-    body: "A finding survives only if the rule or fact it cites was retrieved for this run, matches its dimension, and its quote is found in your draft.",
-    anchor: "citation-gate",
-    snippet: (
-      <>
-        <span className="text-success">✓ kept CL-03</span> (retrieved, dim=claims, quote found)
-        {"\n"}
-        <span className="text-success">✓ kept E-19</span> (deterministic, fact vault){"\n"}
-        <span className="text-danger">✕ dropped X-99</span> (not retrieved){"\n"}
-        <span className="text-danger">✕ dropped TV-04</span> (quote not in draft)
-      </>
-    ),
-  },
-  {
-    eyebrow: "INTENT-VERIFIED REWRITES",
-    title: "Fixes that keep your hook",
-    body: "Every rewrite is re-checked against the intent you gave: same goal, same audience, same call to action. If it drifts, you get no fix rather than a bad one.",
-    anchor: "intent-verification",
-    snippet: (
-      <>
-        <span className="text-blocker line-through">“14.2% assured annual returns”</span>
-        {"\n"}
-        <span className="text-success">“14.2% 3-yr historical CAGR*”</span>
-        {"\n\n"}cosine 0.91 ≥ 0.82 · CTA “Register now” kept{"\n"}
-        re-check <span className="text-success">✓</span> · 9ms
-      </>
-    ),
-  },
-  {
-    eyebrow: "RISK-ROUTED REVIEW",
-    title: "Reviewers see the riskiest work first",
-    body: "Open claims go to Legal, contrast to Accessibility, and clean drafts skip straight to the approver queue. The reason is written on every row.",
-    anchor: "routing",
-    snippet: (
-      <>
-        RISK <span className="text-blocker">■■■■□</span> 22 Flexi-Cap deck{" "}
-        <span className="text-accent-soft">→ LEGAL</span>
-        {"\n"}RISK <span className="text-warning">■■■□□</span> 14 Diwali SIP caption{" "}
-        <span className="text-accent-soft">→ MANAGER</span>
-        {"\n"}RISK <span className="text-warning">■□□□□</span> 6 Webinar invite{" "}
-        <span className="text-accent-soft">→ MANAGER</span>
-        {"\n\n"}rule: open CL-03 claim → Legal · approver queue skipped
-      </>
-    ),
-  },
-  {
-    id: "insights",
-    eyebrow: "GUIDELINE CLARITY SCORE",
-    title: "Find the rules that confuse people",
-    body: "Dismissals, overrides and low-confidence hits add up to a score per rule. Unclear rules get generated do/don't examples for a brand admin to approve.",
-    anchor: "guideline-clarity-score",
-    snippet: (
-      <>
-        RULE N GCS STATUS{"\n"}
-        <span className="text-blocker">TV-04 60 41 UNCLEAR</span>
-        {"\n"}VS-02 73 58 <span className="text-blocker">UNCLEAR</span>
-        {"\n"}CL-03 97 82 <span className="text-success">clear</span>
-        {"\n"}G-07 99 91 <span className="text-success">clear</span>
-      </>
-    ),
-  },
+const POINTS = [
+  { Icon: Quote, label: "Cites every flag" },
+  { Icon: FileCheck2, label: "Checks facts and dates" },
+  { Icon: UserCheck, label: "People approve" },
 ];
 
-/** §8.5 feature cells, 2 up. */
-export function FeatureCells() {
+/** Hero (DESIGN.md §9): headline, one line, two buttons, three icon points, the hero scene. */
+export function Hero() {
   return (
-    <div className="border-line bg-line grid gap-px border md:grid-cols-2">
-      {FEATURES.map((f, i) => (
-        <Reveal key={f.eyebrow} index={i} className="bg-canvas flex flex-col gap-4 p-6 lg:p-8">
-          <p id={f.id} className="mono-label text-fg-faint scroll-mt-24">
-            {f.eyebrow}
-          </p>
-          <h3 className="text-2xl font-light">{f.title}</h3>
-          <p className="text-fg-muted max-w-[60ch] text-[0.9375rem]">{f.body}</p>
-          <Snippet>{f.snippet}</Snippet>
-          <a
-            href={README(f.anchor)}
-            className="text-accent-soft mt-auto text-sm underline-offset-4 hover:underline"
+    <section aria-labelledby="hero-h" className="overflow-hidden">
+      <div className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pt-14 pb-16 sm:px-6 md:pt-20 lg:grid-cols-[1fr_1.05fr] lg:pb-24">
+        <div className="space-y-8">
+          <h1
+            id="hero-h"
+            className="text-[clamp(40px,5.5vw,72px)] leading-[1.05] font-semibold tracking-[-0.03em]"
           >
-            Docs →<span className="sr-only"> {f.title}</span>
-          </a>
-        </Reveal>
-      ))}
-    </div>
+            Every draft, checked before it ships.
+          </h1>
+          <p className="text-fg-muted max-w-[34rem] text-lg leading-relaxed">
+            BrandLens checks posts, decks and images against your approved rules and facts. Every
+            flag cites its source. People approve.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Cta href="/login">Try the demo</Cta>
+            <Cta href="#how-it-works" variant="highlight">
+              How it works
+            </Cta>
+          </div>
+          <ul className="grid gap-4 pt-2 sm:grid-cols-3">
+            {POINTS.map(({ Icon, label }) => (
+              <li key={label} className="flex items-center gap-3 text-[0.9375rem] leading-snug">
+                <IconTile Icon={Icon} />
+                {label}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <HeroScene className="mx-auto w-full max-w-[560px]" />
+      </div>
+    </section>
   );
 }
 
-/** §8.6 guarantees band. Latency rows read the P14 report when it exists, else show TARGET. */
-export function GuaranteesBand({ report }: { report: EvalSummary | null }) {
-  const date = report?.generatedAt.slice(0, 10);
-  const p95 = report?.p95TotalMs != null ? `${(report.p95TotalMs / 1000).toFixed(1)} s` : null;
-  const intent = report?.intentP95Ms != null ? `${report.intentP95Ms} ms` : null;
-  const cells: { value: string; label: string; chip?: string }[] = [
-    { value: "100%", label: "of shown flags cite a rule, fact or WCAG criterion" },
-    { value: "0", label: "unapproved auto-publishes. BrandLens has no publish button" },
-    {
-      value: p95 ?? "<15 s",
-      label: "P95 text analysis, ≤ 2,000 words",
-      chip: p95 ? `MEASURED · ${date}` : "TARGET",
-    },
-    {
-      value: intent ?? "<15 ms",
-      label: "intent verification per rewrite",
-      chip: intent ? `MEASURED · ${date}` : "TARGET",
-    },
-  ];
-  return (
-    <ul className="border-line bg-line grid gap-px border sm:grid-cols-2 lg:grid-cols-4">
-      {cells.map((c) => (
-        <li key={c.label} className="bg-canvas space-y-3 p-6">
-          <p className="font-mono text-[clamp(36px,4vw,56px)] leading-none font-light">{c.value}</p>
-          <p className="text-fg-muted text-sm">{c.label}</p>
-          {c.chip ? (
-            <p
-              className={cn(
-                "mono-label inline-block border px-1.5 py-0.5",
-                c.chip === "TARGET"
-                  ? "border-line-strong text-fg-faint"
-                  : "border-success text-success",
-              )}
-            >
-              {c.chip}
-            </p>
-          ) : null}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-const EVIDENCE = [
+const STEPS = [
   {
-    value: "98%",
-    label: "of ads ASCI scrutinised in FY 2024–25 needed modification",
-    source: "ASCI Annual Complaints Report 2024–25",
-    href: "https://www.ascionline.in/wp-content/uploads/2025/05/ASCI-Press-Release-Annual-Complaints-Report-2024-25-1.pdf",
+    Scene: StepRulesScene,
+    title: "Add your rules",
+    body: "Upload your brand guide. Approve the rule cards and facts it drafts.",
   },
   {
-    value: "79.1%",
-    label: "of the top million home pages have low-contrast text",
-    source: "WebAIM Million 2025",
-    href: "https://webaim.org/projects/million/2025",
+    Scene: StepCheckScene,
+    title: "Check a draft",
+    body: "Paste a caption or upload a file. Each flag names the rule it breaks.",
   },
   {
-    value: "49%",
-    label: "of marketers cite tone-of-voice issues with AI-generated content",
-    source: "Kaltura 2023 survey, n=500",
-    href: "https://www.mediapost.com/publications/article/390709/",
-  },
-  {
-    value: "72–96 h",
-    label: "typical turnaround per post across approval chains",
-    source: "Our 4 discovery interviews, Oct 2026",
-    href: README("discovery"),
+    Scene: StepApproveScene,
+    title: "Review and approve",
+    body: "Risky drafts go to the right reviewer. Every decision is logged.",
   },
 ];
 
-/** §8.7 evidence band, every stat footnoted. */
-export function EvidenceBand() {
+/** How it works: three illustrated feature cards. */
+export function Steps() {
   return (
-    <ol className="border-line bg-line grid gap-px border sm:grid-cols-2 lg:grid-cols-4">
-      {EVIDENCE.map((e, i) => (
-        <li key={e.value} className="bg-canvas flex flex-col gap-3 p-6">
-          <p className="text-[clamp(36px,4vw,56px)] leading-none font-light">{e.value}</p>
-          <p className="text-fg-muted text-sm">{e.label}</p>
-          <p className="mono-id text-fg-faint mt-auto text-xs">
-            [{i + 1}]{" "}
-            <a
-              href={e.href}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-fg underline underline-offset-4"
-            >
-              {e.source}
-              <span className="sr-only"> (opens in a new tab)</span>
-            </a>
-          </p>
+    <ol className="grid gap-6 md:grid-cols-3">
+      {STEPS.map(({ Scene, title, body }, i) => (
+        <li key={title}>
+          <Reveal
+            index={i}
+            className="bg-elevated border-outline flex h-full flex-col overflow-hidden rounded-lg border-2"
+          >
+            <div className="bg-band-pink border-outline flex items-center justify-center border-b-2 px-6 py-6">
+              <Scene className="w-full max-w-[260px]" />
+            </div>
+            <div className="space-y-2 p-6">
+              <p className="mono-id text-fg-muted">Step {i + 1}</p>
+              <h3 className="text-xl leading-tight font-bold tracking-[-0.01em]">{title}</h3>
+              <p className="text-fg-muted text-[0.9375rem]">{body}</p>
+            </div>
+          </Reveal>
         </li>
       ))}
     </ol>
   );
 }
 
-const TRUST: { glyph: GlyphName; title: string; body: string }[] = [
+/** The context-bleed example: last campaign's venue caught by a Fact Vault match. */
+export function BleedExample() {
+  return (
+    <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
+      <div className="space-y-4">
+        <h2
+          id="example-h"
+          className="text-[clamp(30px,3.6vw,48px)] leading-[1.1] font-semibold tracking-[-0.02em]"
+        >
+          Caught without AI.
+        </h2>
+        <p className="text-fg-muted max-w-md text-lg">
+          The draft reused last campaign&apos;s date and venue. The Fact Vault knows this
+          campaign&apos;s details, so the flag is certain and cites{" "}
+          <span className="mono-id text-fg">E-19</span>.
+        </p>
+      </div>
+      <figure className="bg-elevated border-outline overflow-hidden rounded-lg border-2">
+        <div className="bg-highlight border-outline flex h-10 items-center gap-2 border-b-2 px-4">
+          {[0, 1, 2].map((i) => (
+            <span key={i} aria-hidden className="bg-highlight-fg size-2 rounded-full" />
+          ))}
+          <span className="text-highlight-fg ml-2 text-sm font-semibold">
+            Instagram caption · v1
+          </span>
+        </div>
+        <div className="space-y-5 p-6">
+          <p className="text-base leading-relaxed">
+            …webinar registrations{" "}
+            <mark className="bg-blocker-bg text-fg decoration-blocker underline decoration-2 underline-offset-4">
+              close Oct 18 at Hall B, Chandigarh
+            </mark>
+            .
+          </p>
+          <div className="bg-code space-y-1 rounded-sm p-4 font-mono text-[0.8125rem] leading-relaxed">
+            <p className="text-fg-muted">Fact Vault match</p>
+            <p>E-19 · Diwali SIP webinar · Oct 28, online</p>
+            <p className="text-fg-muted">E-11 · Navratri Savings · Oct 18, Hall B (ended)</p>
+          </div>
+          <p className="flex flex-wrap items-center gap-2 text-[0.9375rem]">
+            <SeverityBadge severity="blocker" />
+            <span className="mono-id border-outline rounded-sm border-2 px-1.5">E-19</span>
+            Date and venue belong to another campaign.
+          </p>
+        </div>
+      </figure>
+    </div>
+  );
+}
+
+const TRUST = [
   {
-    glyph: "shield-check",
-    title: "Minimal context to the AI",
-    body: "Only the redacted draft chunk and the top-k retrieved snippets are sent.",
+    Icon: ShieldCheck,
+    title: "Minimal context to AI",
+    body: "Only the redacted draft and a few rule snippets.",
   },
+  { Icon: Lock, title: "Never-send items", body: "Mark a rule or fact and it stays local." },
   {
-    glyph: "chart-bars",
-    title: "Local embeddings",
-    body: "Vault text is embedded inside our own worker with bge-small; it never leaves for an embedding API.",
+    Icon: FileCheck2,
+    title: "Isolated by organisation",
+    body: "Row-level security on every table.",
   },
-  {
-    glyph: "lock",
-    title: "Never-send vault items",
-    body: "Mark a rule or fact “never send” and it is checked locally only.",
-  },
-  {
-    glyph: "id-badge",
-    title: "Row-level isolation per organisation",
-    body: "Postgres row-level security on every organisation table, including realtime.",
-  },
-  {
-    glyph: "stamp",
-    title: "Human sign-off",
-    body: "Approvals are recorded with a reason. Nothing is published automatically.",
-  },
-  {
-    glyph: "eye",
-    title: "AI-use disclosure",
-    body: "Every external provider is named, with what it receives and how it treats it.",
-  },
+  { Icon: Stamp, title: "People sign off", body: "Nothing is published automatically." },
 ];
 
-/** §8.9 responsible-design grid. */
-export function TrustGrid() {
+/** Trust band: four short points and a link to the AI-use page. */
+export function TrustPoints() {
   return (
     <>
-      <ul className="border-line bg-line grid gap-px border sm:grid-cols-2 lg:grid-cols-3">
-        {TRUST.map((t, i) => (
-          <li key={t.title} className="bg-canvas p-6">
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {TRUST.map(({ Icon, title, body }, i) => (
+          <li key={title}>
             <Reveal index={i} className="space-y-3">
-              <PixelGlyph name={t.glyph} size={32} />
-              <h3 className="text-xl font-light">{t.title}</h3>
-              <p className="text-fg-muted text-sm">{t.body}</p>
+              <IconTile Icon={Icon} />
+              <h3 className="text-lg leading-tight font-bold">{title}</h3>
+              <p className="text-fg-muted text-[0.9375rem]">{body}</p>
             </Reveal>
           </li>
         ))}
       </ul>
-      <div className="mt-10 flex flex-wrap gap-3">
-        <Cta href="/login">Try the demo</Cta>
-        <Cta href="/ai-use" variant="secondary">
-          Services &amp; AI use
+      <p className="mt-10">
+        <Link
+          href="/ai-use"
+          className="text-fg text-[0.9375rem] font-semibold underline underline-offset-4 hover:decoration-2"
+        >
+          See every service and what it receives
+        </Link>
+      </p>
+    </>
+  );
+}
+
+/** Featured card (DESIGN.md §7.4): the demo call to action. */
+export function FeaturedDemo() {
+  return (
+    <div className="grid items-center gap-10 lg:grid-cols-[1fr_1fr]">
+      <div className="space-y-4">
+        <h2
+          id="demo-h"
+          className="text-[clamp(30px,3.6vw,48px)] leading-[1.1] font-semibold tracking-[-0.02em]"
+        >
+          Try it as any role.
+        </h2>
+        <p className="text-fg-muted max-w-md text-lg">
+          Sign in as a creator, a reviewer or Legal. No sign-up.
+        </p>
+      </div>
+      <div className="bg-accent text-accent-fg relative rounded-lg p-8 pt-10">
+        <span className="bg-highlight text-highlight-fg border-outline absolute -top-4 right-8 rounded-sm border-2 px-3 py-1 text-sm font-bold">
+          Live demo
+        </span>
+        <h3 className="text-2xl font-bold tracking-[-0.01em]">PayWise workspace</h3>
+        <p className="mt-2 opacity-90">A fictional fund app with real rules and drafts.</p>
+        <ul className="mt-6 space-y-2 text-[0.9375rem]">
+          <li>Six demo roles</li>
+          <li>Drafts ready to check</li>
+          <li>Nothing is ever published</li>
+        </ul>
+        <Cta href="/login" variant="inverse" className="mt-8 w-full sm:w-auto">
+          Open the demo
         </Cta>
       </div>
-    </>
+    </div>
   );
 }

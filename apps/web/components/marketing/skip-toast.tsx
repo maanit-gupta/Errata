@@ -13,17 +13,17 @@ export function SkipToast() {
   return (
     <aside
       aria-label="Skip the landing page"
-      className="bg-elevated border-line-strong shadow-pop fixed top-20 right-4 z-30 flex max-w-xs items-start gap-3 border p-3 text-sm"
+      className="bg-elevated border-outline fixed top-24 right-4 z-30 flex max-w-xs items-start gap-3 rounded-[8px] border-2 p-4 text-[0.9375rem]"
     >
       <div className="space-y-2">
-        <p>Skip this page next time?</p>
+        <p className="font-semibold">Open the app by default?</p>
         <button
           type="button"
           onClick={() => {
             setPrefCookie(SKIP_LANDING_COOKIE, "1");
             router.push("/drafts");
           }}
-          className="bg-fg text-canvas hover:bg-accent hover:text-accent-fg inline-flex h-8 items-center gap-1 px-3 text-sm font-medium"
+          className="bg-accent text-accent-fg hover:bg-accent-hover inline-flex h-9 items-center gap-1 rounded-sm px-3 text-sm font-semibold"
         >
           Always open app <ChevronRight aria-hidden className="size-4" />
         </button>
@@ -32,7 +32,7 @@ export function SkipToast() {
         type="button"
         aria-label="Dismiss"
         onClick={() => setOpen(false)}
-        className="text-fg-muted hover:text-fg inline-flex size-7 items-center justify-center"
+        className="text-fg hover:bg-hover inline-flex size-8 items-center justify-center rounded-sm"
       >
         <X aria-hidden className="size-4" />
       </button>

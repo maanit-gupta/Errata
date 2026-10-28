@@ -1,58 +1,63 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/brand/wordmark";
 import { EVAL_REPORT, LICENCE, README, REPO } from "@/components/marketing/links";
-import { PixelComposition } from "@/components/marketing/pixel-sprites";
 
 const COLS: { head: string; links: { label: string; href: string; external?: boolean }[] }[] = [
   {
-    head: "PRODUCT",
+    head: "Product",
     links: [
-      { label: "Checks", href: "/#checks" },
-      { label: "Workflow", href: "/#how-it-works" },
-      { label: "Insights", href: "/#insights" },
+      { label: "How it works", href: "/#how-it-works" },
+      { label: "Example", href: "/#example" },
+      { label: "Try the demo", href: "/login" },
     ],
   },
   {
-    head: "TRUST",
+    head: "Trust",
     links: [
-      { label: "Responsible AI", href: "/#responsible" },
       { label: "Services & AI use", href: "/ai-use" },
+      { label: "How we handle data", href: "/#trust" },
       { label: "Security notes", href: README("security"), external: true },
     ],
   },
   {
-    head: "BUILD",
+    head: "Build",
     links: [
       { label: "GitHub", href: REPO, external: true },
       { label: "README", href: README(), external: true },
       { label: "Eval report", href: EVAL_REPORT, external: true },
-      { label: "Licence AGPL-3.0", href: LICENCE, external: true },
+      { label: "Licence (AGPL-3.0)", href: LICENCE, external: true },
     ],
   },
 ];
 
-/** Marketing footer (DESIGN.md §8.11). */
+const linkCls = "text-highlight-fg underline underline-offset-4 hover:decoration-2";
+
+/** Marketing footer (DESIGN.md §5.2): yellow band with an ink bottom bar. */
 export function MarketingFooter() {
   return (
-    <footer className="border-line relative overflow-hidden border-t">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 pt-16 pb-40 sm:grid-cols-2 sm:px-6 lg:grid-cols-4">
+    <footer className="bg-highlight text-highlight-fg border-outline border-t-2">
+      <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="space-y-3">
+          {/* The mark's paper tile keeps the logo readable on yellow in both themes. */}
+          <Wordmark className="text-highlight-fg" />
+          <p className="max-w-xs text-[0.9375rem]">
+            Every draft checked against your brand. Every flag cited.
+          </p>
+          <p className="text-sm">Maanit Gupta · Jagpreet Singh · SRMIST</p>
+        </div>
         {COLS.map((c) => (
-          <nav key={c.head} aria-label={c.head.toLowerCase()}>
-            <p className="mono-label text-fg-faint mb-3">{c.head}</p>
-            <ul className="space-y-2 text-sm">
+          <nav key={c.head} aria-label={c.head}>
+            <h2 className="mb-3 text-base font-bold">{c.head}</h2>
+            <ul className="space-y-2 text-[0.9375rem]">
               {c.links.map((l) => (
                 <li key={l.label}>
                   {l.external ? (
-                    <a
-                      href={l.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-fg-faint hover:text-fg"
-                    >
+                    <a href={l.href} target="_blank" rel="noreferrer" className={linkCls}>
                       {l.label}
                       <span className="sr-only"> (opens in a new tab)</span>
                     </a>
                   ) : (
-                    <Link href={l.href} className="text-fg-faint hover:text-fg">
+                    <Link href={l.href} className={linkCls}>
                       {l.label}
                     </Link>
                   )}
@@ -61,22 +66,12 @@ export function MarketingFooter() {
             </ul>
           </nav>
         ))}
-        <div>
-          <p className="mono-label text-fg-faint mb-3">TEAM</p>
-          <ul className="text-fg-faint space-y-2 text-sm">
-            <li>Maanit Gupta · AI &amp; backend</li>
-            <li>Jagpreet Singh · Product &amp; UX</li>
-            <li>SRMIST</li>
-          </ul>
-        </div>
       </div>
-      <PixelComposition className="absolute -bottom-2 -left-4 opacity-90" />
-      <div className="border-line relative mx-auto flex max-w-[1280px] flex-wrap justify-between gap-2 border-t px-4 py-4 text-xs sm:px-6">
-        <p className="text-fg-faint bg-canvas">
-          Demo brand PayWise and its data are fictional. Product names are trademarks of their
-          owners.
-        </p>
-        <p className="text-fg-faint bg-canvas">© BrandLens 2026</p>
+      <div className="bg-accent text-accent-fg">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-2 px-4 py-3 text-sm sm:px-6">
+          <p>PayWise is a fictional demo brand.</p>
+          <p>© 2026 BrandLens</p>
+        </div>
       </div>
     </footer>
   );
