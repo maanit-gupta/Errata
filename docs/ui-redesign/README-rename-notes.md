@@ -46,3 +46,7 @@ The GitHub repo moved from `maanit-gupta/BrandLens` to **https://github.com/maan
 | 95 | `https://brandlens-app.vercel.app` (Vercel project `brandlens`), `https://brandlens-worker.onrender.com` (Render service `brandlens-worker`) | Hosting names are separate from the repo name. Renaming them is a separate task |
 | 100 | `Render Dashboard → New → Blueprint → select this repo` | "This repo" is still correct: it is now `maanit-gupta/Errata` |
 | 102 | `the GitHub repo variable WORKER_URL` | Repo variables move with the repo on a rename |
+
+## Applied (2026-10-29)
+
+The owner asked for the README to be updated, so the changes above are now in `README.md` (plus the redesign, the demo video, the local-stack options and a "Names that still say brandlens" section). This file stays as the record of why each line changed.

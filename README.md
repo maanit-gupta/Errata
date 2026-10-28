@@ -1,18 +1,21 @@
-# BrandLens
+# Errata
 
-**Pre-publication brand governance.** Every draft (text, doc, image, PDF) is checked against an organisation's approved rule cards, facts and assets, and every flag cites the rule or fact ID it was checked against. Humans approve; BrandLens never publishes.
+**Pre-publication checks with cited rules.** Every draft (text, doc, image, PDF) is checked against an organisation's approved rule cards, facts and assets, and every flag cites the rule or fact ID it was checked against. Humans approve; Errata never publishes.
 
 Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") by Maanit Gupta and Jagpreet Singh (SRMIST).
 
-- **Live app:** https://brandlens-app.vercel.app. On the login page, pick a role under "Try a demo role" (no password needed). All data is the fictional PayWise brand.
-- **Demo script:** [`docs/DEMO.md`](docs/DEMO.md) (3–4 minutes, storyboard F01–F06).
-- **Build spec:** [`docs/SPEC.md`](docs/SPEC.md) · **Security review:** [`docs/SECURITY.md`](docs/SECURITY.md) · **Build log:** [`PROGRESS.md`](PROGRESS.md)
+> Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; package, service and project names still use `brandlens` (see [Names that still say brandlens](#names-that-still-say-brandlens)).
 
-## The problem, and what BrandLens does
+- **Live app:** https://brandlens-app.vercel.app. On the login page, pick a role under "Try a demo role" (no password needed). All data is the fictional PayWise brand.
+- **Demo video:** a 60-second silent walkthrough with captions and a transcript, under "How it works" on the landing page (`apps/web/public/demo/`).
+- **Demo script:** [`docs/DEMO.md`](docs/DEMO.md) (3–4 minutes, storyboard F01–F06).
+- **Build spec:** [`docs/SPEC.md`](docs/SPEC.md) · **Design system:** [`docs/DESIGN.md`](docs/DESIGN.md) · **Security review:** [`docs/SECURITY.md`](docs/SECURITY.md) · **Build log:** [`PROGRESS.md`](PROGRESS.md)
+
+## The problem, and what Errata does
 
 Marketing teams in regulated categories (PayWise is a fictional Indian mutual-fund app) publish under brand guides and compliance rules that live in PDFs nobody re-reads. Mistakes are cheap to make and expensive to ship: a "guaranteed returns" claim, last campaign's event date, a misspelt brand name, an inaccessible colour pair.
 
-BrandLens turns the guide into **rule cards** and a **Fact Vault**, checks each draft before it goes out, and **cites** the rule or fact behind every flag. A creator states the draft's intent (goal, audience, CTA, channel, campaign) and gets findings with suggested rewrites that keep that intent. Blockers route to the right reviewer (Legal or Accessibility), every decision needs a reason, and nothing is published automatically. Over time, the **Guideline Clarity Score** shows which rules reviewers keep overriding, so the brand team can fix the rule rather than blame the writer.
+Errata turns the guide into **rule cards** and a **Fact Vault**, checks each draft before it goes out, and **cites** the rule or fact behind every flag. A creator states the draft's intent (goal, audience, CTA, channel, campaign) and gets findings with suggested rewrites that keep that intent. Blockers route to the right reviewer (Legal or Accessibility), every decision needs a reason, and nothing is published automatically. Over time, the **Guideline Clarity Score** shows which rules reviewers keep overriding, so the brand team can fix the rule rather than blame the writer.
 
 ## How it works
 
@@ -67,13 +70,15 @@ A deliberately broken prompt drops tone precision to 0.43, and the gate fails th
 
 **Images** ([`vision_report.md`](apps/worker/eval/vision_report.md)): logo found in 9/9 creatives with 0 false positives; WCAG contrast within ±0.1 of WebAIM on 40/40 PNG colour pairs; 1.1 s per creative. **PDF decks** ([`pdf_report.md`](apps/worker/eval/pdf_report.md)): 9/9 seeded issues found on the right page, including two hidden-text injections; a 40-page deck stays under 512 MB.
 
-**Usability:** A/B benchmark (manual guideline check vs BrandLens) and SUS templates are in [`docs/usability/`](docs/usability/). _Results pending: sessions are run by Jagpreet._
+**Usability:** A/B benchmark (manual guideline check vs Errata) and SUS templates are in [`docs/usability/`](docs/usability/). _Results pending: sessions are run by Jagpreet._
 
 ## Quick start
 
 Requires Node 22+, pnpm, [uv](https://docs.astral.sh/uv/), the Supabase CLI and Docker.
 
 ```bash
+git clone https://github.com/maanit-gupta/Errata.git
+cd Errata
 make setup   # pnpm install + uv sync
 make dev     # web on :3000, worker on :8000 (GET /healthz)
 make check   # lint + types + tests
@@ -88,6 +93,8 @@ make setup && make models   # deps + the bge-small embedding model
 make db-start && make db-reset
 make dev-local              # web :3000 + worker :8000 against the LOCAL Supabase stack
 ```
+
+Low on disk? `make db-start lite=1` skips Studio, mail, analytics, the image proxy and edge functions. If the Supabase CLI isn't installed, `make` falls back to `npx supabase@2`. On a fresh clone without `apps/web/.env.local` or `apps/worker/.env`, `make dev-local` fills in local-only defaults (`scripts/local-supabase-env.sh`). The LLM keys are placeholders, so reviews run in degraded mode (deterministic findings only) until you add real keys.
 
 `make dev` runs against whatever `apps/*/.env*` point at (the cloud project). E2E:
 `cd apps/web && E2E_WORKER=1 pnpm exec playwright test` (needs `make dev-local`); add `E2E_LLM=1` for the live guide-upload test.
@@ -116,7 +123,7 @@ make test-db    # pgTAP: RLS, state machine, queue, retrieval
 make types      # regenerate apps/web/types/database.ts
 ```
 
-Local ports are shifted to the 553xx range so BrandLens can run next to another local Supabase project.
+Local ports are shifted to the 553xx range so Errata can run next to another local Supabase project.
 
 The seed creates the fictional **PayWise** org (SPEC §16). Every demo account uses the password **`PayWise-demo-2026`** (demo only; never reuse it):
 
@@ -158,7 +165,8 @@ Mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
 | Area | Round 1 plan said | We built | Why |
 |---|---|---|---|
 | Auth | Google sign-in | Supabase email/password, plus a demo role switcher when `NEXT_PUBLIC_DEMO_MODE=true` | No OAuth setup; judges get one-click roles |
-| Visual design | Light off-white palette with a serif display face | "Terminal Noir" ([`docs/DESIGN.md`](docs/DESIGN.md)): dark by default with a light theme, Geist Sans and Mono, a public landing page, a ⌘K palette and keyboard shortcuts. The app is axe-clean (WCAG 2.2 AA) on every route in both themes | Team design decision; rule and fact IDs stay first-class, and severity never relies on colour alone |
+| Visual design | Light off-white palette with a serif display face | A flat, outlined, light-first system ([`docs/DESIGN.md`](docs/DESIGN.md)): white surfaces, 2px ink outlines, yellow fills for primary actions, grey and pink section bands, DM Sans with DM Mono for IDs, original illustrations, and a dark theme. Also a public landing page with a demo video, a ⌘K palette and keyboard shortcuts. Every colour pair is checked for WCAG AA in a unit test, and the app is axe-clean (WCAG 2.2 AA) on every route in both themes | Team design decision (it replaced the earlier dark "Terminal Noir" look on 2026-10-28); rule and fact IDs stay first-class, and severity never relies on colour alone |
+| Name | BrandLens | **Errata** (user-facing only; repo `maanit-gupta/Errata`) | Team decision; internal identifiers keep `brandlens` so deploys and data don't break |
 | LLM | Claude or Gemini | **Groq** primary, **Gemini** fallback, both free tiers, chosen by `LLM_PROVIDER` | Free APIs; the provider switch still avoids lock-in |
 | Notifications | Slack + email | Discord webhook (email via Resend is optional and off) | Team uses Discord |
 | Tracing | Self-hosted Langfuse | Langfuse Cloud | Faster to set up; traces contain only fictional demo data |
@@ -191,6 +199,10 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P14 | Golden set (60 rows, 40 rewrite pairs), in-process eval runner with committed LLM cache, precision gate, `INTENT_COSINE` calibration, latency benchmark, eval CI workflow, precision fixes from the reports |
 | P15 | Security review and `docs/SECURITY.md`, submit rate limit, CSP/headers, upload and storage limits, prompt-injection fence and tests, router cool-down, consumer concurrency, load and restart test scripts, a11y sweep and keyboard test |
 | P16 | README (pitch, architecture, results, licences, contributions), demo script, demo reset script, usability templates |
+| UI redesign (R0–R6, R7–R10 first pass) | Design study, the flat outlined design system and tokens, the WCAG contrast test and colour lint rules, restyled components, app shell, landing, sign-in and feature panels, original SVG illustrations and the wordmark |
+| Rename and repo move | User-facing rename to Errata, the list of identifiers that keep `brandlens`, and links pointing at the `maanit-gupta/Errata` repo |
+| Demo video | Capture script for real app screens, a HyperFrames composition (storyboard in `apps/web/video-src/brag-plan.md`), renders, captions, transcript and the landing-page embed |
+| Local stack | `make db-start lite=1`, the Supabase CLI fallback and local env defaults so a fresh clone runs |
 
 ## Models, services, data and libraries
 
@@ -210,7 +222,9 @@ Model IDs come from env (`GROQ_MODEL_*`, `GEMINI_MODEL_*`). The table lists the 
 
 **Data:** no external datasets. The PayWise brand kit (guide, facts, glossary, logos, creatives, deck) and the golden set are fictional and written by the team (`fixtures/paywise/`, `apps/worker/eval/golden/`).
 
-**Templates and assets:** shadcn/ui components (MIT, copied into `apps/web/components/ui`); fonts Newsreader, DM Sans and JetBrains Mono (SIL OFL 1.1, via `next/font`); lucide icons (ISC).
+**Templates and assets:** shadcn/ui components (MIT, copied into `apps/web/components/ui`); fonts DM Sans and DM Mono (SIL OFL 1.1, via `next/font`); lucide icons (ISC). Illustrations and the wordmark are original inline SVGs drawn for this project; no third-party artwork or templates are used.
+
+**Demo video tooling** (build time only, not shipped in the app bundle): HyperFrames (Apache-2.0, run via `npx`) and GSAP (Standard "no charge" licence, vendored in `apps/web/video-src/composition/vendor/`). Every screen in the video is a capture of the running app with the fictional PayWise data.
 
 **Libraries**
 
@@ -221,7 +235,7 @@ Model IDs come from env (`GROQ_MODEL_*`, `GEMINI_MODEL_*`). The table lists the 
 | fastapi, pydantic, pydantic-settings, supabase-py, langfuse, python-docx, textstat | MIT |
 | uvicorn, numpy, httpx, pyahocorasick, scikit-image, scipy, diff (JS) | BSD-3-Clause |
 | tenacity, fastembed, groq, google-genai, trafilatura, opencv-python-headless, pytesseract, paddleocr (optional) | Apache-2.0 |
-| next, react, react-dom, zod, tailwindcss, @base-ui/react, cn, shadcn, tw-animate-css, @supabase/ssr, @supabase/supabase-js, server-only, sonner, @tiptap/*, recharts | MIT |
+| next, react, react-dom, zod, tailwindcss, @base-ui/react, cn, shadcn, tw-animate-css, @supabase/ssr, @supabase/supabase-js, server-only, sonner, @tiptap/*, recharts, motion, cmdk | MIT |
 | lucide-react | ISC |
 | class-variance-authority | Apache-2.0 |
 | Dev: pytest, ruff, mypy, eslint, prettier, vitest (MIT); pytest-asyncio, typescript, @playwright/test (Apache-2.0); @axe-core/playwright (MPL-2.0) | as listed |
@@ -242,7 +256,15 @@ The source of truth is the dependency table in [`PROGRESS.md`](PROGRESS.md) (Dec
 | Member | Role | Contribution |
 |---|---|---|
 | **Maanit Gupta** | AI and backend lead | Worker pipeline (ingest, redaction, deterministic filters, retrieval, LLM pass, citation gate, intent check), vision and PDF checks, schema, RLS and workflow SQL, eval golden set and CI gate, deployment, security hardening. Ran the Claude Code sessions for every phase, including the web UI phases. As of 2026-10-27, every commit in the git history is authored from Maanit's account (`maanit-gupta`). |
-| **Jagpreet Singh** | Product, frontend and UX lead | Co-author of the Round 1 plan and storyboard. Owns product and UX direction, usability testing (`docs/usability/`) and the live demo. _Jagpreet to add specifics before submission._ |
+| **Jagpreet Singh** | Product, frontend and UX lead | Co-author of the Round 1 plan and storyboard. Owns product and UX direction, usability testing (`docs/usability/`) and the live demo. Led the 2026-10-28 UI redesign (design study, the flat outlined design system, tokens and contrast test, restyled components, shell, landing and sign-in, original illustrations), the rename to Errata, the "How it works" demo video, and the local-stack fixes for fresh clones. Those commits are authored from Jagpreet's account and were developed on the `UI/UX_jagpreet` branch with Claude Code. |
+
+## Names that still say brandlens
+
+These keep the old name on purpose. Renaming them would break deploys, sessions or data:
+
+- **Hosting:** `brandlens-app.vercel.app`, `brandlens-worker.onrender.com`, the Vercel project `brandlens`, the Render service `brandlens-worker`, and the Supabase project `BrandLens`.
+- **Code:** the npm package `@brandlens/web`, the Python package `brandlens_worker`, the `bl_*` cookies, and env var names.
+- **Data and tooling:** database objects (`supabase_db_brandlens`, `brandlens.workflow_write`), Langfuse names, and the CI image tag `brandlens-worker`.
 
 ## Licence
 

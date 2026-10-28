@@ -54,7 +54,8 @@ Keep the README's "Changes since Round 1" section in sync with this table.
 | Web framework | Next.js 15 | **Next.js 16** (App Router) | Current stable |
 | Confidence | Two-sample agreement on every LLM finding | Second sample **only for blocker-severity LLM findings** | Resolves the "one LLM call per draft" vs "two samples" contradiction in the PDF |
 | Embeddings | bge-small via sentence-transformers | Same model via **fastembed** (ONNX) | Avoids torch and keeps the worker image small |
-| Visual design | Light off-white palette, serif headings | **Terminal Noir** (`docs/DESIGN.md`): dark default plus light theme, Geist Sans/Mono | Team design decision; IDs first-class, colour never the only cue |
+| Visual design | Light off-white palette, serif headings | **Flat, outlined, light-first** (`docs/DESIGN.md`): ink outlines, yellow fills, grey/pink bands, DM Sans/DM Mono, dark theme kept (replaced Terminal Noir on 2026-10-28) | Team design decision; IDs first-class, colour never the only cue |
+| Name | BrandLens | **Errata** (user-facing; repo `maanit-gupta/Errata`) | Internal identifiers keep `brandlens` (README → "Names that still say brandlens") |
 | Data training | "No training on our data" | True for Groq and paid tiers. The **Gemini free tier may use prompts**, so the demo uses fictional data only, and the Services and AI-use page says so. | Honesty |
 
 ---
