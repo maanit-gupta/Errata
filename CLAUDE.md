@@ -103,7 +103,7 @@ Don't add a dependency without logging it under Decisions in `PROGRESS.md`, alon
 ## Repo layout
 
 ```
-brandlens/
+Errata/
 ├── CLAUDE.md  PROGRESS.md  Makefile  LICENSE  README.md
 ├── .claude/commands/          next.md, checkpoint.md
 ├── docs/                      SPEC.md, PHASES.md, plan.pdf

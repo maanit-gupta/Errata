@@ -26,3 +26,23 @@ Add one line under the title block (after line 9):
 | 97 | Supabase project `BrandLens` | Cloud project name |
 | 100 | `render.yaml` defines `brandlens-worker` | Blueprint service name |
 | any | `brandlens_worker`, `@brandlens/web`, `supabase_db_brandlens` | Package and container names |
+
+## Repo rename (2026-10-29)
+
+The GitHub repo moved from `maanit-gupta/BrandLens` to **https://github.com/maanit-gupta/Errata**. The README has no GitHub URL and no clone command today, so only these lines change. Line numbers are from the committed README (`git show HEAD:README.md`).
+
+### Change
+
+| Where | Before | After |
+|---|---|---|
+| The note suggested above, under the title block | ``> Errata was called BrandLens until 2026-10-28. Repo, package, service and project names still use `brandlens`.`` | ``> Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; package, service and project names still use `brandlens`.`` |
+| Quick start code block (line 76, before `make setup   # pnpm install + uv sync`) | none | Add two lines: `git clone https://github.com/maanit-gupta/Errata.git` and `cd Errata` |
+
+### Keep as they are
+
+| Line | Text | Why |
+|---|---|---|
+| 7 | `**Live app:** https://brandlens-app.vercel.app` | The live-app link stays: the Vercel hostname didn't change with the repo |
+| 95 | `https://brandlens-app.vercel.app` (Vercel project `brandlens`), `https://brandlens-worker.onrender.com` (Render service `brandlens-worker`) | Hosting names are separate from the repo name. Renaming them is a separate task |
+| 100 | `Render Dashboard → New → Blueprint → select this repo` | "This repo" is still correct: it is now `maanit-gupta/Errata` |
+| 102 | `the GitHub repo variable WORKER_URL` | Repo variables move with the repo on a rename |
