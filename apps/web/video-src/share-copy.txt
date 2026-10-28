@@ -1,0 +1,1 @@
+Errata checks every draft against your approved brand rules and cites the rule behind every flag: assured returns (CL-03), last campaign's venue (E-19), the brand's spelling (G-07), low-contrast text (WCAG 1.4.3). People approve; Errata never publishes.
