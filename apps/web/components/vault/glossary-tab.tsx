@@ -84,7 +84,7 @@ export async function GlossaryTab({ orgId }: { orgId: string }) {
           </table>
         </div>
       ) : (
-        <EmptyState glyph="id-badge" title="No glossary terms yet">
+        <EmptyState glyph="rule-card" title="No glossary terms yet">
           Import a glossary CSV: preferred spellings, variants to flag, and banned terms.
         </EmptyState>
       )}

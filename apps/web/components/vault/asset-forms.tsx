@@ -96,7 +96,7 @@ export function PaletteSection({
   if (!palette && !adding) {
     return (
       <EmptyState
-        glyph="eye"
+        glyph="window"
         title="No palette yet"
         headingLevel={3}
         className="py-10"

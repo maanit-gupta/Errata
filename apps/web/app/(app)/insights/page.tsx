@@ -124,7 +124,7 @@ export default async function InsightsPage() {
       />
 
       {!summary.versions_checked && !rows.length ? (
-        <EmptyState glyph="chart-bars" title="Not enough reviews yet">
+        <EmptyState glyph="chart" title="Not enough reviews yet">
           Guideline Clarity Scores appear once a rule has at least 10 findings.
         </EmptyState>
       ) : (

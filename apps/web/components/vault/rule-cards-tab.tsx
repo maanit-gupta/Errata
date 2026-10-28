@@ -96,7 +96,7 @@ export async function RuleCardsTab({
         {rules.length ? (
           <RuleCardList rules={rules} statusParam={filter} />
         ) : (
-          <EmptyState glyph="id-badge" title="No rule cards here">
+          <EmptyState glyph="rule-card" title="No rule cards here">
             Upload a brand guide on the Guides tab to draft rule cards.
           </EmptyState>
         )}

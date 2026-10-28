@@ -54,7 +54,7 @@ export function CampaignsView({ campaigns }: { campaigns: CampaignView[] }) {
         initialSort={{ key: "start", dir: "desc" }}
         empty={
           <EmptyState
-            glyph="calendar-x"
+            glyph="calendar"
             title="No campaigns yet"
             action={<Button onClick={() => setEditing("new")}>New campaign</Button>}
           >

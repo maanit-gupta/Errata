@@ -36,7 +36,7 @@ export function FactsTable({ facts, now }: { facts: FactRow[]; now: string }) {
         rowKey={(f) => f.id}
         initialSort={{ key: "code", dir: "asc" }}
         empty={
-          <EmptyState glyph="calendar-x" title="No facts yet">
+          <EmptyState glyph="calendar" title="No facts yet">
             Import a facts CSV above. Dates, venues and fees are then checked deterministically.
           </EmptyState>
         }

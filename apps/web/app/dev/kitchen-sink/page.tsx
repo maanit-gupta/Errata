@@ -311,7 +311,7 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
       <Section title="States (§11)">
         <Spinner label="Loading drafts…" />
         <EmptyState
-          glyph="shield-check"
+          glyph="shield"
           title="Check your first draft"
           action={<Button>+ New draft</Button>}
           headingLevel={3}

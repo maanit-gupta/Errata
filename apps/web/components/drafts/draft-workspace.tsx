@@ -813,7 +813,7 @@ export function DraftWorkspace({
                 </button>
               </p>
             ) : run?.status === "done" ? (
-              <EmptyState glyph="shield-check" title="No findings" headingLevel={3}>
+              <EmptyState glyph="shield" title="No findings" headingLevel={3}>
                 This draft follows every approved rule BrandLens checked.
               </EmptyState>
             ) : (
