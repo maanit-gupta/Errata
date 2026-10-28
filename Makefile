@@ -5,6 +5,9 @@ SHELL := /bin/bash
 WEB    := apps/web
 WORKER := apps/worker
 UV     := cd $(WORKER) && uv run
+# The Supabase CLI, or the same CLI through npx when it isn't installed globally.
+SUPABASE := $(shell command -v supabase >/dev/null 2>&1 && echo supabase || echo npx --yes supabase@2)
+export SUPABASE
 
 .PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
         models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision eval-pdf seed-demo seed-assets-local simulate-activity
@@ -17,22 +20,26 @@ setup: ## Install everything (pnpm i, uv sync)
 	cd $(WORKER) && uv sync
 
 # --- Database (local Supabase; Docker required) ------------------------------
-db-start: ## Start local Supabase
-	supabase start
+# lite=1 skips services the app doesn't need (Studio, mail, analytics, image proxy, edge
+# functions): less disk and memory.
+LITE_EXCLUDE := studio,mailpit,logflare,vector,imgproxy,edge-runtime,postgres-meta,supavisor
+
+db-start: ## Start local Supabase (lite=1 for the minimal stack)
+	$(SUPABASE) start $(if $(lite),-x $(LITE_EXCLUDE))
 
 db-stop: ## Stop local Supabase
-	supabase stop
+	$(SUPABASE) stop
 
 db-reset: ## Re-apply all migrations and seed.sql locally
-	supabase db reset
+	$(SUPABASE) db reset
 
 db-new: ## New migration: make db-new name=x
 	@test -n "$(name)" || { echo "usage: make db-new name=<snake_case>"; exit 1; }
-	supabase migration new $(name)
+	$(SUPABASE) migration new $(name)
 
 types: ## Regenerate apps/web/types/database.ts from the local DB
 	@mkdir -p $(WEB)/types
-	supabase gen types typescript --local > $(WEB)/types/database.ts
+	$(SUPABASE) gen types typescript --local > $(WEB)/types/database.ts
 
 # --- Dev ---------------------------------------------------------------------
 dev: ## Web on :3000 and worker on :8000
@@ -63,8 +70,8 @@ test-web:
 	cd $(WEB) && pnpm test
 
 test-db: ## pgTAP on a freshly reset local DB (tests assume seed.sql state)
-	supabase db reset
-	supabase test db
+	$(SUPABASE) db reset
+	$(SUPABASE) test db
 
 e2e: ## Playwright core-loop test (needs make dev)
 	@if compgen -G "$(WEB)/e2e/*.spec.ts" > /dev/null; then cd $(WEB) && pnpm e2e; \

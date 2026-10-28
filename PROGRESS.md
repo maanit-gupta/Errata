@@ -290,6 +290,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-28 | R4 | Sidebar tip/watchlist card, its per-request `rule_gcs` query and the sidebar GitHub link removed; worker status moved into the account menu | Owner decision; one fewer RPC per page |
 | 2026-10-28 | R4 | Dev-only `/dev/shell` renders the real `AppShell` with mock data and is in the `ui.spec` axe gate | Lets the signed-in chrome be checked without a database |
 | 2026-10-28 | R5 | Landing rebuilt per DESIGN.md §9; anchors `#how-it-works`, `#example`, `#trust`; announcement bar, typewriter, pipeline loop, stats bands, carousel and pixel sprites deleted | Owner decision |
+| 2026-10-28 | tooling | `make` falls back to `npx --yes supabase@2` when the Supabase CLI isn't installed; `make db-start lite=1` skips Studio, mail, analytics, image proxy and edge functions; `scripts/local-supabase-env.sh` gives a fresh clone (no `apps/web/.env.local`) local defaults for `NEXT_PUBLIC_SITE_URL` and a refusing `DISCORD_WEBHOOK_URL`, checking only key names, and fails with "make db-start" when the stack is down | `make dev-web-local` didn't work on a machine without `.env.local` or a global CLI; no `.env` file is created or read |
 
 **Dependencies and licences** (append when adding any dependency):
 
