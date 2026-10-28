@@ -1,21 +1,93 @@
 # Errata
 
-**Pre-publication checks with cited rules.** Every draft (text, doc, image, PDF) is checked against an organisation's approved rule cards, facts and assets, and every flag cites the rule or fact ID it was checked against. Humans approve; Errata never publishes.
+**Pre-publication checks with cited rules.**
+
+Errata checks every marketing draft against your approved brand rules and facts before it ships, cites the rule behind every flag, and leaves the decision to people.
+
+[![CI](https://github.com/maanit-gupta/Errata/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/maanit-gupta/Errata/actions/workflows/ci.yml)
+[![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16-black)](apps/web)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)](apps/worker)
+
+**Live app: https://brandlens-app.vercel.app** · pick a role under "Try a demo role" on the login page (no password). All data is the fictional PayWise brand.
+
+![The Errata landing page: the headline "Every draft, checked before it ships", Try the demo and How it works buttons, and an illustration of a draft with the rule IDs CL-03 and E-19 flagged](docs/screens/readme/01-landing-hero.webp)
+
+### Demo video
+
+[![Play the 60-second Errata demo: a CL-03 finding card with its cited rule and fact IDs](apps/web/public/demo/errata-how-it-works-poster.jpg)](apps/web/public/demo/errata-how-it-works.mp4)
+
+**[▶ Watch the 60-second demo](apps/web/public/demo/errata-how-it-works.mp4)** (MP4, silent, 5 MB) · or watch it with captions under "How it works" on the [live landing page](https://brandlens-app.vercel.app/#how-it-works).
+
+What it shows:
+1. A creator writes an Instagram caption and fills in its intent: goal, audience, call to action, channel and campaign.
+2. Six check stages run. A flag survives only if it cites an approved rule or fact.
+3. **CL-03** flags "assured returns" on a market-linked fund, and **E-19** catches last campaign's date and venue without AI judgement.
+4. **G-07** flags the brand spelling, and **WCAG 1.4.3** flags poster text at 2.89 : 1 contrast.
+5. The fix keeps the intent, and the claim is routed to Legal, who signs off with a reason.
+6. The audit trail records who decided, when and why. Errata never publishes.
+
+The full transcript is in [`demo-video.tsx`](apps/web/components/marketing/demo-video.tsx) and the captions in [`errata-how-it-works.en.vtt`](apps/web/public/demo/errata-how-it-works.en.vtt).
+
+> Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; some hosting, package and database names still use `brandlens` (see [Names that still say brandlens](#names-that-still-say-brandlens)).
+
+**Contents:** [The problem](#the-problem-and-what-errata-does) · [The workflow in screens](#the-workflow-in-screens) · [How a draft is checked](#how-a-draft-is-checked) · [Architecture](#how-it-works) · [Results](#results) · [Quick start](#quick-start) · [Deploying](#deploying) · [Security](#security-and-reliability) · [Changes since Round 1](#changes-since-round-1) · [AI assistance](#ai-assistance) · [Licences](#models-services-data-and-libraries) · [Team](#team-and-contributions)
+
+**Docs:** [Demo script](docs/DEMO.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
 
 Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") by Maanit Gupta and Jagpreet Singh (SRMIST).
 
-> Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; package, service and project names still use `brandlens` (see [Names that still say brandlens](#names-that-still-say-brandlens)).
-
-- **Live app:** https://brandlens-app.vercel.app. On the login page, pick a role under "Try a demo role" (no password needed). All data is the fictional PayWise brand.
-- **Demo video:** a 60-second silent walkthrough with captions and a transcript, under "How it works" on the landing page (`apps/web/public/demo/`).
-- **Demo script:** [`docs/DEMO.md`](docs/DEMO.md) (3–4 minutes, storyboard F01–F06).
-- **Build spec:** [`docs/SPEC.md`](docs/SPEC.md) · **Design system:** [`docs/DESIGN.md`](docs/DESIGN.md) · **Security review:** [`docs/SECURITY.md`](docs/SECURITY.md) · **Build log:** [`PROGRESS.md`](PROGRESS.md)
-
 ## The problem, and what Errata does
 
-Marketing teams in regulated categories (PayWise is a fictional Indian mutual-fund app) publish under brand guides and compliance rules that live in PDFs nobody re-reads. Mistakes are cheap to make and expensive to ship: a "guaranteed returns" claim, last campaign's event date, a misspelt brand name, an inaccessible colour pair.
+Marketing teams in regulated categories publish under brand guides and compliance rules that live in PDFs nobody re-reads. (PayWise, the demo brand, is a fictional Indian mutual-fund app.) Mistakes are cheap to make and expensive to ship:
+- a "guaranteed returns" claim
+- last campaign's event date
+- a misspelt brand name
+- an inaccessible colour pair
 
-Errata turns the guide into **rule cards** and a **Fact Vault**, checks each draft before it goes out, and **cites** the rule or fact behind every flag. A creator states the draft's intent (goal, audience, CTA, channel, campaign) and gets findings with suggested rewrites that keep that intent. Blockers route to the right reviewer (Legal or Accessibility), every decision needs a reason, and nothing is published automatically. Over time, the **Guideline Clarity Score** shows which rules reviewers keep overriding, so the brand team can fix the rule rather than blame the writer.
+What Errata does:
+- **Rule cards and a Fact Vault.** It turns the brand guide into rule cards and a Fact Vault, and checks each draft before it goes out.
+- **Every flag is cited.** Each finding names the rule card, fact or WCAG criterion it was checked against.
+- **Intent-aware fixes.** The creator states the draft's goal, audience, CTA, channel and campaign, and suggested rewrites keep that intent.
+- **People decide.** Blockers route to Legal or Accessibility, every decision needs a reason, and nothing is published automatically.
+- **Guideline Clarity Score.** It shows which rules reviewers keep overriding, so the brand team can fix the rule instead of blaming the writer.
+
+## The workflow in screens
+
+All screens are from the running app with the fictional PayWise data.
+
+| | |
+|---|---|
+| ![The draft editor: an Instagram caption beside the required intent fields Goal, Audience, Call to action, Channel and Campaign](docs/screens/readme/02-draft-and-intent.webp) | ![The findings panel: the caption with risky phrases underlined, the check run summary, a fix replacing Oct 18 at Hall B with Oct 28 online, and a G-07 warning card](docs/screens/readme/03-findings-with-citations.webp) |
+| **1. Write and state the intent.** Paste or upload a draft (text, DOCX, PDF or image) and fill in goal, audience, CTA, channel and campaign. | **2. Findings with citations.** Each flag shows its rule or fact ID, the quote, a fix and where it came from. This run had no AI keys, so only the rule-based checks ran (flagged in the banner). |
+| ![An uploaded poster with numbered boxes over two low-contrast text regions, and a finding citing A-02 and WCAG 1.4.3 with a measured contrast of 2.89 to 1](docs/screens/readme/04-image-contrast-overlay.webp) | ![The Legal reviewer's sign-off dialog with a required reason field over the routed draft](docs/screens/readme/05-legal-sign-off.webp) |
+| **3. Images and PDFs.** Boxes on the creative show where each finding is. This poster fails WCAG 1.4.3 at 2.89 : 1. | **4. Review and sign-off.** The CL-03 claim is routed to Legal, who signs off with a required reason. |
+| ![The Insights dashboard with four KPI cards, a bar chart of top recurring issues by rule ID, and a Guideline Clarity Score watchlist marking TV-04 UNCLEAR and VS-02 watch](docs/screens/readme/06-clarity-score-dashboard.webp) | ![The audit tab listing each transition with the person, the time and the Legal sign-off reason](docs/screens/readme/07-audit-trail.webp) |
+| **5. Guideline Clarity Score.** Rules that reviewers keep dismissing show up as UNCLEAR. This view uses simulated history, labelled "Illustrative data" in the app. | **6. Audit trail.** Every state change records who, when and why. |
+
+## How a draft is checked
+
+<table>
+<tr>
+<td width="55%" valign="top">
+
+1. **Ingest:** parse the text, file or image into text with positions and boxes.
+2. **Protect:** redact personal data and secrets, and drop "never send" vault items.
+3. **Filters:** rule checks without AI, covering brand terms, facts and campaign bleed, claims, tone, readability, contrast, colour ΔE and logo.
+4. **Retrieve:** find the approved rule cards and facts that apply (bge-small + pgvector).
+5. **AI pass:** one LLM call per draft judges tone and claims nuance, using the draft's intent.
+6. **Citation gate:** keep a flag only if its rule was retrieved for this run and its quote is really in the draft.
+
+</td>
+<td width="45%" valign="top">
+
+![The check run panel listing each stage with its time, 4 findings, 0 dropped by the gate and 0 LLM calls](docs/screens/readme/08-check-run-stages.webp)
+
+<sub>A run with no AI keys skips stage 5 and says so.</sub>
+
+</td>
+</tr>
+</table>
 
 ## How it works
 
@@ -70,7 +142,7 @@ A deliberately broken prompt drops tone precision to 0.43, and the gate fails th
 
 **Images** ([`vision_report.md`](apps/worker/eval/vision_report.md)): logo found in 9/9 creatives with 0 false positives; WCAG contrast within ±0.1 of WebAIM on 40/40 PNG colour pairs; 1.1 s per creative. **PDF decks** ([`pdf_report.md`](apps/worker/eval/pdf_report.md)): 9/9 seeded issues found on the right page, including two hidden-text injections; a 40-page deck stays under 512 MB.
 
-**Usability:** A/B benchmark (manual guideline check vs Errata) and SUS templates are in [`docs/usability/`](docs/usability/). _Results pending: sessions are run by Jagpreet._
+**Usability:** A/B benchmark (manual guideline check vs Errata) and SUS templates are in [`docs/usability/`](docs/usability/). Not run yet.
 
 ## Quick start
 
