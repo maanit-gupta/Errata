@@ -72,7 +72,7 @@ export function Shortcuts() {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Backdrop className="bg-overlay fixed inset-0 z-50" />
         <Dialog.Popup className="bg-elevated border-line-strong shadow-pop fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-md border p-5 outline-none">
           <div className="flex items-center justify-between">
             <Dialog.Title className="text-lg">Keyboard shortcuts</Dialog.Title>

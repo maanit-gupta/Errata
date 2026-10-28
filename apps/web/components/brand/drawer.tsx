@@ -37,7 +37,7 @@ export function Drawer({
   return (
     <Dialog.Root open={open} onOpenChange={(o) => (o ? null : close())}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/50 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <Dialog.Popup
           className={cn(
             "bg-elevated border-line-strong shadow-pop fixed inset-y-0 right-0 z-50 flex max-w-full flex-col border-l outline-none",

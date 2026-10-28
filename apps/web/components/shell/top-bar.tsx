@@ -83,7 +83,7 @@ export function TopBar({
           <Menu aria-hidden className="size-5" />
         </Dialog.Trigger>
         <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/50" />
+          <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40" />
           <Dialog.Popup className="fixed inset-y-0 left-0 z-50 outline-none">
             <Dialog.Title className="sr-only">Navigation</Dialog.Title>
             {mobileNav(() => setSheet(false))}

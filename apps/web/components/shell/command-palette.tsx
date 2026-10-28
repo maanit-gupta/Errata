@@ -124,7 +124,7 @@ export function CommandPalette({
       open={open}
       onOpenChange={setOpen}
       label="Command palette"
-      overlayClassName="fixed inset-0 z-50 bg-black/50"
+      overlayClassName="fixed inset-0 z-50 bg-overlay"
       contentClassName="fixed inset-x-0 top-0 z-50 outline-none"
       className="bg-elevated border-line-strong shadow-pop mx-auto w-full border-b"
     >

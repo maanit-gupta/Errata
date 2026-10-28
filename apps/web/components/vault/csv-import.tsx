@@ -102,7 +102,7 @@ export function CsvImport({
         <Upload aria-hidden /> Import {kind === "facts" ? "facts" : "glossary"} CSV
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-40 bg-black/50" />
+        <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40" />
         <Dialog.Popup className="bg-elevated border-line-strong shadow-pop fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-[min(44rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md border outline-none">
           <header className="border-line flex items-start gap-3 border-b px-5 py-4">
             <div className="flex-1 space-y-2">

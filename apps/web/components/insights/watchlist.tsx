@@ -123,7 +123,7 @@ export function Watchlist({ rows, canDecide }: { rows: WatchRow[]; canDecide: bo
         ref={dialog}
         aria-labelledby="examples-title"
         onClose={() => setOpen(null)}
-        className="bg-elevated text-card-foreground border-line m-0 ml-auto h-full max-h-none w-full max-w-lg border-l p-0 backdrop:bg-black/40"
+        className="bg-elevated text-card-foreground border-line backdrop:bg-overlay m-0 ml-auto h-full max-h-none w-full max-w-lg border-l p-0"
       >
         {open?.suggestion ? (
           <SuggestionPanel
