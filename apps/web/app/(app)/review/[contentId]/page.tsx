@@ -468,15 +468,15 @@ export default async function ReviewContentPage({
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section
           aria-labelledby="version-h"
-          className="border-line bg-code min-w-0 self-start rounded-md border lg:sticky lg:top-20"
+          className="border-outline bg-code min-w-0 self-start rounded-lg border-2 lg:sticky lg:top-20"
         >
-          <div className="border-line flex items-center gap-2 border-b px-3 py-2">
-            <span aria-hidden className="flex gap-1">
-              <span className="bg-blocker size-2" />
-              <span className="bg-line-strong size-2" />
-              <span className="bg-line-strong size-2" />
+          <div className="bg-band-grey border-outline flex h-10 items-center gap-2 rounded-t-[14px] border-b-2 px-4">
+            <span aria-hidden className="flex gap-1.5">
+              <span className="bg-fg size-2 rounded-full" />
+              <span className="bg-fg size-2 rounded-full" />
+              <span className="bg-fg size-2 rounded-full" />
             </span>
-            <h2 id="version-h" className="mono-label text-fg-muted">
+            <h2 id="version-h" className="text-fg text-sm font-semibold">
               Draft · version {current?.n ?? "–"} · read-only
             </h2>
           </div>
@@ -517,7 +517,7 @@ export default async function ReviewContentPage({
           </section>
           <section
             aria-labelledby="decision-h"
-            className="border-line-strong bg-elevated shadow-pop sticky bottom-3 z-10 rounded-md border p-4"
+            className="border-outline bg-elevated sticky bottom-3 z-10 rounded-lg border-2 p-4"
           >
             <h2 id="decision-h" className="mono-label text-fg-faint mb-3">
               Decision

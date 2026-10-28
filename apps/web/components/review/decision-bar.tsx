@@ -33,7 +33,7 @@ type Props = {
 
 type Open = null | "override" | "escalate" | "signoff" | "changes" | "archive";
 
-const area = "w-full rounded-md border border-control bg-canvas px-3 py-2 text-sm";
+const area = "w-full rounded-sm border-2 border-control bg-canvas px-3 py-2 text-sm";
 const MIN_REASON = 3;
 
 /**
@@ -86,7 +86,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
                 .querySelector<HTMLElement>('[role="tab"][id$="audit"], [role="tab"]:last-child')
                 ?.click()
             }
-            className="text-accent-soft underline-offset-4 hover:underline"
+            className="text-accent-soft font-semibold underline underline-offset-4"
           >
             Audit trail ↗
           </button>
@@ -121,7 +121,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
   return (
     <div className="space-y-3">
       {error ? (
-        <p role="alert" className="border-danger text-danger rounded-md border p-3 text-sm">
+        <p role="alert" className="border-danger text-danger rounded-lg border-2 p-3 text-sm">
           {error}
         </p>
       ) : null}

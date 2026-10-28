@@ -58,7 +58,7 @@ export function Comments({
     <div className="space-y-4">
       <ul className="space-y-3" aria-live="polite">
         {comments.map((c) => (
-          <li key={c.id} className="border-line bg-elevated rounded-md border p-3 text-sm">
+          <li key={c.id} className="border-outline bg-elevated rounded-lg border-2 p-3 text-sm">
             <p className="text-fg-muted mb-1 text-xs">
               <span className="text-fg font-medium">{c.author}</span> ·{" "}
               {new Date(c.at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
@@ -102,7 +102,7 @@ export function Comments({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="Use @Name to mention a teammate"
-          className="border-control bg-elevated w-full rounded-md border px-3 py-2 text-sm"
+          className="border-control bg-elevated w-full rounded-sm border-2 px-3 py-2 text-sm"
         />
         <div className="flex flex-wrap items-center gap-2">
           <label htmlFor={`${id}-anchor`} className="text-sm">
@@ -112,7 +112,7 @@ export function Comments({
             id={`${id}-anchor`}
             value={findingId}
             onChange={(e) => setFindingId(e.target.value)}
-            className="border-control bg-elevated h-8 rounded-md border px-2 text-sm"
+            className="border-control bg-elevated h-8 rounded-sm border-2 px-2 text-sm"
           >
             <option value="">The whole version</option>
             {findings.map((f) => (

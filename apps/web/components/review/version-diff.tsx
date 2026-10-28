@@ -24,7 +24,7 @@ export function VersionDiff({
         <span className="text-fg font-medium">Removed</span> text is struck through;{" "}
         <span className="text-fg font-medium">added</span> text is underlined.
       </p>
-      <p className="border-line bg-code rounded-md border p-4 leading-7 whitespace-pre-wrap">
+      <p className="border-outline bg-code rounded-lg border-2 p-4 leading-7 whitespace-pre-wrap">
         {parts.map((p, i) =>
           p.added ? (
             <ins key={i} className="bg-success-bg decoration-success underline decoration-2">

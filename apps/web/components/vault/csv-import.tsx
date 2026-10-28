@@ -103,7 +103,7 @@ export function CsvImport({
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40" />
-        <Dialog.Popup className="bg-elevated border-line-strong shadow-pop fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-[min(44rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md border outline-none">
+        <Dialog.Popup className="bg-elevated border-outline fixed top-1/2 left-1/2 z-50 max-h-[85vh] w-[min(44rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border-2 outline-none">
           <header className="border-line flex items-start gap-3 border-b px-5 py-4">
             <div className="flex-1 space-y-2">
               <ol className="mono-label flex gap-3" aria-label="Import steps">
@@ -135,7 +135,7 @@ export function CsvImport({
                 : "Columns: code, preferred, variants (separated by |), banned, case_sensitive, note."}{" "}
               Rows with the same code are updated. A file with any invalid row isn&apos;t imported.
             </Dialog.Description>
-            <div className="border-control rounded-md border border-dashed p-4">
+            <div className="border-control rounded-sm border-2 border-dashed p-4">
               <label htmlFor={`${id}-file`} className="text-sm font-medium">
                 CSV file
               </label>
@@ -151,7 +151,7 @@ export function CsvImport({
             {preview ? (
               <div className="space-y-3" aria-live="polite">
                 {preview.errors.length ? (
-                  <div role="alert" className="border-danger rounded-md border p-3">
+                  <div role="alert" className="border-danger rounded-lg border-2 p-3">
                     <p className="text-danger mb-1 text-sm font-medium">
                       {preview.errors.length} row{preview.errors.length === 1 ? "" : "s"} can&apos;t
                       be imported. Fix the file and choose it again.
@@ -168,7 +168,7 @@ export function CsvImport({
                     </Button>
                   </div>
                 ) : null}
-                <div className="border-line max-h-64 overflow-y-auto rounded-md border">
+                <div className="border-outline max-h-64 overflow-y-auto rounded-lg border-2">
                   <table className="w-full text-left text-sm">
                     <caption className="text-fg-muted px-3 py-2 text-left text-sm">
                       Preview: {preview.rows.length} valid row{preview.rows.length === 1 ? "" : "s"}

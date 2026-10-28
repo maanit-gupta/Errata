@@ -28,7 +28,7 @@ function Onboarding() {
   return (
     <section
       aria-labelledby="onboard-h"
-      className="border-line bg-elevated grid gap-8 rounded-md border p-8 lg:grid-cols-2"
+      className="border-outline bg-elevated grid gap-8 rounded-lg border-2 p-8 lg:grid-cols-2"
     >
       <div className="space-y-4">
         <PixelGlyph name="shield-check" size={48} />
@@ -43,7 +43,7 @@ function Onboarding() {
           {newDraft}
           <Link
             href="/#how-it-works"
-            className="text-accent-soft text-sm underline-offset-4 hover:underline"
+            className="text-accent-soft text-sm font-semibold underline underline-offset-4"
           >
             How citations work →
           </Link>
@@ -51,7 +51,7 @@ function Onboarding() {
       </div>
       <div
         aria-hidden
-        className="border-line bg-canvas space-y-2 self-center rounded-md border p-4"
+        className="border-outline bg-canvas space-y-2 self-center rounded-lg border-2 p-4"
       >
         <p className="flex items-center gap-2">
           <SeverityBadge severity="blocker" />

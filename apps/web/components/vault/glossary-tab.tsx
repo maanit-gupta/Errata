@@ -16,7 +16,7 @@ export async function GlossaryTab({ orgId }: { orgId: string }) {
     <>
       <CsvImport kind="glossary" />
       {terms?.length ? (
-        <div className="border-line overflow-x-auto rounded-md border">
+        <div className="border-outline overflow-x-auto rounded-lg border-2">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Glossary terms</caption>
             <thead className="bg-elevated">

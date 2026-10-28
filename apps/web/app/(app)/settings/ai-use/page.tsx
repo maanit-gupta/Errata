@@ -72,7 +72,7 @@ export default async function AiUsePage() {
           Models in use
         </h2>
         {models.length ? (
-          <div className="border-line overflow-x-auto rounded-md border">
+          <div className="border-outline overflow-x-auto rounded-lg border-2">
             <table className="w-full text-sm">
               <caption className="text-fg-faint px-4 py-2 text-left text-xs">
                 Reviews in the last 30 days, by provider, model and prompt version
@@ -124,7 +124,7 @@ export default async function AiUsePage() {
             LLM was available.
           </p>
         ) : null}
-        <p className="border-line text-fg-muted rounded-md border p-4 text-sm">
+        <p className="border-outline text-fg-muted rounded-lg border-2 p-4 text-sm">
           The demo organisation, PayWise, and all of its data are fictional.
         </p>
       </section>

@@ -50,7 +50,7 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
           {images.map((a, i) => {
             const s = (a.spec ?? {}) as Spec;
             return (
-              <li key={a.id} className="border-line bg-elevated rounded-md border p-3">
+              <li key={a.id} className="border-outline bg-elevated rounded-lg border-2 p-3">
                 {signed[i] ? (
                   // eslint-disable-next-line @next/next/no-img-element -- signed Supabase URL, not optimisable
                   <img
@@ -73,7 +73,7 @@ export async function AssetsTab({ orgId }: { orgId: string }) {
             );
           })}
         </ul>
-        <div className="border-control rounded-md border border-dashed p-4">
+        <div className="border-control rounded-sm border-2 border-dashed p-4">
           <AssetUpload />
         </div>
       </section>

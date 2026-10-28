@@ -462,7 +462,7 @@ export function DraftWorkspace({
   const intentPanel = (
     <section
       aria-labelledby={`${id}-intent`}
-      className="border-line bg-elevated space-y-4 rounded-md border p-4"
+      className="border-outline bg-elevated space-y-4 rounded-lg border-2 p-4"
     >
       <h2 id={`${id}-intent`} className="mono-label text-accent-soft">
         Intent · required
@@ -580,15 +580,15 @@ export function DraftWorkspace({
 
         <section
           aria-labelledby={`${id}-editor`}
-          className="border-line bg-code min-w-0 self-start rounded-md border"
+          className="border-outline bg-code min-w-0 self-start rounded-lg border-2"
         >
-          <div className="border-line flex flex-wrap items-center gap-2 border-b px-3 py-2">
-            <span aria-hidden className="flex gap-1">
-              <span className="bg-blocker size-2" />
-              <span className="bg-line-strong size-2" />
-              <span className="bg-line-strong size-2" />
+          <div className="bg-band-grey border-outline flex min-h-10 flex-wrap items-center gap-2 rounded-t-[14px] border-b-2 px-4 py-2">
+            <span aria-hidden className="flex gap-1.5">
+              <span className="bg-fg size-2 rounded-full" />
+              <span className="bg-fg size-2 rounded-full" />
+              <span className="bg-fg size-2 rounded-full" />
             </span>
-            <h2 id={`${id}-editor`} className="mono-label text-fg-muted">
+            <h2 id={`${id}-editor`} className="text-fg text-sm font-semibold">
               {kindLabel} {version ? `· version ${version.n}` : ""}
               <span className="text-fg-faint">
                 {channelLabel ? ` · ${channelLabel}` : ""}
@@ -806,7 +806,7 @@ export function DraftWorkspace({
                 No findings on page {page}.{" "}
                 <button
                   type="button"
-                  className="text-accent-soft underline-offset-4 hover:underline"
+                  className="text-accent-soft font-semibold underline underline-offset-4"
                   onClick={() => setAllPages(true)}
                 >
                   Show all pages
@@ -825,7 +825,7 @@ export function DraftWorkspace({
           </div>
 
           {canEdit && content.state === "needs_revision" ? (
-            <div className="border-line bg-elevated sticky bottom-0 space-y-2 rounded-md border p-3">
+            <div className="border-outline bg-elevated sticky bottom-0 space-y-2 rounded-lg border-2 p-3">
               <p className={cn("mono-label", openBlockers ? "text-blocker" : "text-success")}>
                 {openBlockers
                   ? `${openBlockers} blocker${openBlockers === 1 ? "" : "s"} left`
@@ -837,7 +837,7 @@ export function DraftWorkspace({
               </p>
             </div>
           ) : !canEdit && canAct && content.state === "changes_requested" ? (
-            <div className="border-warning bg-warning-bg space-y-2 rounded-md border p-3 text-sm">
+            <div className="border-warning bg-warning-bg space-y-2 rounded-lg border-2 p-3 text-sm">
               <p>A reviewer asked for changes. See their reason on the review page.</p>
               <Button
                 className="w-full"
@@ -855,7 +855,7 @@ export function DraftWorkspace({
               </Button>
             </div>
           ) : !canEdit ? (
-            <p className="border-line text-fg-muted rounded-md border p-3 text-sm">
+            <p className="border-outline text-fg-muted rounded-lg border-2 p-3 text-sm">
               {content.state === "ai_check"
                 ? "Checking…"
                 : content.state === "publish_ready"

@@ -118,7 +118,7 @@ export function RuleCardPanel({ rule, closeHref }: { rule: RuleDetail; closeHref
       footer={footer}
     >
       {rule.status === "approved" ? (
-        <p className="border-warning bg-warning-bg mb-4 rounded-md border p-3 text-sm">
+        <p className="border-warning bg-warning-bg mb-4 rounded-lg border-2 p-3 text-sm">
           Saving creates v{rule.version + 1} and re-embeds this rule. Findings keep citing the
           version they were checked against.
         </p>
@@ -152,7 +152,7 @@ export function RuleCardPanel({ rule, closeHref }: { rule: RuleDetail; closeHref
               <label
                 key={s}
                 className={cn(
-                  "flex h-11 cursor-pointer items-center justify-center rounded-md border has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
+                  "flex h-11 cursor-pointer items-center justify-center rounded-lg border-2 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
                   draft.severity === s
                     ? "border-accent bg-accent-deep"
                     : "border-line-strong hover:bg-hover",
@@ -274,7 +274,7 @@ export function RuleCardPanel({ rule, closeHref }: { rule: RuleDetail; closeHref
                 href={`${rule.sourceUrl}#page=${rule.source_page}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-accent-soft underline-offset-4 hover:underline"
+                className="text-accent-soft font-semibold underline underline-offset-4"
               >
                 guide p.{rule.source_page}
                 <span className="sr-only"> (opens in a new tab)</span>

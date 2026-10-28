@@ -15,7 +15,7 @@ export function NewDraftForm({
   const id = useId();
   const active = campaigns.filter((c) => c.status !== "ended");
   return (
-    <form action={action} className="border-line bg-elevated space-y-5 rounded-md border p-6">
+    <form action={action} className="border-outline bg-elevated space-y-5 rounded-lg border-2 p-6">
       <div className="space-y-1.5">
         <label htmlFor={`${id}-t`} className="text-sm font-medium">
           Title

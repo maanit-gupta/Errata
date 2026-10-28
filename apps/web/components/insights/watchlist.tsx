@@ -56,7 +56,7 @@ export function Watchlist({ rows, canDecide }: { rows: WatchRow[]; canDecide: bo
 
   return (
     <>
-      <div className="border-line overflow-x-auto rounded-md border">
+      <div className="border-outline overflow-x-auto rounded-lg border-2">
         <table className="w-full text-sm">
           <caption className="sr-only">
             Guideline watchlist: Guideline Clarity Score per rule, lowest first
@@ -190,7 +190,7 @@ function SuggestionPanel({
             <label
               key={i}
               htmlFor={`${id}-${i}`}
-              className="border-line flex cursor-pointer gap-3 rounded-md border p-3"
+              className="border-outline flex cursor-pointer gap-3 rounded-lg border-2 p-3"
             >
               <input
                 id={`${id}-${i}`}

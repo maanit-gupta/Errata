@@ -43,7 +43,7 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
             content={({ active, payload }) => {
               const p = active && payload?.[0] ? (payload[0].payload as Issue) : null;
               return p ? (
-                <div className="border-line-strong bg-elevated text-fg shadow-pop rounded-md border px-2 py-1 text-xs">
+                <div className="border-outline bg-elevated text-fg rounded-lg border-2 px-2 py-1 text-xs">
                   <p className="font-mono font-medium">{p.code}</p>
                   <p className="max-w-56">{p.label}</p>
                   <p className="text-fg-muted">

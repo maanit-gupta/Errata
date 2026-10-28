@@ -29,7 +29,7 @@ function Cell({
     <section
       id={id}
       aria-labelledby={`${id}-h`}
-      className="border-line bg-elevated grid scroll-mt-20 gap-4 rounded-md border p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
+      className="border-outline bg-elevated grid scroll-mt-20 gap-4 rounded-lg border-2 p-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]"
     >
       <div className="space-y-1">
         <h2 id={`${id}-h`} className="text-lg">
@@ -134,7 +134,7 @@ export default async function SettingsPage() {
               title="Organisation"
               description="Members of this workspace. Inviting people isn't in this build."
             >
-              <ul className="divide-line border-line divide-y rounded-md border text-sm">
+              <ul className="divide-line border-outline divide-y rounded-lg border-2 text-sm">
                 {(members ?? []).map((m) => (
                   <li key={m.user_id} className="flex items-center justify-between gap-3 px-3 py-2">
                     <span>{name.get(m.user_id) ?? "—"}</span>

@@ -59,7 +59,7 @@ export async function GuidesTab({ orgId }: { orgId: string }) {
       />
       <section
         aria-labelledby="upload-h"
-        className="border-control flex gap-4 rounded-md border border-dashed p-5"
+        className="border-control flex gap-4 rounded-sm border-2 border-dashed p-5"
       >
         <PixelGlyph name="id-badge" size={48} />
         <div className="min-w-0 flex-1">
@@ -77,7 +77,7 @@ export async function GuidesTab({ orgId }: { orgId: string }) {
         <h2 id="guides-h" className="mono-label text-fg-faint mb-2">
           Guides
         </h2>
-        <div className="border-line overflow-x-auto rounded-md border">
+        <div className="border-outline overflow-x-auto rounded-lg border-2">
           <table className="w-full text-left text-sm">
             <caption className="sr-only">Uploaded brand guides and their extraction status</caption>
             <thead className="bg-elevated border-line border-b">
@@ -116,7 +116,7 @@ export async function GuidesTab({ orgId }: { orgId: string }) {
                     {draftCounts.get(g.id) ? (
                       <Link
                         href="/vault?tab=rules&status=draft"
-                        className="text-accent-soft underline-offset-4 hover:underline"
+                        className="text-accent-soft font-semibold underline underline-offset-4"
                       >
                         {draftCounts.get(g.id)} draft{draftCounts.get(g.id) === 1 ? "" : "s"}
                       </Link>

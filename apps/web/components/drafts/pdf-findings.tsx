@@ -96,7 +96,7 @@ export function PdfFindings({
                   aria-current={p.n === page ? "page" : undefined}
                   onClick={() => setPage(p.n)}
                   className={cn(
-                    "block w-24 rounded-md border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus) sm:w-full",
+                    "block w-24 rounded-sm border-2 p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus) sm:w-full",
                     p.n === page ? "border-line-strong" : "hover:border-line border-transparent",
                   )}
                 >

@@ -172,8 +172,8 @@ export function FindingCard({
       data-finding={f.id}
       style={{ animationDelay: `${Math.min(index, 10) * 60}ms` }}
       className={cn(
-        "bg-elevated fade-in rounded-md border transition-colors",
-        active ? "border-focus" : "border-line",
+        "bg-elevated fade-in rounded-lg border-2 transition-colors",
+        active ? "border-outline bg-hover" : "border-outline",
         resolved && "bg-canvas",
       )}
       onMouseEnter={() => onFocus(f.id)}
@@ -286,7 +286,7 @@ export function FindingCard({
 
           {f.rewrite && !editing ? (
             <div
-              className="bg-code border-line rounded-md border p-2.5"
+              className="bg-code border-outline rounded-lg border-2 p-2.5"
               aria-label="Suggested fix"
               role="group"
             >
@@ -414,7 +414,7 @@ export function FindingCard({
       <Dialog.Root open={dismissing} onOpenChange={setDismissing}>
         <Dialog.Portal>
           <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40" />
-          <Dialog.Popup className="bg-elevated border-line-strong shadow-pop fixed top-1/2 left-1/2 z-50 w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-md border p-5 outline-none">
+          <Dialog.Popup className="bg-elevated border-outline fixed top-1/2 left-1/2 z-50 w-[min(30rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-lg border-2 p-5 outline-none">
             <Dialog.Title className="text-lg">Dismiss {codes}?</Dialog.Title>
             <Dialog.Description className="text-fg-muted text-sm">
               Pick a reason. Dismissals are audited and feed the rule&apos;s clarity score.
@@ -425,7 +425,7 @@ export function FindingCard({
                 <label
                   key={r.value}
                   className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-md border p-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
+                    "flex cursor-pointer items-start gap-3 rounded-lg border-2 p-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
                     reason === r.value
                       ? "border-accent bg-accent-deep"
                       : "border-line-strong hover:bg-hover",

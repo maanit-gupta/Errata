@@ -75,7 +75,7 @@ export function RuleCardList({ rules, statusParam }: { rules: RuleRow[]; statusP
   return (
     <div className="space-y-8">
       {drafts.length ? (
-        <div className="border-accent bg-accent-deep sticky top-16 z-10 flex flex-wrap items-center gap-3 rounded-md border p-3">
+        <div className="border-outline bg-band-pink sticky top-16 z-10 flex flex-wrap items-center gap-3 rounded-lg border-2 p-3">
           <p className="mr-auto text-sm">
             <span className="mono-id">{drafts.length}</span> draft{" "}
             {drafts.length === 1 ? "rule needs" : "rules need"} review. Drafts aren&apos;t used in
@@ -101,7 +101,7 @@ export function RuleCardList({ rules, statusParam }: { rules: RuleRow[]; statusP
               {DIMENSION_LABELS[g.dim]}
               <span className="text-fg-faint">· {g.rules.length}</span>
             </h2>
-            <ul className="divide-line border-line bg-elevated divide-y rounded-md border">
+            <ul className="divide-line border-outline bg-elevated divide-y rounded-lg border-2">
               {g.rules.map((r) => (
                 <li
                   key={r.id}
@@ -149,7 +149,7 @@ export function RuleCardList({ rules, statusParam }: { rules: RuleRow[]; statusP
                     <Link
                       href={`/vault?tab=rules&status=${statusParam}&card=${r.id}`}
                       scroll={false}
-                      className="border-control hover:bg-hover inline-flex h-8 items-center rounded-md border px-2.5 text-sm"
+                      className="border-control hover:bg-hover inline-flex h-8 items-center rounded-sm border-2 px-2.5 text-sm"
                     >
                       {r.status === "archived" ? "View" : "Edit"}
                       <span className="sr-only">&nbsp;{r.code}</span>

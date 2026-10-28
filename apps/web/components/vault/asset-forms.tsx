@@ -108,7 +108,7 @@ export function PaletteSection({
     );
   }
   return (
-    <div className="border-line bg-elevated rounded-md border p-4">
+    <div className="border-outline bg-elevated rounded-lg border-2 p-4">
       <PaletteEditor palette={palette} />
     </div>
   );
@@ -176,7 +176,7 @@ export function PaletteEditor({
             <li key={i} className="flex flex-wrap items-center gap-2">
               <span
                 aria-hidden
-                className="border-line-strong size-9 rounded-md border"
+                className="border-outline size-9 rounded-lg border-2"
                 style={{ background: /^#[0-9a-f]{6}$/i.test(c.hex) ? c.hex : "transparent" }}
               />
               <label className="sr-only" htmlFor={`${id}-cn-${i}`}>
