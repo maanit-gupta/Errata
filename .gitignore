@@ -42,3 +42,16 @@ supabase/.temp/
 # Demo video build output (apps/web/video-src): renders and HyperFrames caches stay local.
 apps/web/video-src/composition/renders/
 apps/web/video-src/composition/.hyperframes/
+
+# Scratch notes and spent drafts: keep them local, never in the tree.
+# Project docs (README, CLAUDE.md, PROGRESS.md, docs/*, prompts, eval reports) stay tracked.
+*.txt
+!requirements*.txt
+!**/public/robots.txt
+NOTES.md
+TODO.md
+*.notes.md
+*.scratch.md
+scratch/
+docs/ui-redesign/PR.md
+docs/ui-redesign/README-rename-notes.md
