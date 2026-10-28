@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PixelGlyph } from "@/components/brand/pixel-glyphs";
+import { RuleCardSpot } from "@/components/illustrations";
 import { createClient } from "@/lib/supabase/server";
 import { GuideUpload } from "./guide-upload";
 import { RealtimeRefresh } from "./realtime-refresh";
@@ -61,7 +61,7 @@ export async function GuidesTab({ orgId }: { orgId: string }) {
         aria-labelledby="upload-h"
         className="border-control flex gap-4 rounded-sm border-2 border-dashed p-5"
       >
-        <PixelGlyph name="id-badge" size={48} />
+        <RuleCardSpot className="w-20" />
         <div className="min-w-0 flex-1">
           <h2 id="upload-h" className="text-lg">
             Add a brand guide

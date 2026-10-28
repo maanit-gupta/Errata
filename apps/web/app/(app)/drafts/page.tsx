@@ -2,7 +2,9 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/brand/page-header";
-import { PixelGlyph } from "@/components/brand/pixel-glyphs";
+import { DimensionLabel } from "@/components/brand/dimension";
+import { IntentCheckTag } from "@/components/brand/intent-check-tag";
+import { DocumentSpot } from "@/components/illustrations";
 import { SeverityBadge } from "@/components/brand/severity-badge";
 import { DraftsTable, type DraftRow } from "@/components/drafts/drafts-table";
 import { requireSession } from "@/lib/auth/session";
@@ -31,7 +33,7 @@ function Onboarding() {
       className="border-outline bg-elevated grid gap-8 rounded-lg border-2 p-8 lg:grid-cols-2"
     >
       <div className="space-y-4">
-        <PixelGlyph name="shield-check" size={48} />
+        <DocumentSpot className="w-24" />
         <h2 id="onboard-h" className="text-2xl">
           Check your first draft
         </h2>
@@ -56,14 +58,14 @@ function Onboarding() {
         <p className="flex items-center gap-2">
           <SeverityBadge severity="blocker" />
           <span className="mono-id text-accent-soft">CL-03</span>
-          <span className="mono-label text-fg-faint">CLAIMS</span>
+          <DimensionLabel dimension="claims" />
         </p>
         <p className="font-mono text-[0.8125rem]">“14.2% assured annual returns”</p>
         <p className="text-fg-muted text-sm">
           Market-linked returns can&apos;t be promised. Cite the historical CAGR with its
           disclaimer.
         </p>
-        <p className="mono-label text-success">✓ cited · intent verified · 0.91</p>
+        <IntentCheckTag score={0.91} />
       </div>
     </section>
   );

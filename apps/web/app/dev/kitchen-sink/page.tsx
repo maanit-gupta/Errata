@@ -11,7 +11,14 @@ import { IllustrativeDataPill } from "@/components/brand/illustrative-pill";
 import { IntentCheckTag } from "@/components/brand/intent-check-tag";
 import { KpiTile } from "@/components/brand/kpi-tile";
 import { PageHeader } from "@/components/brand/page-header";
-import { GLYPH_NAMES, PixelGlyph } from "@/components/brand/pixel-glyphs";
+import {
+  HeroScene,
+  SPOT_NAMES,
+  Spot,
+  StepApproveScene,
+  StepCheckScene,
+  StepRulesScene,
+} from "@/components/illustrations";
 import { RiskMeter } from "@/components/brand/risk-meter";
 import { RunPanel } from "@/components/brand/run-panel";
 import { SeverityBadge } from "@/components/brand/severity-badge";
@@ -90,19 +97,25 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
         <p className="text-gradient-word text-3xl font-light">gradient word (large text only)</p>
       </Section>
 
-      <Section title="Brand marks and glyphs">
+      <Section title="Brand marks and illustrations">
         <Row>
           <Wordmark />
           <ThemeToggle />
         </Row>
         <Row>
-          {GLYPH_NAMES.map((g) => (
+          {SPOT_NAMES.map((g) => (
             <span key={g} className="flex flex-col items-center gap-1">
-              <PixelGlyph name={g} size={32} />
-              <span className="mono-id text-fg-faint text-[0.6875rem]">{g}</span>
+              <Spot name={g} className="w-20" />
+              <span className="mono-id text-fg-muted text-[0.6875rem]">{g}</span>
             </span>
           ))}
         </Row>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <HeroScene className="w-full" />
+          <StepRulesScene className="w-full" />
+          <StepCheckScene className="w-full" />
+          <StepApproveScene className="w-full" />
+        </div>
       </Section>
 
       <Section title="Buttons">
