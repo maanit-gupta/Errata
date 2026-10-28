@@ -16,7 +16,7 @@ Round 2 is judged on five things: end-to-end workflow (30), depth and reliabilit
 | `docs/plan.pdf` | Round 1 plan, used for product intent and judging context. **Do not read it by default** (it's large); consult a specific page only when SPEC is silent. |
 | `docs/SPEC.md` | The **build spec**. It wins over the PDF on any conflict, because it records the deliberate deviations. |
 | `docs/PHASES.md` | Phase-by-phase tasks and acceptance criteria. |
-| `docs/DESIGN.md` | Visual and interaction system ("Terminal Noir") and the UI phases U0–U2 (§12). Wins on look and feel. |
+| `docs/DESIGN.md` | Visual and interaction system (flat, outlined, light-first; adopted 2026-10-28 on `UI/UX_jagpreet`) and the redesign status (§14). Wins on look and feel. |
 | `PROGRESS.md` | Live state: phase status, the latest handoff, decisions and open questions. **Read it first, every session.** |
 
 ---
