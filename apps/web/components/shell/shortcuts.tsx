@@ -73,12 +73,12 @@ export function Shortcuts() {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Backdrop className="bg-overlay fixed inset-0 z-50" />
-        <Dialog.Popup className="bg-elevated border-line-strong shadow-pop fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-md border p-5 outline-none">
+        <Dialog.Popup className="bg-elevated border-outline fixed top-1/2 left-1/2 z-50 w-[min(32rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-lg border-2 p-6 outline-none">
           <div className="flex items-center justify-between">
-            <Dialog.Title className="text-lg">Keyboard shortcuts</Dialog.Title>
+            <Dialog.Title className="text-xl font-bold">Keyboard shortcuts</Dialog.Title>
             <Dialog.Close
               aria-label="Close"
-              className="text-fg-muted hover:bg-hover inline-flex size-8 items-center justify-center rounded-md"
+              className="text-fg hover:bg-hover border-outline inline-flex size-9 items-center justify-center rounded-sm border-2"
             >
               <X aria-hidden className="size-4" />
             </Dialog.Close>
@@ -86,7 +86,7 @@ export function Shortcuts() {
           <dl className="divide-line divide-y text-sm">
             {KEYS.map(([k, v]) => (
               <div key={k} className="flex items-center justify-between gap-4 py-2">
-                <dt className="mono-id text-accent-soft">{k}</dt>
+                <dt className="mono-id text-fg">{k}</dt>
                 <dd className="text-fg-muted text-right">{v}</dd>
               </div>
             ))}
@@ -107,7 +107,6 @@ export function Shortcuts() {
             />
             Single-key shortcuts (j, k, a, e, x, g …)
           </label>
-          <p className="text-fg-faint text-xs">Every shortcut has a clickable equivalent.</p>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

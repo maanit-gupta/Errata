@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { useCrumbLabel } from "@/components/shell/crumbs";
 import { NAV_ICONS } from "@/components/shell/nav-icons";
+import { buttonVariants } from "@/components/ui/button";
 import type { NavIcon } from "@/lib/workflow/permissions";
 
 const SECTIONS: Record<string, { label: string; icon: NavIcon; href: string }> = {
@@ -25,20 +26,25 @@ function Breadcrumb() {
   const [first, second] = pathname.split("/").filter(Boolean);
   const section = first ? SECTIONS[first] : undefined;
   if (!section)
-    return <span className="text-fg-muted text-sm">{first === "dev" ? "Kitchen sink" : ""}</span>;
+    return <span className="text-fg-muted text-sm">{first === "dev" ? "Dev preview" : ""}</span>;
   const Icon = NAV_ICONS[section.icon];
   const tail = second ? (SUB[second] ?? custom ?? "Item") : null;
   return (
     <nav aria-label="Breadcrumb" className="min-w-0">
-      <ol className="flex min-w-0 items-center gap-1.5 text-sm">
+      <ol className="flex min-w-0 items-center gap-1.5 text-[0.9375rem]">
         <li className="flex shrink-0 items-center gap-1.5">
-          <Icon aria-hidden className="text-fg-faint size-4" strokeWidth={1.5} />
+          <Icon aria-hidden className="size-4" strokeWidth={2} />
           {tail ? (
-            <Link href={section.href} className="text-fg-muted hover:text-fg">
+            <Link
+              href={section.href}
+              className="text-fg-muted hover:text-fg underline-offset-4 hover:underline"
+            >
               {section.label}
             </Link>
           ) : (
-            <span aria-current="page">{section.label}</span>
+            <span aria-current="page" className="font-semibold">
+              {section.label}
+            </span>
           )}
         </li>
         {tail ? (
@@ -46,7 +52,7 @@ function Breadcrumb() {
             <li aria-hidden className="text-fg-faint">
               /
             </li>
-            <li aria-current="page" className="truncate">
+            <li aria-current="page" className="truncate font-semibold">
               {tail}
             </li>
           </>
@@ -74,11 +80,11 @@ export function TopBar({
 }) {
   const [sheet, setSheet] = useState(false);
   return (
-    <header className="border-line bg-canvas/95 sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur sm:px-6 lg:px-8">
+    <header className="border-outline bg-canvas sticky top-0 z-30 flex h-16 shrink-0 items-center gap-3 border-b-2 px-4 sm:px-6 lg:px-8">
       <Dialog.Root open={sheet} onOpenChange={setSheet}>
         <Dialog.Trigger
           aria-label="Open menu"
-          className="text-fg-muted hover:bg-hover -ml-2 inline-flex size-9 items-center justify-center rounded-md lg:hidden"
+          className="text-fg hover:bg-hover border-outline -ml-1 inline-flex size-10 items-center justify-center rounded-sm border-2 lg:hidden"
         >
           <Menu aria-hidden className="size-5" />
         </Dialog.Trigger>
@@ -99,7 +105,7 @@ export function TopBar({
         {activeRuns.count > 0 ? (
           <Link
             href={activeRuns.href ?? "/drafts"}
-            className="mono-id text-fg-muted hover:text-fg hidden h-8 items-center gap-1.5 rounded-md px-2 sm:inline-flex"
+            className="text-fg hover:bg-hover hidden h-10 items-center gap-1.5 rounded-sm px-2 text-sm font-semibold sm:inline-flex"
           >
             <LoaderCircle aria-hidden className="spin size-3.5" />
             {activeRuns.count} check{activeRuns.count === 1 ? "" : "s"} running
@@ -108,18 +114,15 @@ export function TopBar({
         <button
           type="button"
           onClick={() => window.dispatchEvent(new Event("bl-palette"))}
-          className="border-line-strong text-fg-muted hover:bg-hover hover:text-fg inline-flex h-8 items-center gap-2 rounded-md border px-2.5 text-sm"
+          className="border-outline text-fg hover:bg-hover inline-flex h-10 items-center gap-2 rounded-sm border-2 px-3 text-sm"
         >
           <Search aria-hidden className="size-3.5" />
           <span className="hidden md:inline">Search</span>
-          <kbd className="mono-id text-fg-faint hidden md:inline">⌘K</kbd>
+          <kbd className="mono-id text-fg-muted bg-hover hidden rounded-sm px-1 md:inline">⌘K</kbd>
           <span className="sr-only md:hidden">Search</span>
         </button>
         {canCreate ? (
-          <Link
-            href="/drafts/new"
-            className="bg-accent text-accent-fg hover:bg-accent-hover inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium transition-colors"
-          >
+          <Link href="/drafts/new" className={buttonVariants({ variant: "primary" })}>
             <Plus aria-hidden className="size-4" />
             <span className="hidden sm:inline">New draft</span>
             <span className="sr-only sm:hidden">New draft</span>
@@ -129,7 +132,7 @@ export function TopBar({
           type="button"
           onClick={() => window.dispatchEvent(new Event("bl-shortcuts"))}
           aria-label="Keyboard shortcuts and help"
-          className="border-line-strong text-fg-muted hover:bg-hover hover:text-fg mono-id inline-flex size-8 items-center justify-center rounded-md border"
+          className="border-outline text-fg hover:bg-hover inline-flex size-10 items-center justify-center rounded-sm border-2 font-bold"
         >
           ?
         </button>

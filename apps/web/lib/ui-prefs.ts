@@ -1,7 +1,6 @@
 /** Cookie names for per-browser UI preferences (DESIGN.md §6.0, §7.4, §8). */
 export const THEME_COOKIE = "bl_theme";
 export const SIDEBAR_COOKIE = "bl_sidebar";
-export const TIPCARD_COOKIE = "bl_tipcard";
 export const FLASH_COOKIE = "bl_flash";
 export const SKIP_LANDING_COOKIE = "bl_skip_landing";
 export const SHORTCUTS_KEY = "bl_shortcuts";

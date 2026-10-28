@@ -2,7 +2,7 @@
 
 import { Suspense, type ReactNode } from "react";
 import { AccountMenu, type AccountInfo } from "@/components/shell/account-menu";
-import { AppSidebar, type BottomCard } from "@/components/shell/app-sidebar";
+import { AppSidebar } from "@/components/shell/app-sidebar";
 import { CommandPalette } from "@/components/shell/command-palette";
 import { CrumbProvider } from "@/components/shell/crumbs";
 import { DemoRoleList, DemoStrip } from "@/components/shell/demo-strip";
@@ -14,7 +14,6 @@ import type { NavGroup } from "@/lib/workflow/permissions";
 export type ShellProps = {
   account: AccountInfo;
   groups: NavGroup[];
-  bottomCard: BottomCard;
   queueCount: number | null;
   activeRuns: { count: number; href: string | null };
   collapsed: boolean;
@@ -35,7 +34,6 @@ export function AppShell({ children, ...p }: ShellProps & { children: ReactNode 
         workspace={(collapsed) => (
           <AccountMenu account={p.account} collapsed={collapsed} demoSlot={demoSlot} />
         )}
-        bottomCard={p.bottomCard}
         queueCount={p.queueCount}
         initialCollapsed={p.collapsed}
         {...opts}
@@ -48,7 +46,7 @@ export function AppShell({ children, ...p }: ShellProps & { children: ReactNode 
       <div className="flex min-h-dvh flex-col">
         <a
           href="#main"
-          className="bg-accent text-accent-fg sr-only z-[60] rounded-md px-3 py-2 focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+          className="bg-accent text-accent-fg sr-only z-[60] rounded-sm px-3 py-2 font-semibold focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
         >
           Skip to content
         </a>

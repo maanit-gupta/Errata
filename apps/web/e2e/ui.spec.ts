@@ -28,6 +28,7 @@ const firstLink = (prefix: string) => async (page: import("@playwright/test").Pa
 
 const ROUTES: Route[] = [
   { name: "kitchen-sink", path: "/dev/kitchen-sink", role: null },
+  { name: "shell-preview", path: "/dev/shell", role: null },
   { name: "landing", path: "/", role: null },
   { name: "ai-use-public", path: "/ai-use", role: null },
   { name: "login", path: "/login", role: null },

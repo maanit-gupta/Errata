@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DIMENSIONS } from "@/components/brand/dimension";
-import { PixelGlyph } from "@/components/brand/pixel-glyphs";
+import { LensSpot } from "@/components/illustrations";
 import { DEMO_USERS } from "@/lib/auth/demo-users";
 import { signInAsDemo } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/browser";
@@ -67,7 +67,7 @@ async function loadIndex(canVault: boolean, reviewer: boolean): Promise<Index> {
 }
 
 const itemCls =
-  "flex h-9 cursor-pointer items-center gap-3 rounded-md px-2 text-sm text-fg-muted data-[selected=true]:bg-accent data-[selected=true]:text-accent-fg";
+  "flex h-10 cursor-pointer items-center gap-3 rounded-sm px-2 text-sm text-fg data-[selected=true]:bg-highlight data-[selected=true]:text-highlight-fg";
 
 /** ⌘K palette (DESIGN.md §6.12): drafts, rules by code, facts, campaigns, actions. */
 export function CommandPalette({
@@ -126,9 +126,9 @@ export function CommandPalette({
       label="Command palette"
       overlayClassName="fixed inset-0 z-50 bg-overlay"
       contentClassName="fixed inset-x-0 top-0 z-50 outline-none"
-      className="bg-elevated border-line-strong shadow-pop mx-auto w-full border-b"
+      className="bg-elevated border-outline mx-auto w-full border-b-2"
     >
-      <div className="border-line flex h-14 items-center gap-2 border-b px-4">
+      <div className="border-outline flex h-16 items-center gap-2 border-b-2 px-4">
         <Command.Input
           autoFocus
           placeholder="Search drafts, rule codes, facts, campaigns…"
@@ -137,15 +137,15 @@ export function CommandPalette({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="mono-label border-line-strong text-fg-muted hover:bg-hover inline-flex h-7 items-center gap-1 rounded-sm border px-2"
+          className="border-outline text-fg hover:bg-hover inline-flex h-8 items-center gap-1 rounded-sm border-2 px-2 text-xs font-semibold"
         >
           <X aria-hidden className="size-3" /> Close · ESC
         </button>
       </div>
-      <Command.List className="[&_[cmdk-group-heading]]:mono-label [&_[cmdk-group-heading]]:text-fg-faint mx-auto max-h-[60vh] max-w-3xl overflow-y-auto p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1">
+      <Command.List className="[&_[cmdk-group-heading]]:label [&_[cmdk-group-heading]]:text-fg-muted mx-auto max-h-[60vh] max-w-3xl overflow-y-auto p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-semibold">
         <Command.Empty>
           <div className="relative mx-auto flex h-48 w-48 items-center justify-center">
-            <PixelGlyph name="lens" size={48} />
+            <LensSpot className="w-16" />
             {Object.values(DIMENSIONS).map(({ Icon, label }, i) => {
               const a = (i / 6) * Math.PI * 2;
               return (

@@ -7,8 +7,6 @@ export type ShellData = {
   queueCount: number | null;
   /** The user's checks still queued or running. */
   activeRuns: { count: number; href: string | null };
-  /** Admin watchlist: approved rules scoring UNCLEAR. */
-  unclear: { code: string; gcs: number }[];
 };
 
 /** Small, RLS-scoped reads for the sidebar and top bar. Failures degrade to empty, never throw. */
@@ -16,7 +14,7 @@ export async function getShellData(session: Session): Promise<ShellData> {
   const supabase = await createClient();
   const reviewer = ["manager", "specialist", "brand_admin"].includes(session.role);
 
-  const [queue, runs, gcs] = await Promise.all([
+  const [queue, runs] = await Promise.all([
     reviewer
       ? supabase
           .from("contents")
@@ -29,9 +27,6 @@ export async function getShellData(session: Session): Promise<ShellData> {
       .in("status", ["queued", "running"])
       .eq("versions.contents.owner_id", session.userId)
       .limit(5),
-    session.role === "brand_admin"
-      ? supabase.rpc("rule_gcs", { p_org: session.orgId })
-      : Promise.resolve({ data: null }),
   ]);
 
   const queueCount = queue.data
@@ -51,9 +46,5 @@ export async function getShellData(session: Session): Promise<ShellData> {
       count: active.length,
       href: first?.versions?.content_id ? `/drafts/${first.versions.content_id}` : null,
     },
-    unclear: (gcs.data ?? [])
-      .filter((r) => r.card_status === "approved" && r.status === "unclear")
-      .sort((a, b) => a.gcs - b.gcs)
-      .map((r) => ({ code: r.code, gcs: Math.round(r.gcs) })),
   };
 }

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export function DemoRoleList({ currentEmail }: { currentEmail?: string }) {
   return (
     <form action={signInAsDemo}>
-      <p className="mono-label text-fg-faint mb-1.5">Switch demo role</p>
+      <p className="label text-fg-muted mb-2 font-semibold">Switch demo role</p>
       <ul className="space-y-0.5">
         {DEMO_USERS.map((u) => {
           const current = u.email === currentEmail;
@@ -24,15 +24,19 @@ export function DemoRoleList({ currentEmail }: { currentEmail?: string }) {
                 disabled={current}
                 aria-current={current ? "true" : undefined}
                 className={cn(
-                  "flex w-full flex-col items-start rounded-md px-2 py-1.5 text-left transition-colors",
-                  current ? "bg-accent-deep cursor-default" : "hover:bg-hover",
+                  "flex w-full flex-col items-start rounded-sm border-2 px-2 py-1.5 text-left transition-colors",
+                  current
+                    ? "bg-highlight text-highlight-fg border-outline cursor-default"
+                    : "hover:bg-hover border-transparent",
                 )}
               >
-                <span className="text-fg text-sm">
+                <span className="text-sm font-semibold">
                   {u.label}
-                  {current ? <span className="text-fg-faint"> · current</span> : null}
+                  {current ? <span className="font-normal"> · current</span> : null}
                 </span>
-                <span className="text-fg-muted text-xs">{DEMO_ROLE_BLURB[u.key]}</span>
+                <span className={cn("text-xs", current ? "" : "text-fg-muted")}>
+                  {DEMO_ROLE_BLURB[u.key]}
+                </span>
               </button>
             </li>
           );
@@ -53,21 +57,21 @@ export function DemoStrip({
   currentEmail: string;
 }) {
   return (
-    <div className="bg-accent-deep text-fg mono-label flex h-8 shrink-0 items-center gap-2 px-4">
-      <span className="text-accent-soft">DEMO</span>
+    <div className="bg-band-pink text-fg border-outline flex h-9 shrink-0 items-center gap-2 border-b-2 px-4 text-sm">
+      <span className="font-bold">Demo</span>
       <span aria-hidden className="text-fg-faint">
         ·
       </span>
-      <span className="text-fg-muted truncate tracking-normal normal-case">
-        {orgName} (fictional) · signed in as {roleLabel}
+      <span className="truncate">
+        {orgName} (fictional) · {roleLabel}
       </span>
       <Popover.Root>
-        <Popover.Trigger className="text-accent-soft hover:text-fg ml-auto inline-flex h-7 items-center gap-1 rounded-sm px-1.5">
+        <Popover.Trigger className="text-fg hover:bg-elevated ml-auto inline-flex h-7 items-center gap-1 rounded-sm px-2 font-semibold underline underline-offset-4">
           Switch role <ChevronDown aria-hidden className="size-3" />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Positioner sideOffset={4} align="end" className="z-50">
-            <Popover.Popup className="bg-elevated border-line-strong shadow-pop w-80 rounded-md border p-2 outline-none">
+            <Popover.Popup className="bg-elevated border-outline w-80 rounded-[8px] border-2 p-3 outline-none">
               <DemoRoleList currentEmail={currentEmail} />
             </Popover.Popup>
           </Popover.Positioner>

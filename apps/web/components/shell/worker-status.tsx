@@ -36,13 +36,13 @@ export function WorkerStatus({ compact = false }: { compact?: boolean }) {
           : "worker …";
   return (
     <span
-      className="mono-id text-fg-faint inline-flex items-center gap-1.5"
+      className="text-fg-muted inline-flex items-center gap-1.5 text-xs"
       title={`Status: ${label}`}
     >
       <span
         aria-hidden
         className={cn(
-          "size-1.5 rounded-full",
+          "size-2 rounded-full",
           status === "ok" ? "bg-success" : status === "down" ? "bg-danger" : "bg-fg-faint",
         )}
       />
