@@ -22,7 +22,7 @@ export function Hint({
       <TooltipPrimitive.Trigger render={children} />
       <TooltipPrimitive.Portal>
         <TooltipPrimitive.Positioner side={side} sideOffset={6} className="z-50">
-          <TooltipPrimitive.Popup className="bg-elevated text-fg border-line-strong shadow-pop max-w-xs rounded-md border px-2.5 py-1.5 text-xs leading-snug">
+          <TooltipPrimitive.Popup className="bg-elevated text-fg border-outline max-w-xs rounded-[8px] border-2 px-2.5 py-1.5 text-xs leading-snug">
             {content}
           </TooltipPrimitive.Popup>
         </TooltipPrimitive.Positioner>

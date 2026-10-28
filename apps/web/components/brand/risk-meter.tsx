@@ -29,9 +29,9 @@ export function RiskMeter({
           <span
             key={i}
             className={cn(
-              "rounded-[1px]",
-              size === "sm" ? "h-2.5 w-1.5" : "h-3 w-2",
-              i < filled ? (blocker ? "bg-blocker" : "bg-warning") : "bg-line-strong",
+              "border-outline rounded-[2px] border",
+              size === "sm" ? "h-3 w-2" : "h-3.5 w-2.5",
+              i < filled ? (blocker ? "bg-blocker" : "bg-warning") : "bg-elevated",
             )}
           />
         ))}

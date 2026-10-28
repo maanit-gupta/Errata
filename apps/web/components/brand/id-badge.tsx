@@ -79,7 +79,7 @@ export function IdBadge({
         data-citation={label}
         aria-label={`${KIND_LABEL[kind]} ${label}: show source`}
         className={cn(
-          "mono-id text-accent-soft border-line-strong hover:border-accent-soft data-popup-open:border-accent-soft inline-flex h-6 items-center gap-1 rounded-sm border px-1.5 leading-none whitespace-nowrap transition-colors",
+          "mono-id text-fg border-outline bg-elevated hover:bg-hover data-popup-open:bg-highlight data-popup-open:text-highlight-fg inline-flex h-6 items-center gap-1 rounded-sm border-2 px-1.5 leading-none whitespace-nowrap transition-colors",
           className,
         )}
       >
@@ -88,8 +88,8 @@ export function IdBadge({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={6} align="start" className="z-50">
-          <Popover.Popup className="bg-elevated text-fg border-line-strong shadow-pop w-80 max-w-[calc(100vw-2rem)] space-y-2 rounded-md border p-3 text-sm outline-none">
-            <p className="mono-label text-fg-faint flex items-center gap-2">
+          <Popover.Popup className="bg-elevated text-fg border-outline w-80 max-w-[calc(100vw-2rem)] space-y-2 rounded-[8px] border-2 p-4 text-sm outline-none">
+            <p className="label text-fg-muted flex items-center gap-2">
               {KIND_LABEL[kind]}
               {source?.version ? <span>· v{source.version}</span> : null}
               {source?.neverSend ? (
@@ -98,8 +98,8 @@ export function IdBadge({
                 </span>
               ) : null}
             </p>
-            <Popover.Title className="flex items-baseline gap-2 text-base">
-              <span className="mono-id text-accent-soft">{label}</span>
+            <Popover.Title className="flex items-baseline gap-2 text-base font-bold">
+              <span className="mono-id text-fg">{label}</span>
               <span>{w?.name ?? source?.title ?? ""}</span>
             </Popover.Title>
             {kind === "wcag" ? (
@@ -118,24 +118,21 @@ export function IdBadge({
                 Cited by this finding. Open the vault for the full text.
               </Popover.Description>
             )}
-            {source?.summaryView ? <p className="mono-label text-fg-faint">Summary view</p> : null}
+            {source?.summaryView ? <p className="label text-fg-muted">Summary view</p> : null}
             <div className="flex flex-wrap gap-3 pt-1 text-xs">
               {kind === "wcag" && w ? (
                 <a
                   href={w.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-accent-soft inline-flex items-center gap-1 underline-offset-4 hover:underline"
+                  className="text-fg inline-flex items-center gap-1 underline underline-offset-4"
                 >
                   Understanding {w.num} <ExternalLink aria-hidden className="size-3" />
                   <span className="sr-only">(opens in a new tab)</span>
                 </a>
               ) : null}
               {source?.href ? (
-                <Link
-                  href={source.href}
-                  className="text-accent-soft underline-offset-4 hover:underline"
-                >
+                <Link href={source.href} className="text-fg underline underline-offset-4">
                   Open {kind === "fact" ? "fact" : "rule card"} →
                 </Link>
               ) : null}
@@ -155,7 +152,7 @@ export function IdCode({ code, className }: { code: string; className?: string }
   return (
     <span
       className={cn(
-        "mono-id text-accent-soft border-line-strong inline-flex h-6 items-center rounded-sm border px-1.5 leading-none whitespace-nowrap",
+        "mono-id text-fg border-outline inline-flex h-6 items-center rounded-sm border-2 px-1.5 leading-none whitespace-nowrap",
         className,
       )}
     >

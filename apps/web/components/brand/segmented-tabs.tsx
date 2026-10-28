@@ -14,7 +14,7 @@ export type SegmentedTab = {
 };
 
 /**
- * SegmentedTabs (DESIGN.md §5): 32px, active = violet fill + white text, counts in the label.
+ * SegmentedTabs (DESIGN.md §7.8): an ink-outlined control; active = solid ink + white text.
  * Arrow keys move focus, Enter/Space activates (manual activation, so URL tabs don't navigate on
  * every arrow press). The active panel wraps `children`.
  */
@@ -42,20 +42,20 @@ export function SegmentedTabs({
     >
       <Tabs.List
         aria-label={label}
-        className="border-line bg-elevated inline-flex max-w-full gap-0.5 overflow-x-auto rounded-md border p-0.5"
+        className="border-outline bg-elevated inline-flex max-w-full gap-1 overflow-x-auto rounded-sm border-2 p-1"
       >
         {tabs.map((t) => {
           const text = (
             <>
               {t.label}
               {t.count != null ? (
-                <span className="font-mono text-[0.75rem]">({t.count})</span>
+                <span className="font-mono text-[0.75rem] font-medium">{t.count}</span>
               ) : null}
             </>
           );
           const cls = cn(
-            "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[4px] px-3 text-sm whitespace-nowrap transition-colors duration-[80ms]",
-            "text-fg-muted hover:bg-hover hover:text-fg",
+            "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[2px] px-3 text-sm font-semibold whitespace-nowrap transition-colors duration-100",
+            "text-fg hover:bg-hover",
             "data-active:bg-accent data-active:text-accent-fg data-active:hover:bg-accent",
           );
           return t.href ? (

@@ -279,8 +279,8 @@ Primitives live in `components/ui/` (shadcn `base-nova` on Base UI, restyled to 
 | Variant | Style | Use |
 |---|---|---|
 | `primary` | solid `--accent` (ink), `--accent-fg` text, no border; hover `--accent-hover` | The main action on a view |
-| `secondary` | `--highlight` fill, `--highlight-fg` text, 2px ink outline; hover: ink outline thickens to 3px (no colour shift) | The second action; marketing nav CTA |
-| `outline` | transparent, 2px ink outline, ink text; hover `--bg-hover` | Other actions in a row |
+| `highlight` | `--highlight` (yellow) fill, `--highlight-fg` text, 2px ink outline; hover: solid ink with white text | The second action on marketing pages; the marketing nav CTA. At most one per view in the product |
+| `secondary` / `outline` | transparent, 2px ink outline, ink text; hover `--bg-hover` | Every other action (Edit, Dismiss, Request changes…) |
 | `ghost` | transparent, ink text; hover `--bg-hover` | Toolbar, icon buttons |
 | `danger` | 2px `--danger` outline, `--danger` text; hover solid `--danger` with `--bg` text | Destructive only (archive) |
 | `link` | ink text, underlined (offset 3px) | Inline actions |
@@ -309,7 +309,7 @@ The frame for a draft, render or code sample: a 16px-radius card with a 40px tit
 
 ### 7.7 Navigation
 
-- **Marketing nav:** white, 80px tall, wordmark left, text links in ink (active link underlined), "Sign in" as a text link, and the CTA as a `secondary` (yellow) button.
+- **Marketing nav:** white, 80px tall, wordmark left, text links in ink (active link underlined), "Sign in" as a text link, and the CTA as a `highlight` (yellow) button.
 - **Sidebar (product):** white, 2px ink right border, 256px (collapsible to 64px icons). Group headings are sans 12px/600 `--text-faint`, sentence case. Items 40px tall, 16px icon, 15px text. **Active item: `--highlight` fill, ink text, 2px ink outline, 4px radius.** Hover: `--bg-hover`. The queue count is a small ink pill with white mono digits. Nav text and order stay as tested (STUDY.md §6).
 - **Top bar:** white, 64px, 2px ink bottom border. Breadcrumb left; search (outlined input-style button with `⌘K` hint), `New draft` (primary), `?` (outline icon button) and the avatar menu right.
 - **Demo strip:** `--band-pink`, ink text, 32px, "Demo · Creator · Switch role".

@@ -63,11 +63,13 @@ export function DataTable<T>({
   if (rows.length === 0 && empty) return <>{empty}</>;
 
   return (
-    <div className={cn("border-line overflow-x-auto rounded-md border", className)}>
+    <div
+      className={cn("border-outline bg-elevated overflow-x-auto rounded-lg border-2", className)}
+    >
       <table className="w-full border-collapse text-sm">
         <caption className="sr-only">{caption}</caption>
-        <thead className="bg-elevated sticky top-0 z-10">
-          <tr className="border-line border-b">
+        <thead className="bg-band-grey sticky top-0 z-10">
+          <tr className="border-outline border-b-2">
             {columns.map((c) => {
               const active = sort?.key === c.key;
               const ariaSort = active
@@ -81,7 +83,7 @@ export function DataTable<T>({
                   scope="col"
                   aria-sort={c.sortValue ? (ariaSort ?? "none") : undefined}
                   className={cn(
-                    "mono-label text-fg-faint h-10 px-3 font-medium whitespace-nowrap",
+                    "label text-fg h-11 px-4 font-semibold whitespace-nowrap",
                     c.align === "right" ? "text-right" : "text-left",
                   )}
                 >
@@ -94,7 +96,7 @@ export function DataTable<T>({
                           dir: active && sort.dir === "desc" ? "asc" : "desc",
                         })
                       }
-                      className="hover:text-fg inline-flex h-7 items-center gap-1 uppercase"
+                      className="inline-flex h-7 items-center gap-1 underline-offset-4 hover:underline"
                     >
                       {c.header}
                       {active ? (
@@ -120,7 +122,7 @@ export function DataTable<T>({
             <tr
               key={rowKey(row)}
               className={cn(
-                "border-line hover:bg-hover h-11 border-b last:border-b-0",
+                "border-line hover:bg-hover h-12 border-b last:border-b-0",
                 rowClassName?.(row),
               )}
             >
@@ -131,7 +133,7 @@ export function DataTable<T>({
                     key={c.key}
                     scope={c.rowHeader ? "row" : undefined}
                     className={cn(
-                      "px-3 py-2 align-middle font-normal",
+                      "px-4 py-2 align-middle text-sm font-normal",
                       c.align === "right" ? "text-right" : "text-left",
                       c.className,
                     )}
@@ -145,11 +147,11 @@ export function DataTable<T>({
         </tbody>
       </table>
       {sorted.length > shown ? (
-        <div className="border-line border-t p-2 text-center">
+        <div className="border-outline border-t-2 p-2 text-center">
           <button
             type="button"
             onClick={() => setShown((n) => n + pageSize)}
-            className="text-accent-soft h-8 px-3 text-sm underline-offset-4 hover:underline"
+            className="text-fg h-8 px-3 text-sm font-semibold underline underline-offset-4"
           >
             Load more ({sorted.length - shown} more)
           </button>

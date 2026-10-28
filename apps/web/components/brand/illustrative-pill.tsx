@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
-/** Marks insights computed from simulated activity (P13). */
+/** Marks insights computed from simulated activity (P13). Pink chip, ink text. */
 export function IllustrativeDataPill({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "mono-label border-warning text-warning inline-flex h-5 items-center rounded-sm border px-1.5",
+        "label border-outline bg-accent-deep text-fg inline-flex h-6 items-center rounded-sm border-2 px-2 font-semibold",
         className,
       )}
       title="Includes simulated review activity (make simulate-activity)"

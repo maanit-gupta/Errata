@@ -1,13 +1,13 @@
 import * as React from "react";
 import { cn } from "cn";
 
-/** Product container (DESIGN.md §2.6): `--bg-elevated`, 1px hairline, 6px radius, no shadow. */
+/** Card (DESIGN.md §7.3): white, 2px ink outline, 16px radius, no shadow. */
 function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card"
       className={cn(
-        "bg-elevated text-fg border-line flex flex-col gap-3 rounded-md border p-4 text-sm",
+        "bg-elevated text-fg border-outline flex flex-col gap-3 rounded-lg border-2 p-6",
         className,
       )}
       {...props}
@@ -21,7 +21,11 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div data-slot="card-title" className={cn("text-lg leading-snug", className)} {...props} />
+    <div
+      data-slot="card-title"
+      className={cn("text-xl leading-tight font-bold tracking-[-0.01em]", className)}
+      {...props}
+    />
   );
 }
 

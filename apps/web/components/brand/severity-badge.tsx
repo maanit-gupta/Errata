@@ -4,25 +4,36 @@ import type { Database } from "@/types/database";
 
 export type Severity = Database["public"]["Enums"]["severity"];
 
-const STYLE: Record<Severity, { className: string; Icon: typeof OctagonX }> = {
-  blocker: { className: "border-blocker bg-blocker text-blocker-fg", Icon: OctagonX },
-  warning: { className: "border-warning bg-warning-bg text-warning", Icon: TriangleAlert },
-  suggestion: { className: "border-line-strong text-suggestion", Icon: Lightbulb },
+/**
+ * Severity chip (DESIGN.md §2.4): text label + icon + colour, never colour alone. Warning is a
+ * burnt-orange tint with an outline, never yellow and never a solid fill.
+ */
+const STYLE: Record<Severity, { className: string; label: string; Icon: typeof OctagonX }> = {
+  blocker: {
+    className: "border-blocker bg-blocker text-blocker-fg",
+    label: "Blocker",
+    Icon: OctagonX,
+  },
+  warning: {
+    className: "border-warning bg-warning-bg text-warning",
+    label: "Warning",
+    Icon: TriangleAlert,
+  },
+  suggestion: { className: "border-line text-suggestion", label: "Suggestion", Icon: Lightbulb },
 };
 
-/** Severity chip (DESIGN.md §2.4). Always a text label plus an icon, never colour alone. */
 export function SeverityBadge({ severity, className }: { severity: Severity; className?: string }) {
-  const { className: tone, Icon } = STYLE[severity];
+  const { className: tone, label, Icon } = STYLE[severity];
   return (
     <span
       className={cn(
-        "mono-label inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 leading-none whitespace-nowrap",
+        "label inline-flex h-6 items-center gap-1 rounded-sm border-2 px-1.5 leading-none font-semibold whitespace-nowrap",
         tone,
         className,
       )}
     >
-      <Icon aria-hidden className="size-3" strokeWidth={2} />
-      {severity.toUpperCase()}
+      <Icon aria-hidden className="size-3.5" strokeWidth={2.25} />
+      {label}
     </span>
   );
 }

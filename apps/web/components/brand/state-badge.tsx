@@ -1,3 +1,4 @@
+import { Check, Inbox, LoaderCircle, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/types/database";
 
@@ -16,13 +17,13 @@ export const STATE_LABELS: Record<ContentState, string> = {
 };
 
 const STYLES: Record<ContentState, string> = {
-  draft: "border-line-strong text-fg-muted",
-  ai_check: "border-accent text-fg",
-  needs_revision: "border-transparent bg-blocker-bg text-blocker",
-  in_review: "border-transparent bg-warning-bg text-warning",
-  changes_requested: "border-transparent bg-warning-bg text-warning",
-  specialist_review: "border-transparent bg-accent-deep text-accent-soft",
-  approved: "border-transparent bg-success-bg text-success",
+  draft: "border-line text-fg-muted",
+  ai_check: "border-outline text-fg",
+  needs_revision: "border-blocker bg-blocker-bg text-blocker",
+  in_review: "border-outline text-fg",
+  changes_requested: "border-warning bg-warning-bg text-warning",
+  specialist_review: "border-outline bg-accent-deep text-fg",
+  approved: "border-success bg-success-bg text-success",
   publish_ready: "border-success bg-success text-canvas",
   archived: "border-line text-fg-faint",
 };
@@ -33,7 +34,7 @@ const SPECIALIST: Record<string, string> = {
   brand: "Brand review",
 };
 
-/** Content state chip (DESIGN.md §2.4): mono uppercase, 4px radius. */
+/** Content state chip (DESIGN.md §2.4). The DOM text is the plain label; icons are decorative. */
 export function StateBadge({
   state,
   routeTo,
@@ -46,22 +47,22 @@ export function StateBadge({
 }) {
   let label = STATE_LABELS[state];
   if (state === "specialist_review" && routeTo && SPECIALIST[routeTo]) label = SPECIALIST[routeTo];
+  const icon = "size-3.5 shrink-0";
   return (
     <span
       data-state={state}
       className={cn(
-        "mono-label inline-flex h-5 items-center gap-1 rounded-sm border px-1.5 leading-none whitespace-nowrap",
+        "label inline-flex h-6 items-center gap-1 rounded-sm border-2 px-1.5 leading-none font-semibold whitespace-nowrap",
         STYLES[state],
         className,
       )}
     >
-      {state === "ai_check" ? (
-        <span aria-hidden className="spin inline-block">
-          ⟳
-        </span>
+      {state === "ai_check" ? <LoaderCircle aria-hidden className={cn(icon, "spin")} /> : null}
+      {state === "in_review" ? <Inbox aria-hidden className={icon} /> : null}
+      {state === "changes_requested" ? <Undo2 aria-hidden className={icon} /> : null}
+      {state === "approved" || state === "publish_ready" ? (
+        <Check aria-hidden className={icon} strokeWidth={2.5} />
       ) : null}
-      {state === "changes_requested" ? <span aria-hidden>↩</span> : null}
-      {state === "publish_ready" ? <span aria-hidden>✓</span> : null}
       <span>{label}</span>
     </span>
   );

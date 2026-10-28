@@ -27,7 +27,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={() => applyTheme(next)}
       aria-label={theme ? `Switch to ${next} theme` : "Toggle theme"}
       className={cn(
-        "border-line-strong text-fg-muted hover:bg-hover hover:text-fg inline-flex size-10 items-center justify-center rounded-md border transition-colors",
+        "border-outline text-fg hover:bg-hover inline-flex size-10 items-center justify-center rounded-sm border-2 transition-colors",
         className,
       )}
     >
@@ -56,8 +56,10 @@ export function ThemeRadioCards({ initial }: { initial: ThemeChoice }) {
         <label
           key={value}
           className={cn(
-            "bg-canvas flex h-12 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
-            choice === value ? "border-accent" : "border-line-strong hover:bg-hover",
+            "bg-elevated flex h-12 cursor-pointer items-center gap-2 rounded-sm border-2 px-3 text-sm font-semibold transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-(--focus)",
+            choice === value
+              ? "border-outline bg-highlight text-highlight-fg"
+              : "border-line hover:bg-hover",
           )}
         >
           <input
@@ -71,13 +73,13 @@ export function ThemeRadioCards({ initial }: { initial: ThemeChoice }) {
             }}
             className="sr-only"
           />
-          <Icon aria-hidden className="text-fg-muted size-4" />
+          <Icon aria-hidden className="size-4" />
           <span className="flex-1">{label}</span>
           <span
             aria-hidden
             className={cn(
               "size-2.5 rounded-full border",
-              choice === value ? "bg-accent border-accent" : "border-control",
+              choice === value ? "bg-highlight-fg border-highlight-fg" : "border-control",
             )}
           />
         </label>

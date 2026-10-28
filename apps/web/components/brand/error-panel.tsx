@@ -25,9 +25,9 @@ export function ErrorPanel({
   return (
     <section
       role="alert"
-      className={cn("border-danger bg-elevated space-y-3 rounded-md border p-4", className)}
+      className={cn("border-danger bg-elevated space-y-3 rounded-lg border-2 p-5", className)}
     >
-      <p className="flex items-center gap-2 font-medium">
+      <p className="flex items-center gap-2 font-bold">
         <CircleAlert aria-hidden className="text-danger size-4" />
         {title}
       </p>
@@ -40,7 +40,7 @@ export function ErrorPanel({
         ) : retryHref ? (
           <a
             href={retryHref}
-            className="text-accent-soft text-sm underline-offset-4 hover:underline"
+            className="text-fg text-sm font-semibold underline underline-offset-4"
           >
             Try again
           </a>

@@ -102,29 +102,34 @@ export function RunPanel({
     .join(" · ");
 
   return (
-    <section className="border-line bg-code rounded-md border" aria-label="Check run">
+    <section className="border-outline bg-code rounded-lg border-2" aria-label="Check run">
       <h3 className="m-0">
         <button
           type="button"
           aria-expanded={open}
           aria-controls={`${id}-log`}
           onClick={() => setOpen((o) => !o)}
-          className="mono-id text-fg-muted flex h-9 w-full items-center gap-2 px-3 text-left"
+          className="text-fg flex h-11 w-full items-center gap-2 px-4 text-left"
         >
           <span
             className={cn(
               "size-1.5 rounded-full",
-              active ? "bg-accent" : run.status === "failed" ? "bg-danger" : "bg-success",
+              active
+                ? "bg-highlight border-outline border"
+                : run.status === "failed"
+                  ? "bg-danger"
+                  : "bg-success",
             )}
             aria-hidden
           />
-          <span className="min-w-0 flex-1 truncate">{header}</span>
+          <span className="text-sm font-bold">Check run</span>
+          <span className="mono-id text-fg-muted min-w-0 flex-1 truncate">{header}</span>
           {traceHref ? (
             <a
               href={traceHref}
               target="_blank"
               rel="noreferrer"
-              className="text-accent-soft"
+              className="text-fg text-sm underline underline-offset-4"
               onClick={(e) => e.stopPropagation()}
             >
               Trace ↗
@@ -137,7 +142,7 @@ export function RunPanel({
         </button>
       </h3>
       {open ? (
-        <div id={`${id}-log`} className="border-line space-y-2 border-t px-3 py-2">
+        <div id={`${id}-log`} className="border-outline space-y-2 border-t-2 px-4 py-3">
           {banner}
           <ol className="font-mono text-[0.78125rem] leading-[1.6]">
             {lines.map((l, i) => (
@@ -178,7 +183,7 @@ function Chip({ children, title }: { children: ReactNode; title?: string }) {
   return (
     <li
       title={title}
-      className="mono-id border-line-strong text-fg-muted rounded-sm border px-1.5 py-0.5"
+      className="mono-id border-line text-fg-muted rounded-sm border-2 px-1.5 py-0.5"
     >
       {children}
     </li>

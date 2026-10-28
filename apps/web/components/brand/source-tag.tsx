@@ -1,7 +1,7 @@
-import { Bot } from "lucide-react";
+import { Bot, Cog } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** `DETERMINISTIC` or `AI-ASSISTED` (DESIGN.md §5; invariant 9). Required on every finding. */
+/** `Deterministic` or `AI-assisted` (DESIGN.md §7.14; invariant 9). Required on every finding. */
 export function SourceTag({
   source,
   className,
@@ -10,11 +10,14 @@ export function SourceTag({
   className?: string;
 }) {
   return source === "llm" ? (
-    <span className={cn("mono-label text-accent-soft inline-flex items-center gap-1", className)}>
-      <Bot aria-hidden className="size-3.5" strokeWidth={1.5} />
-      AI-ASSISTED
+    <span className={cn("label text-fg inline-flex items-center gap-1 font-semibold", className)}>
+      <Bot aria-hidden className="size-3.5" strokeWidth={2} />
+      AI-assisted
     </span>
   ) : (
-    <span className={cn("mono-label text-fg-faint", className)}>DETERMINISTIC</span>
+    <span className={cn("label text-fg-muted inline-flex items-center gap-1", className)}>
+      <Cog aria-hidden className="size-3.5" strokeWidth={2} />
+      Deterministic
+    </span>
   );
 }

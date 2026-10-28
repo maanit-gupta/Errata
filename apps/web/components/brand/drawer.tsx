@@ -40,26 +40,26 @@ export function Drawer({
         <Dialog.Backdrop className="bg-overlay fixed inset-0 z-40 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <Dialog.Popup
           className={cn(
-            "bg-elevated border-line-strong shadow-pop fixed inset-y-0 right-0 z-50 flex max-w-full flex-col border-l outline-none",
+            "bg-elevated border-outline fixed inset-y-0 right-0 z-50 flex max-w-full flex-col rounded-l-lg border-y-2 border-l-2 outline-none",
             "transition-transform duration-200 data-ending-style:translate-x-8 data-starting-style:translate-x-8",
             width,
           )}
         >
-          <header className="border-line flex items-start gap-3 border-b px-5 py-4">
+          <header className="border-outline flex items-start gap-3 border-b-2 px-6 py-4">
             <div className="min-w-0 flex-1 space-y-1">
               {eyebrow ? <div className="flex flex-wrap items-center gap-2">{eyebrow}</div> : null}
-              <Dialog.Title className="text-xl">{title}</Dialog.Title>
+              <Dialog.Title className="text-xl font-bold tracking-[-0.01em]">{title}</Dialog.Title>
             </div>
             <Dialog.Close
               aria-label="Close"
-              className="text-fg-muted hover:bg-hover hover:text-fg inline-flex size-8 shrink-0 items-center justify-center rounded-md"
+              className="text-fg hover:bg-hover border-outline inline-flex size-9 shrink-0 items-center justify-center rounded-sm border-2"
             >
               <X aria-hidden className="size-4" />
             </Dialog.Close>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
           {footer ? (
-            <footer className="border-line flex flex-wrap gap-2 border-t px-5 py-3">
+            <footer className="border-outline flex flex-wrap gap-2 border-t-2 px-6 py-4">
               {footer}
             </footer>
           ) : null}
