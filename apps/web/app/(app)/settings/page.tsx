@@ -74,7 +74,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        description="Your profile, how BrandLens looks, and how it tells people about reviews."
+        description="Your profile, how Errata looks, and how it tells people about reviews."
       />
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_12rem]">
         <div className="space-y-4">

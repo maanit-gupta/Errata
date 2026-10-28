@@ -10,7 +10,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconTile } from "@/components/brand/icon-tile";
-import { Wordmark } from "@/components/brand/wordmark";
+import { TAGLINE, Wordmark } from "@/components/brand/wordmark";
 import { LensSpot } from "@/components/illustrations";
 import { DEMO_ROLE_BLURB } from "@/lib/auth/demo-roles";
 import { DEMO_USERS, type DemoUserKey } from "@/lib/auth/demo-users";
@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         aria-labelledby="brand-heading"
         className="bg-band-pink border-outline flex flex-col justify-between gap-10 border-b-2 p-6 sm:p-10 lg:border-r-2 lg:border-b-0 lg:p-14"
       >
-        <Link href="/" className="inline-flex w-fit" aria-label="BrandLens home">
+        <Link href="/" className="inline-flex w-fit" aria-label="Errata home">
           <Wordmark />
         </Link>
         <div className="space-y-6">
@@ -52,7 +52,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           >
             Sign in to check your next draft.
           </h1>
-          <p className="text-fg-muted max-w-sm text-lg">Every flag cites its source.</p>
+          <p className="text-fg-muted max-w-sm text-lg">{TAGLINE}</p>
         </div>
         <p className="text-fg-muted text-sm">Demo data is fictional (PayWise).</p>
       </section>

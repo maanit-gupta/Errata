@@ -10,9 +10,9 @@ import { SkipToast } from "@/components/marketing/skip-toast";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata = {
-  title: { absolute: "BrandLens · Every draft, checked before it ships" },
+  title: { absolute: "Errata · Every draft, checked before it ships" },
   description:
-    "BrandLens checks posts, decks and images against your approved rules and facts. Every flag cites its source. People approve; BrandLens never publishes.",
+    "Errata checks posts, decks and images against your approved rules and facts. Every flag cites its source. People approve; Errata never publishes.",
 };
 
 /** Public landing (DESIGN.md §9). Everything on it must be true: no invented customers or stats. */

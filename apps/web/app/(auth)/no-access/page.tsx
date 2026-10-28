@@ -22,7 +22,7 @@ export default function NoAccessPage() {
           </form>
         }
       >
-        Ask your brand admin to add you to their BrandLens organisation, then sign in again.
+        Ask your brand admin to add you to their Errata organisation, then sign in again.
       </EmptyState>
     </main>
   );

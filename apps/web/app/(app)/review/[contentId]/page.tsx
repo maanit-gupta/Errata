@@ -352,7 +352,7 @@ export default async function ReviewContentPage({
             />
             <p className="flex flex-wrap items-center gap-2 text-sm">
               <span className="text-fg">
-                {a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "BrandLens"}
+                {a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "Errata"}
               </span>
               <span className="mono-id text-accent-soft">
                 {e.type === "transition"

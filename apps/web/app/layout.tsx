@@ -27,8 +27,15 @@ const dmMono = DM_Mono({
 serverEnv();
 
 export const metadata: Metadata = {
-  title: { default: "BrandLens", template: "%s · BrandLens" },
-  description: "Pre-publication brand governance with cited findings.",
+  title: { default: "Errata", template: "%s · Errata" },
+  description: "Errata: pre-publication checks with cited rules.",
+  applicationName: "Errata",
+  openGraph: {
+    siteName: "Errata",
+    title: "Errata",
+    description: "Pre-publication checks with cited rules.",
+    type: "website",
+  },
 };
 
 export const viewport: Viewport = {

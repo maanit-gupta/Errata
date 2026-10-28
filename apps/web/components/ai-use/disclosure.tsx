@@ -142,7 +142,7 @@ const STAGES: [string, string, "LOCAL" | "EXTERNAL", string][] = [
   ],
 ];
 
-/** "How BrandLens uses AI" (DESIGN.md §6.10). */
+/** "How Errata uses AI" (DESIGN.md §6.10). */
 export function HowAiWorks() {
   return (
     <div className="space-y-6">
@@ -181,7 +181,7 @@ export function HowAiWorks() {
           the model and prompt version.
         </li>
         <li>No uncited finding is ever shown.</li>
-        <li>Nothing is published automatically. People approve; BrandLens never publishes.</li>
+        <li>Nothing is published automatically. People approve; Errata never publishes.</li>
       </ul>
     </div>
   );

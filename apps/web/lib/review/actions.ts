@@ -146,9 +146,7 @@ export async function markPublishReady(id: string): Promise<ReviewResult> {
   const r = await transition(id, "publish_ready", {
     notify: (c) => ({ type: "publish_ready", contentId: id, title: c.title }),
   });
-  return r.ok
-    ? { ok: true, message: "Marked publish-ready. BrandLens never publishes for you." }
-    : r;
+  return r.ok ? { ok: true, message: "Marked publish-ready. Errata never publishes for you." } : r;
 }
 
 export async function archive(id: string, why: string): Promise<ReviewResult> {

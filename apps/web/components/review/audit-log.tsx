@@ -52,7 +52,7 @@ export function AuditLog({ rows }: { rows: AuditRow[] }) {
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = "brandlens-audit.csv";
+    a.download = "errata-audit.csv";
     a.click();
     URL.revokeObjectURL(url);
   };

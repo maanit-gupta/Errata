@@ -40,7 +40,7 @@ export function CampaignsView({ campaigns }: { campaigns: CampaignView[] }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-fg-muted max-w-2xl text-sm">
-          Facts and content carry their campaign, which is how BrandLens catches details copied from
+          Facts and content carry their campaign, which is how Errata catches details copied from
           another campaign.
         </p>
         <Button onClick={() => setEditing("new")}>

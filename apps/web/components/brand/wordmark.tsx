@@ -1,49 +1,33 @@
 import { cn } from "@/lib/utils";
 
+/** The product name, used wherever the name is shown. */
+export const PRODUCT_NAME = "Errata";
+/** The one tagline, used wherever a tagline is shown (DESIGN.md §1). */
+export const TAGLINE = "Pre-publication checks with cited rules.";
+
 /**
- * The BrandLens mark (DESIGN.md §6): an outlined tile holding a lens ring with a yellow check tab.
- * Drawn from tokens so it follows the theme. Decorative unless `title` is given.
+ * Compact mark (collapsed sidebar, favicon): a bold "E" on a yellow tile with a 2px ink outline.
+ * Decorative; the accessible name comes from the surrounding link or the sr-only text.
  */
-export function LensMark({ size = 28, className }: { size?: number; className?: string }) {
+export function ErrataMark({ size = 28, className }: { size?: number; className?: string }) {
   return (
-    <svg
-      viewBox="0 0 32 32"
-      width={size}
-      height={size}
-      aria-hidden="true"
-      focusable="false"
-      className={cn("shrink-0", className)}
+    <span
+      aria-hidden
+      style={{ width: size, height: size, fontSize: size * 0.6 }}
+      className={cn(
+        "bg-highlight text-highlight-fg border-outline inline-flex shrink-0 items-center justify-center rounded-[6px] border-2 leading-none font-bold",
+        className,
+      )}
     >
-      <rect
-        x="1"
-        y="1"
-        width="30"
-        height="30"
-        rx="5"
-        fill="var(--illo-paper)"
-        stroke="var(--illo-ink)"
-        strokeWidth="2"
-      />
-      <circle cx="14" cy="14" r="7" fill="none" stroke="var(--illo-ink)" strokeWidth="3" />
-      <path
-        d="M19 19 L24.5 24.5"
-        stroke="var(--illo-ink)"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-      />
-      <circle
-        cx="14"
-        cy="14"
-        r="3"
-        fill="var(--illo-yellow)"
-        stroke="var(--illo-ink)"
-        strokeWidth="1.5"
-      />
-    </svg>
+      E
+    </span>
   );
 }
 
-/** BrandLens wordmark: the mark plus "BrandLens" in bold sans. `compact` shows the mark only. */
+/**
+ * Wordmark (DESIGN.md §6): the name "Errata" in bold sans with a yellow highlighter stroke under
+ * it. `compact` shows the mark only, with the name for screen readers.
+ */
 export function Wordmark({
   className,
   compact = false,
@@ -51,14 +35,25 @@ export function Wordmark({
   className?: string;
   compact?: boolean;
 }) {
+  if (compact)
+    return (
+      <span className={cn("inline-flex", className)}>
+        <ErrataMark />
+        <span className="sr-only">{PRODUCT_NAME}</span>
+      </span>
+    );
   return (
-    <span className={cn("text-fg inline-flex items-center gap-2", className)}>
-      <LensMark />
-      {compact ? (
-        <span className="sr-only">BrandLens</span>
-      ) : (
-        <span className="text-lg leading-none font-bold tracking-[-0.02em]">BrandLens</span>
+    <span
+      className={cn(
+        "text-fg relative inline-flex text-[1.375rem] leading-none font-bold tracking-[-0.03em]",
+        className,
       )}
+    >
+      <span className="relative z-10">{PRODUCT_NAME}</span>
+      <span
+        aria-hidden
+        className="bg-highlight absolute inset-x-[-3px] bottom-[0.08em] z-0 h-[0.4em] rounded-[2px]"
+      />
     </span>
   );
 }

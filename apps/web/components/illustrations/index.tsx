@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * BrandLens illustration set (DESIGN.md §6). Original flat drawings: 2px ink outlines, flat fills
+ * Errata illustration set (DESIGN.md §6). Original flat drawings: 2px ink outlines, flat fills
  * from the `--illo-*` tokens only, so dark mode swaps ink and paper automatically. Decorative:
  * every illustration is aria-hidden. Shapes only, no people or characters.
  */

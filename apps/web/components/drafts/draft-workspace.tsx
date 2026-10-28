@@ -814,7 +814,7 @@ export function DraftWorkspace({
               </p>
             ) : run?.status === "done" ? (
               <EmptyState glyph="shield" title="No findings" headingLevel={3}>
-                This draft follows every approved rule BrandLens checked.
+                This draft follows every approved rule Errata checked.
               </EmptyState>
             ) : (
               <EmptyState glyph="lens" title="Not checked yet" headingLevel={3}>

@@ -50,7 +50,7 @@ export default async function AiUsePage() {
       <PageHeader
         eyebrow="Workspace · Transparency"
         title="Services & AI use"
-        description="Every external service BrandLens uses, what it receives, and how AI is involved in a review."
+        description="Every external service Errata uses, what it receives, and how AI is involved in a review."
       />
 
       <section aria-labelledby="services-heading" className="mb-12 space-y-4">
@@ -62,7 +62,7 @@ export default async function AiUsePage() {
 
       <section aria-labelledby="ai-heading" className="mb-12 space-y-4">
         <h2 id="ai-heading" className="text-2xl">
-          How BrandLens uses AI
+          How Errata uses AI
         </h2>
         <HowAiWorks />
       </section>

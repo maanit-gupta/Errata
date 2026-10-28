@@ -28,7 +28,7 @@ export function MarketingNav({ signedIn }: { signedIn: boolean }) {
   return (
     <header className="bg-canvas border-outline sticky top-0 z-40 border-b-2">
       <div className="mx-auto flex h-20 max-w-[1200px] items-center gap-6 px-4 sm:px-6">
-        <Link href="/" className="inline-flex items-center" aria-label="BrandLens home">
+        <Link href="/" className="inline-flex items-center" aria-label="Errata home">
           <Wordmark />
         </Link>
         <nav aria-label="Primary" className="ml-auto hidden items-center gap-4 md:flex">

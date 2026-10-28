@@ -22,7 +22,7 @@ const csp = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
-  // Cache Components is off: every BrandLens page is per-user and session-dependent (PROGRESS
+  // Cache Components is off: every Errata page is per-user and session-dependent (PROGRESS
   // decision, P02).
   turbopack: {
     rules: {

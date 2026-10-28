@@ -67,8 +67,8 @@ export async function GuidesTab({ orgId }: { orgId: string }) {
             Add a brand guide
           </h2>
           <p className="text-fg-muted mb-4 text-sm">
-            BrandLens drafts one rule card per guideline. Nothing is used in checks until you
-            approve it.
+            Errata drafts one rule card per guideline. Nothing is used in checks until you approve
+            it.
           </p>
           <GuideUpload />
         </div>

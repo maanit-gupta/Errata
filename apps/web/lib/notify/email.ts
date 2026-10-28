@@ -20,7 +20,7 @@ export async function notifyEmail(e: NotifyEvent, ownerId: string): Promise<void
     const text =
       e.type === "changes_requested"
         ? `A reviewer requested changes on "${e.title}": ${e.reason}\n\n${link}`
-        : `"${e.title}" is approved and publish-ready. BrandLens never publishes for you.\n\n${link}`;
+        : `"${e.title}" is approved and publish-ready. Errata never publishes for you.\n\n${link}`;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { authorization: `Bearer ${RESEND_API_KEY}`, "content-type": "application/json" },

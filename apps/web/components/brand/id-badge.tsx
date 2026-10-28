@@ -105,7 +105,7 @@ export function IdBadge({
             {kind === "wcag" ? (
               <Popover.Description className="text-fg-muted">
                 Web Content Accessibility Guidelines 2.2, level AA. Checked deterministically by
-                BrandLens.
+                Errata.
               </Popover.Description>
             ) : source?.body && !source.summaryView ? (
               <Popover.Description className="text-fg-muted max-h-48 overflow-y-auto whitespace-pre-line">

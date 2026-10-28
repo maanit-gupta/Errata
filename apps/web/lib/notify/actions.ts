@@ -12,7 +12,7 @@ export async function sendDiscordTest(): Promise<{ ok: boolean; message: string 
     const res = await fetch(serverEnv().DISCORD_WEBHOOK_URL, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ content: `BrandLens test message from ${session.orgName} settings.` }),
+      body: JSON.stringify({ content: `Errata test message from ${session.orgName} settings.` }),
       signal: AbortSignal.timeout(5000),
     });
     return res.ok

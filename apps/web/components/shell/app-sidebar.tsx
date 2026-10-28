@@ -61,12 +61,7 @@ export function AppSidebar({
       <div
         className={cn("flex h-16 shrink-0 items-center px-4", collapsed && "justify-center px-0")}
       >
-        <Link
-          href="/drafts"
-          aria-label="BrandLens home"
-          className="rounded-sm"
-          onClick={onNavigate}
-        >
+        <Link href="/drafts" aria-label="Errata home" className="rounded-sm" onClick={onNavigate}>
           <Wordmark compact={collapsed} />
         </Link>
         {mobile ? (

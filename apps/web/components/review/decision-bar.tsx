@@ -92,7 +92,7 @@ export function DecisionBar({ contentId, state, can, openWarnings }: Props) {
           </button>
         </p>
         <p className="text-fg-muted">
-          Approved and ready. BrandLens never publishes: post it in your own channel.
+          Approved and ready. Errata never publishes: post it in your own channel.
         </p>
       </div>
     );

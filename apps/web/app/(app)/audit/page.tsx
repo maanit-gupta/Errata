@@ -51,7 +51,7 @@ export default async function AuditPage() {
     return {
       id: a.id,
       at: a.at,
-      actor: a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "BrandLens",
+      actor: a.actor_id ? (name.get(a.actor_id) ?? "Someone") : "Errata",
       role: a.actor_id ? (role.get(a.actor_id) ?? null) : "system",
       contentId,
       content: contentId ? (title.get(contentId) ?? null) : null,

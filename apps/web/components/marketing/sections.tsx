@@ -85,8 +85,8 @@ export function Hero() {
             Every draft, checked before it ships.
           </h1>
           <p className="text-fg-muted max-w-[34rem] text-lg leading-relaxed">
-            BrandLens checks posts, decks and images against your approved rules and facts. Every
-            flag cites its source. People approve.
+            Errata checks posts, decks and images against your approved rules and facts. Every flag
+            cites its source. People approve.
           </p>
           <div className="flex flex-wrap gap-3">
             <Cta href="/login">Try the demo</Cta>

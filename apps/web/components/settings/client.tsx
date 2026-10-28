@@ -40,7 +40,7 @@ export function LandingToggle({ skipping }: { skipping: boolean }) {
         }}
         className="size-5 accent-(--accent)"
       />
-      Show the landing page when I open BrandLens
+      Show the landing page when I open Errata
     </label>
   );
 }

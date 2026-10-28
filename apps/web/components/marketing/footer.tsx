@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/wordmark";
+import { TAGLINE, Wordmark } from "@/components/brand/wordmark";
 import { EVAL_REPORT, LICENCE, README, REPO } from "@/components/marketing/links";
 
 const COLS: { head: string; links: { label: string; href: string; external?: boolean }[] }[] = [
@@ -38,11 +38,8 @@ export function MarketingFooter() {
     <footer className="bg-highlight text-highlight-fg border-outline border-t-2">
       <div className="mx-auto grid max-w-[1200px] gap-10 px-4 py-16 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div className="space-y-3">
-          {/* The mark's paper tile keeps the logo readable on yellow in both themes. */}
           <Wordmark className="text-highlight-fg" />
-          <p className="max-w-xs text-[0.9375rem]">
-            Every draft checked against your brand. Every flag cited.
-          </p>
+          <p className="max-w-xs text-[0.9375rem]">{TAGLINE}</p>
           <p className="text-sm">Maanit Gupta · Jagpreet Singh · SRMIST</p>
         </div>
         {COLS.map((c) => (
@@ -70,7 +67,7 @@ export function MarketingFooter() {
       <div className="bg-accent text-accent-fg">
         <div className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-2 px-4 py-3 text-sm sm:px-6">
           <p>PayWise is a fictional demo brand.</p>
-          <p>© 2026 BrandLens</p>
+          <p>© 2026 Errata</p>
         </div>
       </div>
     </footer>

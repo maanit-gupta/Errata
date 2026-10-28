@@ -4,7 +4,7 @@ import { readEvalReport } from "@/lib/eval-report";
 
 export const metadata = {
   title: "Services & AI use",
-  description: "Every external service BrandLens uses, what it receives, and how AI is involved.",
+  description: "Every external service Errata uses, what it receives, and how AI is involved.",
 };
 
 const h2 = "text-[clamp(26px,3vw,36px)] leading-tight font-semibold tracking-[-0.02em]";
@@ -21,7 +21,7 @@ export default async function PublicAiUse() {
               Services &amp; AI use
             </h1>
             <p className="text-fg-muted text-lg">
-              Every service BrandLens uses and what it receives. PayWise and its data are fictional.
+              Every service Errata uses and what it receives. PayWise and its data are fictional.
             </p>
           </header>
           <ShieldSpot className="hidden w-40 md:block" />
@@ -36,7 +36,7 @@ export default async function PublicAiUse() {
         </section>
         <section aria-labelledby="how-h" className="space-y-6">
           <h2 id="how-h" className={h2}>
-            How BrandLens uses AI
+            How Errata uses AI
           </h2>
           <HowAiWorks />
         </section>
