@@ -1,11 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { GeistMono } from "geist/font/mono";
-import { GeistSans } from "geist/font/sans";
+import { DM_Mono, DM_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { Providers } from "@/components/providers";
+import { TOKENS } from "@/lib/design/tokens";
 import { serverEnv } from "@/lib/env";
 import { getThemeChoice } from "@/lib/theme";
 import "./globals.css";
+
+// DESIGN.md §4: DM Sans for everything, DM Mono only for IDs, numbers and code. next/font
+// downloads them at build time and serves them from this origin (CSP font-src 'self').
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: "variable",
+  style: ["normal", "italic"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+const dmMono = DM_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-dm-mono",
+  display: "swap",
+});
 
 // Fail the build / server render if any env var is missing or malformed.
 serverEnv();
@@ -17,8 +33,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
+    { media: "(prefers-color-scheme: light)", color: TOKENS.light.bg },
+    { media: "(prefers-color-scheme: dark)", color: TOKENS.dark.bg },
   ],
 };
 
@@ -28,7 +44,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme={theme === "system" ? undefined : theme}
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">

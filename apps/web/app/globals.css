@@ -3,15 +3,15 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Theme: dark is the default. Light applies when the user picks it (`data-theme="light"` on
- * <html>) or, with no choice recorded, when the OS prefers light (docs/DESIGN.md §2).
- * `dark:` targets whichever theme is dark at the moment.
+ * Theme (docs/DESIGN.md §2): light is the primary design and the default. Dark applies when the
+ * user picks it (`data-theme="dark"` on <html>) or, with no choice recorded, when the OS prefers
+ * dark. `dark:` targets whichever theme is dark at the moment.
  */
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
     @slot;
   }
-  @media not (prefers-color-scheme: light) {
+  @media (prefers-color-scheme: dark) {
     &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
       @slot;
     }
@@ -19,139 +19,101 @@
 }
 
 /*
- * Terminal Noir tokens (docs/DESIGN.md §2). lib/design/tokens.ts mirrors these values, and
- * tests/tokens.contrast.test.ts asserts every §2.3 contrast row against this file.
+ * `color-scheme` picks the theme; every colour token holds both values in one
+ * `light-dark(light, dark)` pair, so each token is defined exactly once. No choice = follow the
+ * OS (light when it doesn't say). A `data-theme` on any element (the kitchen sink renders both)
+ * switches that subtree.
  */
-:root,
-[data-theme="dark"] {
-  color-scheme: dark;
-  /* tokens:dark:start */
-  --bg: #0d0d0f;
-  --bg-elevated: #141416;
-  --bg-hover: #1b1b1f;
-  --bg-code: #0a0a0b;
-  --border: #232327;
-  --border-strong: #34343a;
-  --border-control: #6b6b73;
-  --grid-line: rgba(255, 255, 255, 0.04);
-  --text: #f5f5f7;
-  --text-muted: #a1a1aa;
-  --text-faint: #8b8b94;
-  --accent: #8a2bff;
-  --accent-hover: #7a1ff0;
-  --accent-fg: #ffffff;
-  --accent-soft: #b9a2ff;
-  --accent-deep: #1c0533;
-  --accent-pixel: #e6d9ff;
-  --mint: #7cf5c8;
-  --blocker: #ff6a4d;
-  --blocker-fg: #0d0d0f;
-  --blocker-bg: rgba(255, 106, 77, 0.12);
-  --warning: #f5b544;
-  --warning-bg: rgba(245, 181, 68, 0.1);
-  --suggestion: #a1a1aa;
-  --success: #22e07a;
-  --success-bg: rgba(34, 224, 122, 0.1);
-  --danger: #ff5a5f;
-  --focus: #b9a2ff;
-  /* tokens:dark:end */
-  --gradient-word: linear-gradient(90deg, #8a2bff 0%, #b9a2ff 55%, #7cf5c8 100%);
-  --hero-glow: radial-gradient(60% 50% at 0% 0%, rgba(138, 43, 255, 0.22), transparent 70%);
-  --shadow-pop: 0 8px 30px rgba(0, 0, 0, 0.5);
-  /* Marketing-only dimension sentence colours (§8.4) */
-  --dim-tone: #b9a2ff;
-  --dim-terms: #7cf5c8;
-  --dim-facts: #f5d76e;
-  --dim-claims: #ffa36b;
-  --dim-visual: #c7a8ff;
-  --dim-access: #8cc8ff;
+:root {
+  color-scheme: light dark;
 }
-
 [data-theme="light"] {
   color-scheme: light;
-  /* tokens:light:start */
-  --bg: #fafafa;
-  --bg-elevated: #ffffff;
-  --bg-hover: #f0f0f2;
-  --bg-code: #f4f4f6;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --border-control: #8e8e96;
-  --grid-line: rgba(0, 0, 0, 0.04);
-  --text: #0d0d0f;
-  --text-muted: #52525b;
-  --text-faint: #6b6b73;
-  --accent: #7a1ff0;
-  --accent-hover: #6a14db;
-  --accent-fg: #ffffff;
-  --accent-soft: #6a2bd9;
-  --accent-deep: #f1e9ff;
-  --accent-pixel: #6a2bd9;
-  --mint: #0e8a62;
-  --blocker: #c2301b;
-  --blocker-fg: #ffffff;
-  --blocker-bg: rgba(194, 48, 27, 0.08);
-  --warning: #8a5a00;
-  --warning-bg: rgba(245, 181, 68, 0.16);
-  --suggestion: #52525b;
-  --success: #0f7a43;
-  --success-bg: rgba(15, 122, 67, 0.08);
-  --danger: #b4232a;
-  --focus: #7a1ff0;
-  /* tokens:light:end */
-  --gradient-word: linear-gradient(90deg, #7a1ff0 0%, #6a2bd9 55%, #0e8a62 100%);
-  --hero-glow: radial-gradient(60% 50% at 0% 0%, rgba(122, 31, 240, 0.12), transparent 70%);
-  --shadow-pop: 0 8px 30px rgba(13, 13, 15, 0.12);
-  --dim-tone: #6a2bd9;
-  --dim-terms: #0b6e4f;
-  --dim-facts: #7a5c00;
-  --dim-claims: #a8430f;
-  --dim-visual: #7a1ff0;
-  --dim-access: #1f5f99;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
-    /* tokens:light:start */
-    --bg: #fafafa;
-    --bg-elevated: #ffffff;
-    --bg-hover: #f0f0f2;
-    --bg-code: #f4f4f6;
-    --border: #e4e4e7;
-    --border-strong: #d4d4d8;
-    --border-control: #8e8e96;
-    --grid-line: rgba(0, 0, 0, 0.04);
-    --text: #0d0d0f;
-    --text-muted: #52525b;
-    --text-faint: #6b6b73;
-    --accent: #7a1ff0;
-    --accent-hover: #6a14db;
-    --accent-fg: #ffffff;
-    --accent-soft: #6a2bd9;
-    --accent-deep: #f1e9ff;
-    --accent-pixel: #6a2bd9;
-    --mint: #0e8a62;
-    --blocker: #c2301b;
-    --blocker-fg: #ffffff;
-    --blocker-bg: rgba(194, 48, 27, 0.08);
-    --warning: #8a5a00;
-    --warning-bg: rgba(245, 181, 68, 0.16);
-    --suggestion: #52525b;
-    --success: #0f7a43;
-    --success-bg: rgba(15, 122, 67, 0.08);
-    --danger: #b4232a;
-    --focus: #7a1ff0;
-    /* tokens:light:end */
-    --gradient-word: linear-gradient(90deg, #7a1ff0 0%, #6a2bd9 55%, #0e8a62 100%);
-    --hero-glow: radial-gradient(60% 50% at 0% 0%, rgba(122, 31, 240, 0.12), transparent 70%);
-    --shadow-pop: 0 8px 30px rgba(13, 13, 15, 0.12);
-    --dim-tone: #6a2bd9;
-    --dim-terms: #0b6e4f;
-    --dim-facts: #7a5c00;
-    --dim-claims: #a8430f;
-    --dim-visual: #7a1ff0;
-    --dim-access: #1f5f99;
-  }
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/*
+ * Colour tokens (docs/DESIGN.md §2.1). lib/design/tokens.ts mirrors every value, and
+ * tests/tokens.contrast.test.ts parses this block (hex only, `light-dark(#light, #dark)`) and
+ * asserts each §2.3 contrast row in both themes.
+ *
+ * The block is declared on `[data-theme]` as well as `:root`: Tailwind's CSS compiler resolves
+ * `light-dark()` where a custom property is declared, so a nested `data-theme` subtree (the kitchen
+ * sink) needs its own declaration to pick up its theme.
+ */
+:root,
+[data-theme] {
+  /* tokens:start */
+  /* Surfaces */
+  --bg: light-dark(#ffffff, #121211);
+  --bg-elevated: light-dark(#ffffff, #1b1b19);
+  --bg-hover: light-dark(#eeeeec, #272725);
+  --bg-code: light-dark(#f6f6f4, #0b0b0a);
+  --band-grey: light-dark(#eeeeec, #1f1f1d);
+  --band-pink: light-dark(#facbed, #3b2135);
+  /* Lines: hairline dividers, 2px outlines on cards/tables/inputs, focus ring */
+  --border: light-dark(#d9d9d4, #34342f);
+  --border-strong: light-dark(#000000, #ecebe6);
+  --border-control: light-dark(#000000, #ecebe6);
+  --outline: light-dark(#000000, #ecebe6);
+  --focus: light-dark(#000000, #f2f1ec);
+  /* Text */
+  --text: light-dark(#000000, #f2f1ec);
+  --text-muted: light-dark(#45453f, #b6b5ad);
+  --text-faint: light-dark(#5e5e58, #9a9991);
+  /* Action (ink): primary buttons, links, active tabs. Inverts in dark. */
+  --accent: light-dark(#000000, #f2f1ec);
+  --accent-hover: light-dark(#2e2e2b, #d8d7d0);
+  --accent-fg: light-dark(#ffffff, #121211);
+  --accent-soft: light-dark(#000000, #f2f1ec);
+  --accent-deep: light-dark(#facbed, #4a2343);
+  /* Highlight (yellow): fills only, always with black text and a black outline */
+  --highlight: light-dark(#f7b924, #f7b924);
+  --highlight-fg: light-dark(#000000, #000000);
+  --mint: light-dark(#146f4c, #4cc992);
+  --info: light-dark(#46627c, #9db7cf);
+  /* Severity and status: always with a text label and an icon */
+  --blocker: light-dark(#a31428, #ff7d8c);
+  --blocker-fg: light-dark(#ffffff, #121211);
+  --blocker-bg: light-dark(#fbe6e9, #3e1a21);
+  --warning: light-dark(#a14400, #ff9d57);
+  --warning-bg: light-dark(#fde7d6, #3a2415);
+  --suggestion: light-dark(#45453f, #b6b5ad);
+  --success: light-dark(#137a52, #4cc992);
+  --success-bg: light-dark(#e3f3ea, #15301f);
+  --danger: light-dark(#a31428, #ff7d8c);
+  /* Illustration palette (decorative SVG only; DESIGN.md §6) */
+  --illo-ink: light-dark(#000000, #ecebe6);
+  --illo-paper: light-dark(#ffffff, #2a2a26);
+  --illo-yellow: light-dark(#f7b924, #f7b924);
+  --illo-pink: light-dark(#facbed, #e9a6d6);
+  --illo-green: light-dark(#189364, #2fae7c);
+  --illo-blue: light-dark(#5e7d99, #7f9ab3);
+  --illo-red: light-dark(#a31428, #d2384c);
+  --illo-grey: light-dark(#eeeeec, #3a3a35);
+  /* tokens:end */
+
+  /* Non-contrast tokens */
+  --overlay: light-dark(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.65));
+  --shadow-pop: none; /* DESIGN.md §3: no shadows; floating surfaces use a 2px outline */
+  --angle: 4vw; /* height of the angled top edge on .band-angled */
+
+  /*
+   * Legacy Terminal Noir hooks, neutralised until their components are replaced (R3–R5): no
+   * blueprint grid, no hero glow; the dimension sentence reads as plain
+   * text, pixel art draws in ink.
+   */
+  --grid-line: transparent;
+  --hero-glow: none;
+  --accent-pixel: var(--text);
+  --dim-tone: var(--text);
+  --dim-terms: var(--text);
+  --dim-facts: var(--text);
+  --dim-claims: var(--text);
+  --dim-visual: var(--text);
+  --dim-access: var(--text);
 }
 
 /*
@@ -159,8 +121,8 @@
  * restyled primitives (components/ui) keep working.
  */
 @theme inline {
-  --font-sans: var(--font-geist-sans), "Inter Tight", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, "SF Mono", Menlo, monospace;
   --font-heading: var(--font-sans);
 
   --color-canvas: var(--bg);
@@ -190,6 +152,13 @@
   --color-success-bg: var(--success-bg);
   --color-danger: var(--danger);
   --color-focus: var(--focus);
+  --color-overlay: var(--overlay);
+  --color-outline: var(--outline);
+  --color-highlight: var(--highlight);
+  --color-highlight-fg: var(--highlight-fg);
+  --color-band-grey: var(--band-grey);
+  --color-band-pink: var(--band-pink);
+  --color-info: var(--info);
 
   /* shadcn / legacy aliases */
   --color-background: var(--bg);
@@ -210,12 +179,13 @@
   --color-input: var(--border-control);
   --color-ring: var(--focus);
 
+  /* DESIGN.md §3: 4 buttons, inputs, chips · 8 menus, popovers, toasts · 16 cards, panels, dialogs. */
   --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 6px;
-  --radius-xl: 8px;
-  --radius-2xl: 10px;
-  --radius-3xl: 12px;
+  --radius-md: 4px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
+  --radius-2xl: 16px;
+  --radius-3xl: 16px;
   --radius-4xl: 16px;
   --shadow-pop: var(--shadow-pop);
 }
@@ -231,17 +201,20 @@
   }
   body {
     @apply bg-canvas text-fg;
-    font-size: 0.9375rem;
-    line-height: 1.55;
+    font-size: 1rem;
+    line-height: 1.6;
   }
   h1,
   h2,
   h3 {
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
   }
   ::selection {
-    background: color-mix(in oklab, var(--accent) 45%, transparent);
+    background: var(--highlight);
+    color: var(--highlight-fg);
   }
   /* Visible focus for every interactive element (WCAG 2.4.7 / 2.4.11). */
   :focus-visible {
@@ -250,18 +223,38 @@
   }
 }
 
-@utility mono-label {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
+/*
+ * Small labels: eyebrows, column headers, chips (DESIGN.md §2.5). Sans, sentence case: monospace
+ * is only for IDs, numbers and code. `mono-label` is the legacy name, kept so existing screens
+ * pick up the new style; components move to `label` as they are rebuilt (R2+).
+ */
+@utility label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
 }
+@utility mono-label {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+/* IDs, numbers and code: the only monospace in the product (CL-03, F-112, WCAG 1.4.3, v3). */
 @utility mono-id {
   font-family: var(--font-mono);
-  font-size: 0.78125rem;
+  font-size: 0.8125rem;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
+}
+/*
+ * Section band with an angled top edge (DESIGN.md §5.2). Pair with a band colour and extra top
+ * padding of at least var(--angle) so content never sits in the cut.
+ */
+@utility band-angled {
+  clip-path: polygon(0 var(--angle), 100% 0, 100% 100%, 0 100%);
 }
 @utility blueprint-grid {
   background-image:
@@ -269,11 +262,9 @@
     linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
   background-size: 64px 64px;
 }
+/* Legacy hook (landing hero word): plain text now. Deleted with its last user in R4. */
 @utility text-gradient-word {
-  background: var(--gradient-word);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--text);
 }
 
 /* Finding highlights in the draft editor (decorations; cards carry the text labels). */
@@ -322,7 +313,7 @@
   margin: 0 0 0.75rem;
 }
 
-/* Terminal-like motion (DESIGN §4). */
+/* Motion primitives (DESIGN §4). Pixel and cursor keyframes stay until R4 removes their users. */
 @keyframes bl-blink {
   50% {
     opacity: 0;
@@ -396,12 +387,14 @@
   }
 }
 
-/* Toasts (sonner): elevated panel, hairline border, 6px radius (DESIGN §5). */
+/* Toasts (sonner): white panel, 2px ink outline, 8px radius, no shadow (DESIGN §7). */
 html [data-sonner-toaster] [data-sonner-toast] {
   --normal-bg: var(--bg-elevated);
   --normal-text: var(--text);
   --normal-border: var(--border-strong);
-  border-radius: 6px;
+  border-radius: 8px;
+  border-width: 2px;
+  border-color: var(--outline);
   font-family: var(--font-sans);
 }
 /* Toasts are keyboard-focusable (alt+T); sonner removes the outline, so restore the focus ring. */

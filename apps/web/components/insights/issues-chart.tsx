@@ -35,7 +35,7 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
             tick={{
               fill: "var(--accent-soft)",
               fontSize: 12,
-              fontFamily: "var(--font-geist-mono)",
+              fontFamily: "var(--font-dm-mono)",
             }}
           />
           <Tooltip
@@ -63,7 +63,7 @@ export function IssuesChart({ issues }: { issues: Issue[] }) {
             <LabelList
               dataKey="n"
               position="right"
-              style={{ fill: "var(--text)", fontSize: 12, fontFamily: "var(--font-geist-mono)" }}
+              style={{ fill: "var(--text)", fontSize: 12, fontFamily: "var(--font-dm-mono)" }}
             />
           </Bar>
         </BarChart>
