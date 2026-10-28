@@ -58,6 +58,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Demo video source: vendored GSAP and HyperFrames output are not app code.
+    "video-src/composition/vendor/**",
+    "video-src/composition/renders/**",
+    "video-src/composition/.hyperframes/**",
   ]),
 ]);
 

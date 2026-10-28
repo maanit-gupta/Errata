@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Errata: how it works</title>
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "DM Sans";
+        src: url("fonts/DMSans-variable-latin.woff2") format("woff2");
+        font-weight: 100 1000;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-400-latin.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-500-latin.woff2") format("woff2");
+        font-weight: 500;
+      }
+      :root {
+        --ink: #000000;
+        --paper: #ffffff;
+        --yellow: #f7b924;
+        --pink: #facbed;
+        --grey: #eeeeec;
+        --muted: #45453f;
+        --red: #a31428;
+        --orange: #a14400;
+        --peach: #fde7d6;
+        --green: #137a52;
+        --illo-ink: #000000;
+        --illo-paper: #ffffff;
+        --illo-yellow: #f7b924;
+        --illo-pink: #facbed;
+        --illo-green: #189364;
+        --illo-blue: #5e7d99;
+        --illo-red: #a31428;
+        --illo-grey: #eeeeec;
+        --font-dm-mono: "DM Mono";
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .mono {
+        font-family: "DM Mono", monospace;
+        font-weight: 500;
+      }
+
+      /* Persistent top bar */
+      .topbar {
+        position: absolute;
+        left: 80px;
+        right: 80px;
+        top: 40px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .wordmark {
+        position: relative;
+        display: inline-block;
+        font-weight: 700;
+        font-size: 40px;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      .wordmark span {
+        position: relative;
+        z-index: 1;
+      }
+      .wordmark::after {
+        content: "";
+        position: absolute;
+        left: -4px;
+        right: -4px;
+        bottom: 2px;
+        height: 0.4em;
+        background: var(--yellow);
+        border-radius: 3px;
+        z-index: 0;
+      }
+      .step {
+        position: absolute;
+        right: 80px;
+        top: 44px;
+        height: 56px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .step .mono {
+        font-size: 28px;
+      }
+
+      /* Caption bar */
+      .caption {
+        position: absolute;
+        left: 50%;
+        bottom: 120px;
+        width: 1640px;
+        margin-left: -820px;
+        min-height: 132px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px 48px;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        font-size: 38px;
+        line-height: 1.3;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      /* Screenshot frame with zoom */
+      .frame {
+        position: absolute;
+        left: 160px;
+        top: 132px;
+        width: 1600px;
+        height: 640px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--grey);
+      }
+      .frame.right {
+        left: 860px;
+        width: 900px;
+      }
+      .zoom {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+      }
+      .zoom img {
+        display: block;
+      }
+      .tick {
+        position: absolute;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: var(--green);
+        border: 4px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tick svg {
+        width: 44px;
+        height: 44px;
+      }
+
+      /* Findings: left column */
+      .facts {
+        position: absolute;
+        left: 160px;
+        top: 200px;
+        width: 640px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .ids {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .id {
+        display: inline-flex;
+        align-items: center;
+        height: 84px;
+        padding: 0 22px;
+        border: 3px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 52px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: 56px;
+        padding: 0 18px;
+        border: 2px solid;
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+        width: max-content;
+      }
+      .badge.blocker {
+        background: var(--red);
+        border-color: var(--red);
+        color: var(--paper);
+      }
+      .badge.warning {
+        background: var(--peach);
+        border-color: var(--orange);
+        color: var(--orange);
+      }
+      .badge svg {
+        width: 28px;
+        height: 28px;
+      }
+      .dim {
+        font-size: 30px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .quote {
+        font-size: 34px;
+        line-height: 1.35;
+        font-weight: 600;
+      }
+
+      /* Pipeline */
+      .pipeline {
+        position: absolute;
+        left: 160px;
+        top: 150px;
+        width: 1600px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+      .stage {
+        position: relative;
+        height: 290px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        padding: 24px 30px;
+        background: var(--paper);
+      }
+      .stage .num {
+        font-size: 28px;
+        color: var(--muted);
+      }
+      .stage h3 {
+        margin: 12px 0 10px;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .stage p {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.3;
+        color: var(--muted);
+      }
+      .stage .tick {
+        top: 26px;
+        right: 26px;
+        width: 64px;
+        height: 64px;
+      }
+      .stage .tick svg {
+        width: 36px;
+        height: 36px;
+      }
+      .stage.ai {
+        background: var(--pink);
+      }
+      .stage.gate {
+        background: var(--yellow);
+      }
+      .stage.gate p,
+      .stage.ai p,
+      .stage.gate .num,
+      .stage.ai .num {
+        color: var(--ink);
+      }
+
+      /* Fix */
+      .fixbox {
+        position: absolute;
+        left: 475px;
+        top: 184px;
+        width: 970px;
+        height: 420px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .chips {
+        position: absolute;
+        left: 160px;
+        top: 652px;
+        width: 1600px;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+      }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 76px;
+        padding: 0 24px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 28px;
+        white-space: nowrap;
+      }
+      .chip b {
+        font-weight: 700;
+      }
+      .chip .tick {
+        position: static;
+        width: 42px;
+        height: 42px;
+        border-width: 3px;
+      }
+      .chip .tick svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Title cards */
+      .hook {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr 720px;
+        align-items: center;
+        gap: 40px;
+        padding: 0 120px;
+      }
+      .hook h1,
+      .end h1 {
+        margin: 0;
+        font-size: 104px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        font-weight: 700;
+      }
+      .hook .wordmark {
+        font-size: 56px;
+        margin-bottom: 48px;
+      }
+      .hook svg {
+        width: 720px;
+        height: auto;
+        display: block;
+      }
+      .end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 56px;
+        background: var(--pink);
+      }
+      .end .wordmark {
+        font-size: 84px;
+      }
+      .end .tagline {
+        font-size: 40px;
+        font-weight: 500;
+        margin-top: -24px;
+      }
+      .end .ink {
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 16px;
+        padding: 36px 64px;
+      }
+      .end .ink h1 {
+        font-size: 92px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="60"
+    >
+      <!-- Persistent top bar (scenes 2–6) -->
+      <div id="bar" class="clip" data-start="4" data-duration="51" data-track-index="9">
+        <div id="bar-in" class="topbar">
+          <div class="wordmark"><span>Errata</span></div>
+        </div>
+      </div>
+
+      <!-- 1. Hook -->
+      <section id="s1" class="clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="hook">
+          <div id="s1-text">
+            <div class="wordmark"><span>Errata</span></div>
+            <h1>Every draft, checked before it ships.</h1>
+          </div>
+          <div id="s1-art" data-layout-ignore><svg viewBox="0 0 520 440" aria-hidden="true" focusable="false"><circle cx="300" cy="210" r="170" fill="var(--illo-pink)"></circle><g><rect x="90" y="60" width="320" height="270" rx="16" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M106 60 H394 Q410 60 410 76 V103 H90 V76 Q90 60 106 60 Z" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><circle cx="102" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><circle cx="112" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><circle cx="122" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><rect x="112" y="124" width="150" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="150" width="250" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="176" width="220" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="110" y="198" width="190" height="20" rx="4" fill="var(--illo-pink)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M112 226 H298" stroke="var(--illo-red)" stroke-width="3" stroke-linecap="round"></path><rect x="112" y="246" width="240" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="272" width="180" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="296" width="96" height="22" rx="4" fill="var(--illo-ink)"></rect></g><rect x="392" y="268" width="26" height="86" rx="10" fill="var(--illo-yellow)" transform="rotate(-45 405 311)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><circle cx="356" cy="236" r="58" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></circle><rect x="318" y="222" width="76" height="26" rx="5" fill="var(--illo-pink)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M318 256 H394" stroke="var(--illo-red)" stroke-width="4" stroke-linecap="round"></path><g><rect x="18" y="168" width="104" height="38" rx="6" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><rect x="30" y="181" width="12" height="12" rx="2" fill="var(--illo-red)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><text x="50" y="193" font-size="16" font-weight="500" fill="var(--illo-ink)" style="font-family:var(--font-dm-mono), monospace">CL-03</text></g><g><rect x="36" y="222" width="90" height="38" rx="6" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><text x="52" y="247" font-size="16" font-weight="500" fill="var(--illo-ink)" style="font-family:var(--font-dm-mono), monospace">E-19</text></g><g><circle cx="412" cy="64" r="26" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></circle><path d="M400.85714285714283 64 l7.428571428571429 8.357142857142858 l14.857142857142858 -16.714285714285715" fill="none" stroke="var(--illo-paper)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g><g transform="translate(70 318) rotate(-28)"><path d="M0 0 C 38.7 21.5, 38.7 64.5, 0 86 C -38.7 64.5, -38.7 21.5, 0 0 Z" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 12.9 V 81.7" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><g transform="translate(112 330) rotate(8)"><path d="M0 0 C 33.300000000000004 18.5, 33.300000000000004 55.5, 0 74 C -33.300000000000004 55.5, -33.300000000000004 18.5, 0 0 Z" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 11.1 V 70.3" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><g transform="translate(40 352) rotate(-58)"><path d="M0 0 C 27 15, 27 45, 0 60 C -27 45, -27 15, 0 0 Z" fill="var(--illo-blue)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 9 V 57" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><rect x="430" y="364" width="56" height="44" rx="5" fill="var(--illo-blue)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><rect x="452" y="326" width="40" height="38" rx="5" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M20 410 H500" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></div>
+        </div>
+        <div id="s1-cap" class="caption">
+          Errata checks every draft against your approved brand rules.
+        </div>
+      </section>
+
+      <!-- 2. Write -->
+      <section id="s2" class="clip" data-start="4" data-duration="8" data-track-index="1">
+        <div id="s2-step" class="step"><span class="mono">1</span>Write</div>
+        <div id="s2-frame" class="frame">
+          <div
+            id="s2-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/01-write.png" width="2880" height="1800" alt="" />
+            <div id="t1" class="tick" style="left: 1002px; top: 622px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t2" class="tick" style="left: 1002px; top: 823px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t3" class="tick" style="left: 1002px; top: 1028px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t4" class="tick" style="left: 1002px; top: 1234px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t5" class="tick" style="left: 1002px; top: 1399px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <div id="s2-cap" class="caption">
+          A creator writes a caption and sets its intent: goal, audience, call to action, channel
+          and campaign.
+        </div>
+      </section>
+
+      <!-- 3. Check -->
+      <section id="s3" class="clip" data-start="12" data-duration="7" data-track-index="1">
+        <div id="s3-step" class="step"><span class="mono">2</span>Check</div>
+        <div class="pipeline"><div id="st1" class="stage">
+            <div class="num mono">01</div>
+            <h3>Ingest</h3>
+            <p>Read the text, file or image.</p>
+            <div id="st1-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st2" class="stage">
+            <div class="num mono">02</div>
+            <h3>Protect</h3>
+            <p>Redact personal data and secrets.</p>
+            <div id="st2-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st3" class="stage">
+            <div class="num mono">03</div>
+            <h3>Filters</h3>
+            <p>Rule checks without AI: facts, terms, claims, contrast.</p>
+            <div id="st3-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st4" class="stage">
+            <div class="num mono">04</div>
+            <h3>Retrieve</h3>
+            <p>Find the approved rules and facts that apply.</p>
+            <div id="st4-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st5" class="stage ai">
+            <div class="num mono">05</div>
+            <h3>AI pass</h3>
+            <p>One AI call judges tone and claims.</p>
+            <div id="st5-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st6" class="stage gate">
+            <div class="num mono">06</div>
+            <h3>Citation gate</h3>
+            <p>Keep a flag only if its rule was found and its quote is in the draft.</p>
+            <div id="st6-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div></div>
+        <div id="s3-cap" class="caption">
+          Six steps run. A flag survives only if it cites an approved rule or fact.
+        </div>
+      </section>
+
+      <!-- 4. Findings -->
+      <section id="s4" class="clip" data-start="19" data-duration="20" data-track-index="1">
+        <div id="s4-step" class="step"><span class="mono">3</span>Findings</div>
+        <div id="fa-facts" class="facts">
+          <div class="ids"><span class="id mono">CL-03</span><span class="id mono">F-112</span></div>
+          <div class="badge blocker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Blocker</div>
+          <div class="dim">Claims</div>
+          <div class="quote mono">“lock in 14.2% assured annual returns”</div>
+        </div>
+        <div id="fa-frame" class="frame right">
+          <div id="fa-zoom" class="zoom" data-layout-allow-overflow style="width: 800px; height: 1330px"><img src="shots/card-CL-03.png" width="800" height="1330" alt="" /></div>
+        </div>
+        <div id="fa-cap" class="caption">CL-03: “assured returns” on a market-linked fund, quoting F-112 without its disclaimer.</div>
+        <div id="fb-facts" class="facts">
+          <div class="ids"><span class="id mono">E-19</span></div>
+          <div class="badge blocker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Blocker</div>
+          <div class="dim">Facts</div>
+          <div class="quote mono">“Oct 18 at Hall B, Chandigarh”</div>
+        </div>
+        <div id="fb-frame" class="frame right">
+          <div id="fb-zoom" class="zoom" data-layout-allow-overflow style="width: 800px; height: 922px"><img src="shots/card-E-19.png" width="800" height="922" alt="" /></div>
+        </div>
+        <div id="fb-cap" class="caption">E-19: Oct 18 at Hall B belongs to another campaign. Caught without AI judgement.</div>
+        <div id="fc-facts" class="facts">
+          <div class="ids"><span class="id mono">G-07</span></div>
+          <div class="badge warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Warning</div>
+          <div class="dim">Terms</div>
+          <div class="quote mono">“Paywise app”</div>
+        </div>
+        <div id="fc-frame" class="frame right">
+          <div id="fc-zoom" class="zoom" data-layout-allow-overflow style="width: 800px; height: 860px"><img src="shots/card-G-07.png" width="800" height="860" alt="" /></div>
+        </div>
+        <div id="fc-cap" class="caption">G-07: the brand is written PayWise, not “Paywise app”.</div>
+        <div id="fd-facts" class="facts">
+          <div class="ids"><span class="id mono">WCAG 1.4.3</span><span class="id mono">A-02</span></div>
+          <div class="badge warning"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Warning</div>
+          <div class="dim">Access · poster image</div>
+          <div class="quote mono">Contrast 2.89 : 1</div>
+        </div>
+        <div id="fd-frameA" class="frame right" style="left: 960px; width: 700px">
+          <div id="fd-zoomA" class="zoom" data-layout-allow-overflow style="width: 2880px; height: 1800px"><img src="shots/07-image.png" width="2880" height="1800" alt="" /></div>
+        </div>
+        <div id="fd-frameB" class="frame right">
+          <div id="fd-zoomB" class="zoom" data-layout-allow-overflow style="width: 800px; height: 846px; background: #ffffff"><img src="shots/card-WCAG-1.4.3.png" width="800" height="846" alt="" /></div>
+        </div>
+        <div id="fd-cap" class="caption">WCAG 1.4.3: poster text at 2.89 : 1. Large text needs 3 : 1.</div>
+      </section>
+
+      <!-- 5. Fix -->
+      <section id="s5" class="clip" data-start="39" data-duration="6" data-track-index="1">
+        <div id="s5-step" class="step"><span class="mono">4</span>Fix</div>
+        <div id="s5-box" class="fixbox">
+          <div
+            id="s5-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 800px; height: 1330px"
+          >
+            <img src="shots/card-CL-03.png" width="800" height="1330" alt="" />
+          </div>
+        </div>
+        <div class="chips">
+          <div id="s5-c1" class="chip"><b>Goal</b> webinar sign-ups<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="s5-c2" class="chip"><b>Audience</b> first-time investors<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="s5-c3" class="chip"><b>Call to action</b> Register now<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+        <div id="s5-cap" class="caption">
+          Fixes keep your intent. AI rewrites are re-checked before you see them.
+        </div>
+      </section>
+
+      <!-- 6. Review -->
+      <section id="s6" class="clip" data-start="45" data-duration="10" data-track-index="1">
+        <div id="s6-step" class="step"><span class="mono">5</span>Review</div>
+        <div
+          id="s6-frameA"
+          class="frame"
+          style="left: 352px; top: 330px; width: 1215px; height: 284px; background: #ffffff"
+        >
+          <div
+            id="s6-zoomA"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/04-legal.png" width="2880" height="1800" alt="" />
+          </div>
+        </div>
+        <div id="s6-frame" class="frame">
+          <div
+            id="s6-zoomB"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/05-signoff.png" width="2880" height="1800" alt="" />
+          </div>
+          <div
+            id="s6-zoomC"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 1096px; height: 882px"
+          >
+            <img src="shots/06-audit-list.png" width="1096" height="882" alt="" />
+          </div>
+        </div>
+        <div id="s6-capA" class="caption">
+          The claim goes to Legal, who signs off with a reason.
+        </div>
+        <div id="s6-capB" class="caption">The audit trail records who decided, when and why.</div>
+      </section>
+
+      <!-- 7. End -->
+      <section id="s7" class="clip" data-start="55" data-duration="5" data-track-index="1">
+        <div class="end">
+          <div id="s7-ink" class="ink"><h1>Humans approve. Errata never publishes.</h1></div>
+          <div id="s7-mark" class="wordmark"><span>Errata</span></div>
+          <div id="s7-tag" class="tagline">Pre-publication checks with cited rules.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Frame helper: place a zoom layer so the rect [x0, y0, x1, y1] (in image px) fills the
+      // frame, capped at maxK so 2x screenshots are never upscaled past 1:1 device pixels.
+      function view(frameW, frameH, rect, maxK, pad) {
+        const [x0, y0, x1, y1] = rect;
+        const w = x1 - x0;
+        const h = y1 - y0;
+        const k = Math.min(maxK ?? 1, (frameW * (pad ?? 0.92)) / w, (frameH * (pad ?? 0.92)) / h);
+        return { scale: k, x: frameW / 2 - k * (x0 + w / 2), y: frameH / 2 - k * (y0 + h / 2) };
+      }
+      const FW = 1600,
+        FH = 640,
+        RW = 900;
+      const E = "power3.out";
+      const tl = gsap.timeline({ paused: true });
+      const rise = (sel, at, dur) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, y: 28 },
+          { opacity: 1, y: 0, duration: dur ?? 0.6, ease: E },
+          at,
+        );
+      const fadeOut = (sel, at) =>
+        tl.to(sel, { opacity: 0, duration: 0.35, ease: "power2.in" }, at);
+      const tick = (sel, at) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, scale: 0.6 },
+          { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" },
+          at,
+        );
+
+      // Top bar
+      tl.fromTo("#bar-in", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 4);
+
+      // 1. Hook (0–4)
+      rise("#s1-text", 0.2, 0.7);
+      tl.fromTo(
+        "#s1-art",
+        { opacity: 0, scale: 0.96 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: E },
+        0.4,
+      );
+      rise("#s1-cap", 0.9);
+      fadeOut(["#s1-text", "#s1-art", "#s1-cap"], 3.6);
+
+      // 2. Write (4–12): full screen, then the caption text, then the intent fields ticked.
+      rise("#s2-step", 4.1);
+      rise("#s2-frame", 4.1, 0.7);
+      tl.set("#s2-zoom", view(FW, FH, [0, 0, 2880, 1800]), 4);
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [1160, 470, 1990, 830]), duration: 1.1, ease: "power2.inOut" },
+        5.2,
+      );
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [560, 500, 1150, 1500], 1, 0.96), duration: 1.1, ease: "power2.inOut" },
+        7.3,
+      );
+      ["#t1", "#t2", "#t3", "#t4", "#t5"].forEach((t, i) => tick(t, 8.5 + i * 0.4));
+      rise("#s2-cap", 4.5);
+      fadeOut(["#s2-step", "#s2-frame", "#s2-cap"], 11.6);
+
+      // 3. Check (12–19): six labelled steps tick in order.
+      rise("#s3-step", 12.1);
+      for (let i = 1; i <= 6; i++) {
+        rise(`#st${i}`, 12.2 + i * 0.12, 0.5);
+        tick(`#st${i}-tick`, 13.6 + i * 0.55);
+      }
+      rise("#s3-cap", 12.6);
+      fadeOut(["#s3-step", ".pipeline", "#s3-cap"], 18.6);
+
+      // 4. Findings (19–39): four cited findings, 5 s each, with a slow push-in.
+      rise("#s4-step", 19.1);
+      const beats = [
+        ["a", 19.0, [0, 0, 800, 760]],
+        ["b", 24.0, [0, 0, 800, 740]],
+        ["c", 29.0, [0, 0, 800, 860]],
+      ];
+      for (const [id, t0, rect] of beats) {
+        rise(`#f${id}-facts`, t0 + 0.15, 0.6);
+        tl.set(`#f${id}-zoom`, view(RW, FH, rect, 1.2, 0.94), t0);
+        tl.fromTo(
+          `#f${id}-frame`,
+          { opacity: 0, x: 60 },
+          { opacity: 1, x: 0, duration: 0.6, ease: E },
+          t0 + 0.25,
+        );
+        tl.fromTo(
+          `#f${id}-frame`,
+          { scale: 1 },
+          { scale: 1.03, duration: 3.8, ease: "none" },
+          t0 + 0.85,
+        );
+        rise(`#f${id}-cap`, t0 + 0.4);
+        fadeOut([`#f${id}-facts`, `#f${id}-frame`, `#f${id}-cap`], t0 + 4.65);
+      }
+      // 4d: the poster with its overlay boxes, then the WCAG card.
+      rise("#fd-facts", 34.15, 0.6);
+      tl.set("#fd-zoomA", view(700, FH, [1253, 634, 1901, 1346], 1, 0.96), 34.0);
+      tl.set("#fd-zoomB", view(RW, FH, [0, 0, 800, 846], 1.2, 0.94), 34.0);
+      tl.fromTo(
+        "#fd-frameA",
+        { opacity: 0, x: 60 },
+        { opacity: 1, x: 0, duration: 0.6, ease: E },
+        34.25,
+      );
+      tl.fromTo("#fd-frameA", { scale: 1 }, { scale: 1.03, duration: 2.0, ease: "none" }, 34.85);
+      tl.to("#fd-frameA", { opacity: 0, duration: 0.3 }, 36.4);
+      tl.fromTo(
+        "#fd-frameB",
+        { opacity: 0, x: 40 },
+        { opacity: 1, x: 0, duration: 0.5, ease: E },
+        36.55,
+      );
+      rise("#fd-cap", 34.4);
+      fadeOut(["#s4-step", "#fd-facts", "#fd-frameB", "#fd-cap"], 38.6);
+
+      // 5. Fix (39–45): the CL-03 fix block, then the intent it keeps.
+      rise("#s5-step", 39.1);
+      tl.set("#s5-zoom", view(970, 420, [28, 775, 772, 1078], 1.25, 0.96), 39);
+      rise("#s5-box", 39.15, 0.7);
+      ["#s5-c1", "#s5-c2", "#s5-c3"].forEach((c, i) => rise(c, 40.6 + i * 0.35, 0.5));
+      rise("#s5-cap", 39.5);
+      fadeOut(["#s5-step", "#s5-box", ".chips", "#s5-cap"], 44.6);
+
+      // 6. Review (45–55): routing line as Legal, the sign-off dialog, the audit trail.
+      rise("#s6-step", 45.1);
+      tl.set("#s6-zoomA", view(1215, 284, [560, 203, 1775, 487], 1, 1), 45);
+      tl.set("#s6-zoomB", view(FW, FH, [900, 560, 1980, 1240]), 45);
+      tl.set("#s6-zoomC", { ...view(FW, FH, [0, 300, 1096, 882], 1.2, 0.94), opacity: 0 }, 45);
+      rise("#s6-frameA", 45.1, 0.7);
+      tl.to("#s6-frameA", { opacity: 0, duration: 0.3 }, 48.0);
+      tl.fromTo("#s6-frame", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 48.2);
+      rise("#s6-capA", 45.5);
+      tl.to("#s6-capA", { opacity: 0, duration: 0.3 }, 50.8);
+      tl.to("#s6-zoomB", { opacity: 0, duration: 0.3 }, 50.8);
+      tl.to("#s6-zoomC", { opacity: 1, duration: 0.4 }, 51.0);
+      rise("#s6-capB", 51.1);
+      fadeOut(["#s6-step", "#s6-frame", "#s6-capB"], 54.6);
+      tl.to("#bar-in", { opacity: 0, duration: 0.35 }, 54.6);
+
+      // 7. End (55–60)
+      rise("#s7-ink", 55.2, 0.7);
+      rise("#s7-mark", 55.9);
+      rise("#s7-tag", 56.3);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>

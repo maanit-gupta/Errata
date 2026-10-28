@@ -4,3 +4,8 @@ pnpm-lock.yaml
 types/database.ts
 next-env.d.ts
 .impeccable
+video-src/composition/vendor
+video-src/composition/renders
+video-src/composition/.hyperframes
+video-src/composition/index.html
+video-src/composition/hero-scene.svg

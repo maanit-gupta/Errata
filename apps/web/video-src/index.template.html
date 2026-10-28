@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Errata: how it works</title>
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "DM Sans";
+        src: url("fonts/DMSans-variable-latin.woff2") format("woff2");
+        font-weight: 100 1000;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-400-latin.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-500-latin.woff2") format("woff2");
+        font-weight: 500;
+      }
+      :root {
+        --ink: #000000;
+        --paper: #ffffff;
+        --yellow: #f7b924;
+        --pink: #facbed;
+        --grey: #eeeeec;
+        --muted: #45453f;
+        --red: #a31428;
+        --orange: #a14400;
+        --peach: #fde7d6;
+        --green: #137a52;
+        --illo-ink: #000000;
+        --illo-paper: #ffffff;
+        --illo-yellow: #f7b924;
+        --illo-pink: #facbed;
+        --illo-green: #189364;
+        --illo-blue: #5e7d99;
+        --illo-red: #a31428;
+        --illo-grey: #eeeeec;
+        --font-dm-mono: "DM Mono";
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .mono {
+        font-family: "DM Mono", monospace;
+        font-weight: 500;
+      }
+
+      /* Persistent top bar */
+      .topbar {
+        position: absolute;
+        left: 80px;
+        right: 80px;
+        top: 40px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .wordmark {
+        position: relative;
+        display: inline-block;
+        font-weight: 700;
+        font-size: 40px;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      .wordmark span {
+        position: relative;
+        z-index: 1;
+      }
+      .wordmark::after {
+        content: "";
+        position: absolute;
+        left: -4px;
+        right: -4px;
+        bottom: 2px;
+        height: 0.4em;
+        background: var(--yellow);
+        border-radius: 3px;
+        z-index: 0;
+      }
+      .step {
+        position: absolute;
+        right: 80px;
+        top: 44px;
+        height: 56px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .step .mono {
+        font-size: 28px;
+      }
+
+      /* Caption bar */
+      .caption {
+        position: absolute;
+        left: 50%;
+        bottom: 120px;
+        width: 1640px;
+        margin-left: -820px;
+        min-height: 132px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px 48px;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        font-size: 38px;
+        line-height: 1.3;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      /* Screenshot frame with zoom */
+      .frame {
+        position: absolute;
+        left: 160px;
+        top: 132px;
+        width: 1600px;
+        height: 640px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--grey);
+      }
+      .frame.right {
+        left: 860px;
+        width: 900px;
+      }
+      .zoom {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+      }
+      .zoom img {
+        display: block;
+      }
+      .tick {
+        position: absolute;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: var(--green);
+        border: 4px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tick svg {
+        width: 44px;
+        height: 44px;
+      }
+
+      /* Findings: left column */
+      .facts {
+        position: absolute;
+        left: 160px;
+        top: 200px;
+        width: 640px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .ids {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .id {
+        display: inline-flex;
+        align-items: center;
+        height: 84px;
+        padding: 0 22px;
+        border: 3px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 52px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: 56px;
+        padding: 0 18px;
+        border: 2px solid;
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+        width: max-content;
+      }
+      .badge.blocker {
+        background: var(--red);
+        border-color: var(--red);
+        color: var(--paper);
+      }
+      .badge.warning {
+        background: var(--peach);
+        border-color: var(--orange);
+        color: var(--orange);
+      }
+      .badge svg {
+        width: 28px;
+        height: 28px;
+      }
+      .dim {
+        font-size: 30px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .quote {
+        font-size: 34px;
+        line-height: 1.35;
+        font-weight: 600;
+      }
+
+      /* Pipeline */
+      .pipeline {
+        position: absolute;
+        left: 160px;
+        top: 150px;
+        width: 1600px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+      .stage {
+        position: relative;
+        height: 290px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        padding: 24px 30px;
+        background: var(--paper);
+      }
+      .stage .num {
+        font-size: 28px;
+        color: var(--muted);
+      }
+      .stage h3 {
+        margin: 12px 0 10px;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .stage p {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.3;
+        color: var(--muted);
+      }
+      .stage .tick {
+        top: 26px;
+        right: 26px;
+        width: 64px;
+        height: 64px;
+      }
+      .stage .tick svg {
+        width: 36px;
+        height: 36px;
+      }
+      .stage.ai {
+        background: var(--pink);
+      }
+      .stage.gate {
+        background: var(--yellow);
+      }
+      .stage.gate p,
+      .stage.ai p,
+      .stage.gate .num,
+      .stage.ai .num {
+        color: var(--ink);
+      }
+
+      /* Fix */
+      .fixbox {
+        position: absolute;
+        left: 475px;
+        top: 184px;
+        width: 970px;
+        height: 420px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .chips {
+        position: absolute;
+        left: 160px;
+        top: 652px;
+        width: 1600px;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+      }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 76px;
+        padding: 0 24px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 28px;
+        white-space: nowrap;
+      }
+      .chip b {
+        font-weight: 700;
+      }
+      .chip .tick {
+        position: static;
+        width: 42px;
+        height: 42px;
+        border-width: 3px;
+      }
+      .chip .tick svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Title cards */
+      .hook {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr 720px;
+        align-items: center;
+        gap: 40px;
+        padding: 0 120px;
+      }
+      .hook h1,
+      .end h1 {
+        margin: 0;
+        font-size: 104px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        font-weight: 700;
+      }
+      .hook .wordmark {
+        font-size: 56px;
+        margin-bottom: 48px;
+      }
+      .hook svg {
+        width: 720px;
+        height: auto;
+        display: block;
+      }
+      .end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 56px;
+        background: var(--pink);
+      }
+      .end .wordmark {
+        font-size: 84px;
+      }
+      .end .tagline {
+        font-size: 40px;
+        font-weight: 500;
+        margin-top: -24px;
+      }
+      .end .ink {
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 16px;
+        padding: 36px 64px;
+      }
+      .end .ink h1 {
+        font-size: 92px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="60"
+    >
+      <!-- Persistent top bar (scenes 2–6) -->
+      <div id="bar" class="clip" data-start="4" data-duration="51" data-track-index="9">
+        <div id="bar-in" class="topbar">
+          <div class="wordmark"><span>Errata</span></div>
+        </div>
+      </div>
+
+      <!-- 1. Hook -->
+      <section id="s1" class="clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="hook">
+          <div id="s1-text">
+            <div class="wordmark"><span>Errata</span></div>
+            <h1>Every draft, checked before it ships.</h1>
+          </div>
+          <div id="s1-art" data-layout-ignore>{{HERO_SVG}}</div>
+        </div>
+        <div id="s1-cap" class="caption">
+          Errata checks every draft against your approved brand rules.
+        </div>
+      </section>
+
+      <!-- 2. Write -->
+      <section id="s2" class="clip" data-start="4" data-duration="8" data-track-index="1">
+        <div id="s2-step" class="step"><span class="mono">1</span>Write</div>
+        <div id="s2-frame" class="frame">
+          <div
+            id="s2-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/01-write.png" width="2880" height="1800" alt="" />
+            {{TICKS}}
+          </div>
+        </div>
+        <div id="s2-cap" class="caption">
+          A creator writes a caption and sets its intent: goal, audience, call to action, channel
+          and campaign.
+        </div>
+      </section>
+
+      <!-- 3. Check -->
+      <section id="s3" class="clip" data-start="12" data-duration="7" data-track-index="1">
+        <div id="s3-step" class="step"><span class="mono">2</span>Check</div>
+        <div class="pipeline">{{STAGES}}</div>
+        <div id="s3-cap" class="caption">
+          Six steps run. A flag survives only if it cites an approved rule or fact.
+        </div>
+      </section>
+
+      <!-- 4. Findings -->
+      <section id="s4" class="clip" data-start="19" data-duration="20" data-track-index="1">
+        <div id="s4-step" class="step"><span class="mono">3</span>Findings</div>
+        {{FINDINGS}}
+      </section>
+
+      <!-- 5. Fix -->
+      <section id="s5" class="clip" data-start="39" data-duration="6" data-track-index="1">
+        <div id="s5-step" class="step"><span class="mono">4</span>Fix</div>
+        <div id="s5-box" class="fixbox">
+          <div
+            id="s5-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 800px; height: 1330px"
+          >
+            <img src="shots/card-CL-03.png" width="800" height="1330" alt="" />
+          </div>
+        </div>
+        <div class="chips">
+          <div id="s5-c1" class="chip"><b>Goal</b> webinar sign-ups{{SMALLTICK}}</div>
+          <div id="s5-c2" class="chip"><b>Audience</b> first-time investors{{SMALLTICK}}</div>
+          <div id="s5-c3" class="chip"><b>Call to action</b> Register now{{SMALLTICK}}</div>
+        </div>
+        <div id="s5-cap" class="caption">
+          Fixes keep your intent. AI rewrites are re-checked before you see them.
+        </div>
+      </section>
+
+      <!-- 6. Review -->
+      <section id="s6" class="clip" data-start="45" data-duration="10" data-track-index="1">
+        <div id="s6-step" class="step"><span class="mono">5</span>Review</div>
+        <div
+          id="s6-frameA"
+          class="frame"
+          style="left: 352px; top: 330px; width: 1215px; height: 284px; background: #ffffff"
+        >
+          <div
+            id="s6-zoomA"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/04-legal.png" width="2880" height="1800" alt="" />
+          </div>
+        </div>
+        <div id="s6-frame" class="frame">
+          <div
+            id="s6-zoomB"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/05-signoff.png" width="2880" height="1800" alt="" />
+          </div>
+          <div
+            id="s6-zoomC"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 1096px; height: 882px"
+          >
+            <img src="shots/06-audit-list.png" width="1096" height="882" alt="" />
+          </div>
+        </div>
+        <div id="s6-capA" class="caption">
+          The claim goes to Legal, who signs off with a reason.
+        </div>
+        <div id="s6-capB" class="caption">The audit trail records who decided, when and why.</div>
+      </section>
+
+      <!-- 7. End -->
+      <section id="s7" class="clip" data-start="55" data-duration="5" data-track-index="1">
+        <div class="end">
+          <div id="s7-ink" class="ink"><h1>Humans approve. Errata never publishes.</h1></div>
+          <div id="s7-mark" class="wordmark"><span>Errata</span></div>
+          <div id="s7-tag" class="tagline">Pre-publication checks with cited rules.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Frame helper: place a zoom layer so the rect [x0, y0, x1, y1] (in image px) fills the
+      // frame, capped at maxK so 2x screenshots are never upscaled past 1:1 device pixels.
+      function view(frameW, frameH, rect, maxK, pad) {
+        const [x0, y0, x1, y1] = rect;
+        const w = x1 - x0;
+        const h = y1 - y0;
+        const k = Math.min(maxK ?? 1, (frameW * (pad ?? 0.92)) / w, (frameH * (pad ?? 0.92)) / h);
+        return { scale: k, x: frameW / 2 - k * (x0 + w / 2), y: frameH / 2 - k * (y0 + h / 2) };
+      }
+      const FW = 1600,
+        FH = 640,
+        RW = 900;
+      const E = "power3.out";
+      const tl = gsap.timeline({ paused: true });
+      const rise = (sel, at, dur) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, y: 28 },
+          { opacity: 1, y: 0, duration: dur ?? 0.6, ease: E },
+          at,
+        );
+      const fadeOut = (sel, at) =>
+        tl.to(sel, { opacity: 0, duration: 0.35, ease: "power2.in" }, at);
+      const tick = (sel, at) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, scale: 0.6 },
+          { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" },
+          at,
+        );
+
+      // Top bar
+      tl.fromTo("#bar-in", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 4);
+
+      // 1. Hook (0–4)
+      rise("#s1-text", 0.2, 0.7);
+      tl.fromTo(
+        "#s1-art",
+        { opacity: 0, scale: 0.96 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: E },
+        0.4,
+      );
+      rise("#s1-cap", 0.9);
+      fadeOut(["#s1-text", "#s1-art", "#s1-cap"], 3.6);
+
+      // 2. Write (4–12): full screen, then the caption text, then the intent fields ticked.
+      rise("#s2-step", 4.1);
+      rise("#s2-frame", 4.1, 0.7);
+      tl.set("#s2-zoom", view(FW, FH, [0, 0, 2880, 1800]), 4);
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [1160, 470, 1990, 830]), duration: 1.1, ease: "power2.inOut" },
+        5.2,
+      );
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [560, 500, 1150, 1500], 1, 0.96), duration: 1.1, ease: "power2.inOut" },
+        7.3,
+      );
+      ["#t1", "#t2", "#t3", "#t4", "#t5"].forEach((t, i) => tick(t, 8.5 + i * 0.4));
+      rise("#s2-cap", 4.5);
+      fadeOut(["#s2-step", "#s2-frame", "#s2-cap"], 11.6);
+
+      // 3. Check (12–19): six labelled steps tick in order.
+      rise("#s3-step", 12.1);
+      for (let i = 1; i <= 6; i++) {
+        rise(`#st${i}`, 12.2 + i * 0.12, 0.5);
+        tick(`#st${i}-tick`, 13.6 + i * 0.55);
+      }
+      rise("#s3-cap", 12.6);
+      fadeOut(["#s3-step", ".pipeline", "#s3-cap"], 18.6);
+
+      // 4. Findings (19–39): four cited findings, 5 s each, with a slow push-in.
+      rise("#s4-step", 19.1);
+      const beats = [
+        ["a", 19.0, [0, 0, 800, 760]],
+        ["b", 24.0, [0, 0, 800, 740]],
+        ["c", 29.0, [0, 0, 800, 860]],
+      ];
+      for (const [id, t0, rect] of beats) {
+        rise(`#f${id}-facts`, t0 + 0.15, 0.6);
+        tl.set(`#f${id}-zoom`, view(RW, FH, rect, 1.2, 0.94), t0);
+        tl.fromTo(
+          `#f${id}-frame`,
+          { opacity: 0, x: 60 },
+          { opacity: 1, x: 0, duration: 0.6, ease: E },
+          t0 + 0.25,
+        );
+        tl.fromTo(
+          `#f${id}-frame`,
+          { scale: 1 },
+          { scale: 1.03, duration: 3.8, ease: "none" },
+          t0 + 0.85,
+        );
+        rise(`#f${id}-cap`, t0 + 0.4);
+        fadeOut([`#f${id}-facts`, `#f${id}-frame`, `#f${id}-cap`], t0 + 4.65);
+      }
+      // 4d: the poster with its overlay boxes, then the WCAG card.
+      rise("#fd-facts", 34.15, 0.6);
+      tl.set("#fd-zoomA", view(700, FH, [1253, 634, 1901, 1346], 1, 0.96), 34.0);
+      tl.set("#fd-zoomB", view(RW, FH, [0, 0, 800, 846], 1.2, 0.94), 34.0);
+      tl.fromTo(
+        "#fd-frameA",
+        { opacity: 0, x: 60 },
+        { opacity: 1, x: 0, duration: 0.6, ease: E },
+        34.25,
+      );
+      tl.fromTo("#fd-frameA", { scale: 1 }, { scale: 1.03, duration: 2.0, ease: "none" }, 34.85);
+      tl.to("#fd-frameA", { opacity: 0, duration: 0.3 }, 36.4);
+      tl.fromTo(
+        "#fd-frameB",
+        { opacity: 0, x: 40 },
+        { opacity: 1, x: 0, duration: 0.5, ease: E },
+        36.55,
+      );
+      rise("#fd-cap", 34.4);
+      fadeOut(["#s4-step", "#fd-facts", "#fd-frameB", "#fd-cap"], 38.6);
+
+      // 5. Fix (39–45): the CL-03 fix block, then the intent it keeps.
+      rise("#s5-step", 39.1);
+      tl.set("#s5-zoom", view(970, 420, [28, 775, 772, 1078], 1.25, 0.96), 39);
+      rise("#s5-box", 39.15, 0.7);
+      ["#s5-c1", "#s5-c2", "#s5-c3"].forEach((c, i) => rise(c, 40.6 + i * 0.35, 0.5));
+      rise("#s5-cap", 39.5);
+      fadeOut(["#s5-step", "#s5-box", ".chips", "#s5-cap"], 44.6);
+
+      // 6. Review (45–55): routing line as Legal, the sign-off dialog, the audit trail.
+      rise("#s6-step", 45.1);
+      tl.set("#s6-zoomA", view(1215, 284, [560, 203, 1775, 487], 1, 1), 45);
+      tl.set("#s6-zoomB", view(FW, FH, [900, 560, 1980, 1240]), 45);
+      tl.set("#s6-zoomC", { ...view(FW, FH, [0, 300, 1096, 882], 1.2, 0.94), opacity: 0 }, 45);
+      rise("#s6-frameA", 45.1, 0.7);
+      tl.to("#s6-frameA", { opacity: 0, duration: 0.3 }, 48.0);
+      tl.fromTo("#s6-frame", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 48.2);
+      rise("#s6-capA", 45.5);
+      tl.to("#s6-capA", { opacity: 0, duration: 0.3 }, 50.8);
+      tl.to("#s6-zoomB", { opacity: 0, duration: 0.3 }, 50.8);
+      tl.to("#s6-zoomC", { opacity: 1, duration: 0.4 }, 51.0);
+      rise("#s6-capB", 51.1);
+      fadeOut(["#s6-step", "#s6-frame", "#s6-capB"], 54.6);
+      tl.to("#bar-in", { opacity: 0, duration: 0.35 }, 54.6);
+
+      // 7. End (55–60)
+      rise("#s7-ink", 55.2, 0.7);
+      rise("#s7-mark", 55.9);
+      rise("#s7-tag", 56.3);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
