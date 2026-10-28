@@ -31,9 +31,14 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | U0 | Design-system foundation (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; built on ui/* branches, reverted, then restored on main with the U2 follow-ups closed (DESIGN.md §13) |
 | U1 | Public landing + /ai-use (DESIGN.md §8) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; landing + /ai-use public |
 | U2 | UI polish and audit (DESIGN.md §12) | J | done | M (Claude, /complete-ui) | main | 2026-10-27; axe 0 serious/critical on 19 routes × 2 themes |
+| R0 | UI redesign study (`docs/ui-redesign/STUDY.md`) | J | done | J (Claude) | UI/UX_jagpreet | 2026-10-28; read-only study |
+| R1 | Redesign foundation: DESIGN.md, tokens, fonts, lint | J | done | J (Claude) | UI/UX_jagpreet | 2026-10-28; DB-dependent gates not run here (local Supabase unavailable, see Handoff) |
 
 ## Handoff (latest — overwrite each phase)
 
+- **UI redesign (branch `UI/UX_jagpreet`, 2026-10-28; not on `main`, not pushed):** R0 study and R1 foundation are done. `docs/DESIGN.md` now describes the flat, outlined, light-first system (ink + yellow highlight, grey/pink bands, DM Sans/DM Mono, original inline-SVG illustrations). Tokens are one `light-dark()` block in `apps/web/app/globals.css` mirrored by `lib/design/tokens.ts`; the contrast test asserts 55 pairs per theme. Old screens pick up the new tokens; components are rebuilt from R2 (`docs/ui-redesign/STUDY.md` §7, R2–R11).
+  - **Gates not run in R1:** the local Supabase stack couldn't start on this machine (the image pull filled the disk, then Docker Desktop stopped responding), and there is no `apps/web/.env.local` here. So pgTAP, `ui.spec` signed-in routes, `keyboard.spec` sign-in tests, `a11y.spec` and the functional specs were not run. What ran: ESLint, Prettier, `tsc`, Vitest (incl. the token test), worker lint and pytest, and `ui.spec` axe on `/`, `/ai-use`, `/login`, `/dev/kitchen-sink` in both themes plus the kitchen-sink reduced-motion check, with the app on placeholder env and no DB.
+  - **Exact next step:** fix Docker (Docker Desktop → Troubleshoot → Restart, or Clean/Purge data) and free disk, run `make check` and the full `ui.spec` + `keyboard.spec` on the local stack, then start R2 (21st.dev primitives restyled to DESIGN.md §7).
 - **UI (2026-10-27, user request "complete the design.md"):** `main` runs the full Terminal Noir UI (DESIGN.md). It was re-applied from `ui/U2` as a 3-way patch on top of P15, so the P15 limits, CSP, signed-URL TTL and loading/error states are kept. The U2 follow-ups are closed (DESIGN.md §13): sticky DecisionBar with per-action dialogs, version switcher (`?v=N` read-only), "View as table" toggle, contrast/ΔE swatches, palette empty state.
   - Gates: `make check` green; axe 38/38 (19 routes × 2 themes), keyboard and a11y specs green; core-loop, review and drafts e2e green on the local stack. E2E changes: sign-off and request-changes now go through dialogs ("Confirm sign-off", "Send request"); the P15 keyboard test uses the new nav labels ("Rule cards").
   - **Deployed 2026-10-27:** Vercel production (https://brandlens-app.vercel.app) and Render worker (`b012ef6`, `/healthz` ok) both auto-deployed from `main`. Production UI gates: `ui.spec` + `keyboard.spec` + `a11y.spec` 49 passed, 1 skipped (dev-only kitchen sink). Real data surfaced three fixes, now shipped: tab-panel focus ring, toast focus ring, version-switcher accessible name.
@@ -259,6 +264,23 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-27 | UI | Focus rings on elements that also need `outline-none` use `focus-visible:outline-solid` (or drop `outline-none`) | Tailwind v4 `outline-none` sets `--tw-outline-style: none`, which overrides a later `outline-2`; this hid the SegmentedTabs panel ring |
 | 2026-10-27 | UI | Kitchen-sink reduced-motion e2e skips when the route 404s (production builds) | `/dev/kitchen-sink` is dev-only by design (§10) |
 | 2026-10-27 | P16 | `.gitleaksignore` lists the two fake detector-test strings by fingerprint; gitleaks (MIT, local tool, not a project dependency) used for the pre-public scan | Keeps a future `gitleaks git` run clean without weakening rules |
+| 2026-10-28 | R0 | UI redesign runs on branch `UI/UX_jagpreet` (owner override of the main-only rule for this task); nothing merges to `main` until the owner says so; no pushes by Claude | Production deploys from `main`; the redesign must not reach the live demo half-done |
+| 2026-10-28 | R1 | Visual direction: flat, friendly, light-first with 2px ink outlines, ink primary buttons, a yellow highlight, grey/pink section bands (one angled), a black featured card and a yellow footer. Reference = the owner's chosen commercial website template; **style copied, assets not**: no illustration, logo, text or layout is reused or traced, and no template or vendor name appears in code or UI | Owner decision (replaces Terminal Noir and a short-lived, uncommitted "calm editorial, cobalt" direction from earlier the same day) |
+| 2026-10-28 | R1 | Palette: ink `#000`/off-white, yellow `#F7B924` (fill only, always with black text and a 2px ink outline), grey `#EEEEEC`, pink `#FACBED`; blocker `#A31428`, warning burnt orange `#A14400` on peach, success `#137A52`; dark theme near-black `#121211` with off-white outlines and the same yellow | Owner palette; every text pair ≥ 4.5:1 and every UI boundary ≥ 3:1 in both themes (DESIGN.md §2.3) |
+| 2026-10-28 | R1 | Warning is never yellow: burnt-orange text on a peach tint + `TriangleAlert` + the word Warning, never a solid fill; yellow never carries status | Owner rule; colour is never the only cue and the two must not be confused |
+| 2026-10-28 | R1 | Tokens defined once as `light-dark(#light, #dark)` with `color-scheme` (light default, OS preference when no choice, `data-theme` overrides); the three duplicated light blocks are gone; contrast test parses the pairs (hex only) and asserts one row table in both themes | One source of truth; light-dark() is Baseline 2024 |
+| 2026-10-28 | R1 | Fonts: DM Sans (variable) + DM Mono 400/500 via `next/font/google`, self-hosted at build; `geist` removed. Alternatives considered: Bricolage Grotesque, Figtree, Space Grotesk (DESIGN.md §4) | Friendly geometric, legible at UI sizes, mono from the same family; CSP allows only `font-src 'self'` |
+| 2026-10-28 | R1 | Monospace only for IDs, numbers and code; `mono-label` is now a sans label (legacy alias of the new `label` utility) so existing screens switch without component edits | Owner decision |
+| 2026-10-28 | R1 | Radii: 4px buttons/inputs/chips, 8px popovers/menus/toasts, 16px cards/panels/dialogs; no shadows (`--shadow-pop: none`); legacy grid, glow, gradient and pixel hooks neutralised in CSS until their components go | DESIGN.md §3 |
+| 2026-10-28 | R1 | ESLint now also bans Tailwind palette classes (`bg-zinc-900`, `text-white`, `bg-black/50`…) and yellow as text (`text-highlight`) in `.tsx`; the 8 dialog scrims moved to a new `--overlay` token (`bg-overlay`) | Tokens only; yellow on white is 1.76:1 |
+| 2026-10-28 | R1 | Skeletons allowed where the layout is known (tables, cards, KPI tiles); spinners for actions | Owner decision; replaces the old "no skeletons" rule |
+| 2026-10-28 | R1 | Illustrations are original inline-SVG components (`components/illustrations/`, R3) coloured only by `--illo-*` tokens; no people/characters in the first set; new text wordmark + lens mark replaces the pixel lens | Copy the style, not the assets |
+| 2026-10-28 | R1 | Landing (R5) is short: hero, 3 illustrated steps, context-bleed example, trust band, featured demo card, yellow footer; "What we heard" and the stats bands are cut | Owner decision |
+| 2026-10-28 | R1 | 21st.dev components are copied in by hand from R2 and must port to Base UI + `motion` + tokens; no Magic MCP | Owner decision |
+| 2026-10-28 | R1 | To remove later: sidebar tip/watchlist cards and GitHub link (R4), disabled "Reset demo data" button (R10) | Owner decision |
+| 2026-10-28 | R1 | E2E specs and unit tests may be updated in the same commit as the change that breaks them, keeping assertions as strong | Owner decision |
+| 2026-10-28 | R1 | Phase plan R2–R11: the illustration set (R3) comes before the landing rebuild (R5) | Owner request |
+| 2026-10-28 | R1 | `apps/web/.prettierignore` ignores `.impeccable` (a local design-hook cache, already git-ignored) | It broke `prettier --check .` |
 
 **Dependencies and licences** (append when adding any dependency):
 
@@ -291,6 +313,8 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | geist | OFL-1.1 (fonts) / MIT | U0 (restored on main 2026-10-27) |
 | motion | MIT | U0 (restored on main 2026-10-27) |
 | cmdk | MIT | U0 (restored on main 2026-10-27) |
+| geist | (removed) | R1, `UI/UX_jagpreet`: replaced by DM Sans/DM Mono |
+| DM Sans, DM Mono (fonts via `next/font/google`, no npm package) | OFL-1.1 | R1, `UI/UX_jagpreet` |
 
 ## Open questions (ask the user; don't guess)
 
@@ -302,6 +326,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 - [x] Approve `make seed-demo url=<cloud>` for P11: approved and run (2026-10-26).
 - [x] Merged P12/P13 to `main`, migrations `…100018`/`…100019` applied to cloud, redeployed (user, 2026-10-27). Was: **Merge P12 to `main` and deploy?** It needs migration `20261026100018_review_run_pages.sql` applied to cloud Supabase *before* the Vercel deploy (the web reads `review_runs.pages`), then Render + Vercel redeploys.
 - [x] Model IDs in `apps/worker/.env` confirmed current (user, 2026-10-27). Was: **Update model IDs in `apps/worker/.env`** (see the P03 handoff; the configured Groq/Gemini models are retired).
+- [ ] **Judging date for Round 2?** Needed to plan when the redesign branch can merge (owner left it blank on 2026-10-28).
 - [ ] **Interviewee names on the landing page?** "What we heard" uses role + city only. Confirm consent before adding names or verbatim quotes (DESIGN.md §8.8).
 
 ## Known issues / debt
