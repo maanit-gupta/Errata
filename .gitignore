@@ -44,7 +44,6 @@ apps/web/video-src/composition/renders/
 apps/web/video-src/composition/.hyperframes/
 
 # Scratch notes and spent drafts: keep them local, never in the tree.
-# Project docs (README, CLAUDE.md, PROGRESS.md, docs/*, prompts, eval reports) stay tracked.
 *.txt
 !requirements*.txt
 !**/public/robots.txt
@@ -55,3 +54,13 @@ TODO.md
 scratch/
 docs/ui-redesign/PR.md
 docs/ui-redesign/README-rename-notes.md
+
+# Coding-agent context: instructions, build log, phase plans and session commands stay local.
+.claude/
+CLAUDE.md
+AGENTS.md
+PROGRESS.md
+docs/SPEC.md
+docs/PHASES.md
+docs/ui-redesign/
+apps/web/video-src/brag-plan.md

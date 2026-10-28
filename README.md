@@ -19,7 +19,7 @@ Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") b
 
 **Contents:** [Demo video](#demo-video) · [The problem](#the-problem) · [The workflow](#the-workflow) · [How a draft is checked](#how-a-draft-is-checked) · [Architecture](#architecture) · [Results](#results) · [Run it locally](#run-it-locally) · [Deploying](#deploying) · [Security and reliability](#security-and-reliability) · [Changes since Round 1](#changes-since-round-1) · [AI assistance](#ai-assistance) · [Models, services and licences](#models-services-and-licences) · [Limitations](#limitations-and-roadmap) · [Team](#team-and-contributions)
 
-**Docs:** [Demo script](docs/DEMO.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
+**Docs:** [Demo script](docs/DEMO.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Round 1 plan](docs/plan.pdf)
 
 ---
 
@@ -136,7 +136,7 @@ Key decisions:
 | Rewrite intent check (`INTENT_COSINE` 0.74) | keeps 15/16 good rewrites, 0/24 bad | |
 | Latency (30 text drafts) | P50 3.0 s · P95 15.2 s (recorded LLM time) | P95 ≤ 15 s |
 
-A deliberately broken prompt drops tone precision to 0.43, and the gate fails the build ([`PROGRESS.md`](PROGRESS.md), P14).
+A deliberately broken prompt drops tone precision to 0.43, and the gate fails the build.
 
 - **Images** ([`vision_report.md`](apps/worker/eval/vision_report.md)): logo found in 9/9 creatives with 0 false positives; WCAG contrast within ±0.1 of WebAIM on 40/40 PNG colour pairs; 1.1 s per creative.
 - **PDF decks** ([`pdf_report.md`](apps/worker/eval/pdf_report.md)): 9/9 seeded issues found on the right page, including two hidden-text injections; a 40-page deck stays under 512 MB.
@@ -217,8 +217,6 @@ The bottleneck is the free LLM tiers, not the pipeline. The day's eval runs had 
 
 ## Changes since Round 1
 
-This mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
-
 | Area | Round 1 plan said | We built | Why |
 |---|---|---|---|
 | Auth | Google sign-in | Supabase email/password, plus a demo role switcher when `NEXT_PUBLIC_DEMO_MODE=true` | No OAuth setup; judges get one-click roles |
@@ -235,7 +233,7 @@ This mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
 
 ## AI assistance
 
-Under General Rules 6–7, we disclose that this codebase was written with AI assistance. Claude Code (Anthropic) was the pair programmer for scaffolding, implementation and tests, working phase by phase from [`docs/PHASES.md`](docs/PHASES.md). A team member reviewed and committed every change. The product's own runtime LLM use (Groq and Gemini) is documented separately on the in-app Services & AI-use page.
+Under General Rules 6–7, we disclose that this codebase was written with AI assistance. Claude Code (Anthropic) was the pair programmer for scaffolding, implementation and tests, working phase by phase from a written build plan. A team member reviewed and committed every change. The product's own runtime LLM use (Groq and Gemini) is documented separately on the in-app Services & AI-use page.
 
 <details>
 <summary>AI-assisted work, phase by phase</summary>
@@ -261,7 +259,7 @@ Under General Rules 6–7, we disclose that this codebase was written with AI as
 | P16 | README (pitch, architecture, results, licences, contributions), demo script, demo reset script, usability templates |
 | UI redesign (R0–R6, R7–R10 first pass) | Design study, the flat outlined design system and tokens, the WCAG contrast test and colour lint rules, restyled components, app shell, landing, sign-in and feature panels, original SVG illustrations and the wordmark |
 | Rename and repo move | User-facing rename to Errata, the list of identifiers that keep `brandlens`, and links pointing at the `maanit-gupta/Errata` repo |
-| Demo video | Capture script for real app screens, a HyperFrames composition (storyboard in `apps/web/video-src/brag-plan.md`), renders, captions, transcript and the landing-page embed |
+| Demo video | Capture script for real app screens, a HyperFrames composition (in `apps/web/video-src/`), renders, captions, transcript and the landing-page embed |
 | Local stack | `make db-start lite=1`, the Supabase CLI fallback and local env defaults so a fresh clone runs |
 
 </details>
@@ -297,8 +295,6 @@ Model IDs come from env (`GROQ_MODEL_*`, `GEMINI_MODEL_*`). The table lists the 
 | lucide-react | ISC |
 | class-variance-authority | Apache-2.0 |
 | Dev: pytest, ruff, mypy, eslint, prettier, vitest (MIT); pytest-asyncio, typescript, @playwright/test (Apache-2.0); @axe-core/playwright (MPL-2.0) | as listed |
-
-The source of truth is the dependency table in the Decisions log of [`PROGRESS.md`](PROGRESS.md), which is updated whenever a dependency is added.
 
 </details>
 

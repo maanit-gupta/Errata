@@ -1,3 +1,3 @@
 # @brandlens/web
 
-Next.js 16 client for Errata (internal package name `@brandlens/web`). Run it from the repo root with `make dev-web`; see the root README and CLAUDE.md.
+Next.js 16 client for Errata (internal package name `@brandlens/web`). Run it from the repo root with `make dev-web`; see the root README.
