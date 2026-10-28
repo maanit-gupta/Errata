@@ -1,6 +1,6 @@
-# BrandLens — DESIGN.md
+# Errata — DESIGN.md
 
-> The visual and interaction system for every BrandLens screen: flat, friendly and light-first, with thick ink outlines, a yellow highlight and original flat illustrations. Adopted 2026-10-28 on branch `UI/UX_jagpreet`; it replaces "Terminal Noir". The rebuild runs in phases R1–R11 (`docs/ui-redesign/STUDY.md` §7). Screens not yet rebuilt still use the old components, which this file's tokens restyle.
+> The visual and interaction system for every Errata screen: flat, friendly and light-first, with thick ink outlines, a yellow highlight and original flat illustrations. Adopted 2026-10-28 on branch `UI/UX_jagpreet`; it replaces "Terminal Noir". The rebuild runs in phases R1–R11 (`docs/ui-redesign/STUDY.md` §7). Screens not yet rebuilt still use the old components, which this file's tokens restyle.
 
 ## 0. Precedence
 
@@ -32,7 +32,7 @@
 - **IDs are the proof.** Citation chips carry the rule, fact or WCAG ID in mono on every finding.
 - **Short copy.** Plain, active voice. One idea per line. No emoji.
 
-**Reference and originality.** The visual language follows a flat, outlined illustration style seen in a commercial website template (the owner's reference, 2026-10-28). We copy the **style only**. No illustration, logo, character, text or layout file from the reference may be reused, traced or reproduced. Every illustration is drawn for BrandLens as inline SVG (§6), and no template or vendor names appear in the code or UI.
+**Reference and originality.** The visual language follows a flat, outlined illustration style seen in a commercial website template (the owner's reference, 2026-10-28). We copy the **style only**. No illustration, logo, character, text or layout file from the reference may be reused, traced or reproduced. Every illustration is drawn for Errata as inline SVG (§6), and no template or vendor names appear in the code or UI.
 
 ---
 
@@ -260,19 +260,19 @@ Original, flat, outlined. They make empty states, onboarding and the landing pag
 
 - **Built as inline SVG React components** in `components/illustrations/` (R3, before the landing rebuild). No raster files, no external assets, no traced or adapted third-party art.
 - **Style:** 2px `--illo-ink` stroke, round joins, flat fills from the `--illo-*` palette, white `--illo-paper` for windows and documents. No gradients, textures, shading or drop shadows. Shapes are simple: rectangles with 4–8px corners, circles, leaf shapes.
-- **Set (first pass):** document, magnifier (the BrandLens lens), checkmark badge, shield, rule card (ID tag on a card), chart bars, speech bubble, little window (three dots + title bar), leaf cluster, stacked blocks, stamp (sign-off), calendar (facts).
+- **Set (first pass):** document, magnifier (the lens), checkmark badge, shield, rule card (ID tag on a card), chart bars, speech bubble, little window (three dots + title bar), leaf cluster, stacked blocks, stamp (sign-off), calendar (facts).
 - **Composition:** one hero scene for the landing page (a draft window being checked by a lens, with ID tags and leaves), three step scenes for "how it works", and small spot illustrations (64–120px) for empty states and onboarding.
 - **Theming:** colours come only from `var(--illo-*)`, so dark mode swaps ink to off-white and paper to dark automatically.
 - **Accessibility:** decorative by default (`aria-hidden`, no title). If one ever carries meaning, it gets `role="img"` and a label. No animation beyond a one-time fade, and none under reduced motion.
 - **No people or characters** in the first set; this avoids resembling the reference's character style.
 
-**Wordmark (proposal, built in R3):** "BrandLens" in DM Sans 700, preceded by a 24px mark: a 2px ink circle (the lens) with a small yellow-filled checkmark tab at its lower right, on a white tile with a 2px ink outline and 4px radius. Favicon: the same mark. It replaces the pixel lens everywhere.
+**Wordmark:** the name **Errata** in DM Sans 700 (22px, -0.03em) with a yellow highlighter stroke under the lower third of the word. Compact mark (collapsed sidebar, favicon): a bold "E" on a yellow tile with a 2px ink outline and 6px radius. One tagline, used everywhere a tagline appears: **"Pre-publication checks with cited rules."** (`TAGLINE` in `components/brand/wordmark.tsx`). The product was called BrandLens until 2026-10-28; internal identifiers keep that name (PROGRESS.md → Decisions).
 
 ---
 
 ## 7. Components
 
-Primitives live in `components/ui/` (shadcn `base-nova` on Base UI, restyled to these specs). BrandLens components live in `components/brand/`. 21st.dev components may be ported in (STUDY.md §5) only if they are restyled to this section and use Base UI, `motion` and tokens.
+Primitives live in `components/ui/` (shadcn `base-nova` on Base UI, restyled to these specs). Product components live in `components/brand/`. 21st.dev components may be ported in (STUDY.md §5) only if they are restyled to this section and use Base UI, `motion` and tokens.
 
 ### 7.1 Button
 

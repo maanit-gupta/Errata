@@ -1,6 +1,6 @@
-# BrandLens — CLAUDE.md
+# Errata — CLAUDE.md
 
-BrandLens is a **pre-publication brand-governance tool**. Every draft (text, doc, image, PDF) is checked against an organisation's approved **rule cards, facts and assets**, and every flag **cites the rule or fact ID it was checked against**. Humans approve; BrandLens never publishes.
+Errata (formerly BrandLens; internal identifiers keep that name, see PROGRESS.md → Decisions) is a **pre-publication brand-governance tool**: pre-publication checks with cited rules. Every draft (text, doc, image, PDF) is checked against an organisation's approved **rule cards, facts and assets**, and every flag **cites the rule or fact ID it was checked against**. Humans approve; Errata never publishes.
 
 This is a hackathon build (Inkloom AI brand-governance problem statement, Round 2 "Build"), by a two-person team:
 

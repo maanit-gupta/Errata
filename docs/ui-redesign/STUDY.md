@@ -1,4 +1,4 @@
-# BrandLens UI/UX redesign: study notes
+# Errata (formerly BrandLens) UI/UX redesign: study notes
 
 > Read-only study for the redesign on branch `UI/UX_jagpreet` (2026-10-28). Nothing in `apps/web` has changed yet. This file lists what exists, what a redesign must not break, and a proposed phase plan. Sources are cited inline as file paths.
 
@@ -6,7 +6,7 @@
 
 ## 1. Project summary
 
-BrandLens checks marketing drafts against an organisation's approved brand rules **before** they are published. A brand admin turns a PDF brand guide into **rule cards** (`TV-04`, `CL-03`, `G-07`…) and keeps a **Fact Vault** of campaign facts (`F-112`, `E-19`), a glossary, campaigns and assets (logos, palette). A creator writes or uploads a draft (text, DOCX, image or PDF), states its **intent** (goal, audience, CTA, channel, campaign) and submits it. A worker runs a six-stage pipeline: ingest, protect (redaction), deterministic filters, retrieval, one LLM call, and a **citation gate**. Every finding the user sees cites the rule, fact or WCAG criterion it was checked against. People decide: BrandLens never publishes.
+Errata (then called BrandLens) checks marketing drafts against an organisation's approved brand rules **before** they are published. A brand admin turns a PDF brand guide into **rule cards** (`TV-04`, `CL-03`, `G-07`…) and keeps a **Fact Vault** of campaign facts (`F-112`, `E-19`), a glossary, campaigns and assets (logos, palette). A creator writes or uploads a draft (text, DOCX, image or PDF), states its **intent** (goal, audience, CTA, channel, campaign) and submits it. A worker runs a six-stage pipeline: ingest, protect (redaction), deterministic filters, retrieval, one LLM call, and a **citation gate**. Every finding the user sees cites the rule, fact or WCAG criterion it was checked against. People decide: Errata never publishes.
 
 **Roles** (SPEC §2): brand admin (owns the vault, sees everything), creator, agency creator (sees rule *summaries* only, own content only), manager (approves or requests changes, team insights), and specialists (Legal, Accessibility) who sign off content routed to them.
 

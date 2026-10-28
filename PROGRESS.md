@@ -1,4 +1,4 @@
-# BrandLens — PROGRESS
+# Errata (formerly BrandLens) — PROGRESS
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
@@ -292,6 +292,9 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-28 | R4 | Dev-only `/dev/shell` renders the real `AppShell` with mock data and is in the `ui.spec` axe gate | Lets the signed-in chrome be checked without a database |
 | 2026-10-28 | R5 | Landing rebuilt per DESIGN.md §9; anchors `#how-it-works`, `#example`, `#trust`; announcement bar, typewriter, pipeline loop, stats bands, carousel and pixel sprites deleted | Owner decision |
 | 2026-10-28 | tooling | `make` falls back to `npx --yes supabase@2` when the Supabase CLI isn't installed; `make db-start lite=1` skips Studio, mail, analytics, image proxy and edge functions; `scripts/local-supabase-env.sh` gives a fresh clone (no `apps/web/.env.local`) local defaults for `NEXT_PUBLIC_SITE_URL` and a refusing `DISCORD_WEBHOOK_URL`, checking only key names, and fails with "make db-start" when the stack is down | `make dev-web-local` didn't work on a machine without `.env.local` or a global CLI; no `.env` file is created or read |
+| 2026-10-28 | rename | Product renamed **Errata** (user-facing only). Wordmark = the word "Errata" (DM Sans 700) with a yellow highlighter stroke; compact mark and favicon = bold "E" on a yellow, ink-outlined tile; one tagline everywhere: "Pre-publication checks with cited rules." (`TAGLINE` in `components/brand/wordmark.tsx`). Audit CSV downloads as `errata-audit.csv` | Owner decision |
+| 2026-10-28 | rename | **Do not rename these internal identifiers** (they still say brandlens on purpose): npm packages `brandlens` and `@brandlens/web`; Python package `brandlens_worker` and its imports/paths; repo, folder and git remote names (`github.com/maanit-gupta/BrandLens`); cookies `bl_theme`, `bl_sidebar`, `bl_flash`, `bl_skip_landing`, `bl_shortcuts`; env var names; Supabase `project_id = "brandlens"`, container `supabase_db_brandlens`, GUC `brandlens.workflow_write` and the error texts in applied migration `20261026100010` (never edit applied migrations); Supabase cloud project `BrandLens`, Vercel project `brandlens`, Render service `brandlens-worker`, URLs `brandlens-app.vercel.app` and `brandlens-worker.onrender.com`; Langfuse names; Docker image tag `brandlens-worker` in CI; the worker's LLM prompts (renaming them bumps prompt versions and the eval cache) and its FastAPI title | Renaming them breaks deploys, sessions, data or the eval gate for no user benefit |
+| 2026-10-28 | rename | Not renamed, kept as history or fixture data: SPEC.md, PHASES.md, SECURITY.md titles (build records), the `.claude/commands/*` prompts, quoted old UI strings in `docs/ui-redesign/STUDY.md`, `fixtures/paywise/*` (the guide text feeds the PDF fixture and the eval). README.md changes are listed in `docs/ui-redesign/README-rename-notes.md` for the owner to apply | README has an unrelated working-tree change; fixtures change eval inputs |
 
 **Dependencies and licences** (append when adding any dependency):
 

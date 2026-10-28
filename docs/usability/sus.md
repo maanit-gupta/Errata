@@ -1,6 +1,6 @@
 # System Usability Scale (SUS)
 
-Answer each statement about BrandLens: 1 = strongly disagree … 5 = strongly agree.
+Answer each statement about Errata: 1 = strongly disagree … 5 = strongly agree.
 
 | # | Statement | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|
