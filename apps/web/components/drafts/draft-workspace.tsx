@@ -582,13 +582,13 @@ export function DraftWorkspace({
           aria-labelledby={`${id}-editor`}
           className="border-outline bg-code min-w-0 self-start rounded-lg border-2"
         >
-          <div className="bg-band-grey border-outline flex min-h-10 flex-wrap items-center gap-2 rounded-t-[14px] border-b-2 px-4 py-2">
+          <div className="bg-band-grey border-outline flex min-h-10 items-center gap-2 rounded-t-[14px] border-b-2 px-4 py-2">
             <span aria-hidden className="flex gap-1.5">
               <span className="bg-fg size-2 rounded-full" />
               <span className="bg-fg size-2 rounded-full" />
               <span className="bg-fg size-2 rounded-full" />
             </span>
-            <h2 id={`${id}-editor`} className="text-fg text-sm font-semibold">
+            <h2 id={`${id}-editor`} className="text-fg min-w-0 truncate text-sm font-semibold">
               {kindLabel} {version ? `· version ${version.n}` : ""}
               <span className="text-fg-faint">
                 {channelLabel ? ` · ${channelLabel}` : ""}
