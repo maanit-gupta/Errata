@@ -113,17 +113,17 @@ const STEPS = [
   {
     Scene: StepRulesScene,
     title: "Add your rules",
-    body: "Upload your brand guide. Approve the rule cards and facts it drafts.",
+    body: "Upload your guide. Approve the rule cards.",
   },
   {
     Scene: StepCheckScene,
     title: "Check a draft",
-    body: "Paste a caption or upload a file. Each flag names the rule it breaks.",
+    body: "Paste or upload. Each flag cites a rule.",
   },
   {
     Scene: StepApproveScene,
     title: "Review and approve",
-    body: "Risky drafts go to the right reviewer. Every decision is logged.",
+    body: "The right reviewer decides. It is all logged.",
   },
 ];
 

@@ -13,6 +13,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabase}`,
   "font-src 'self' data:",
+  "media-src 'self'", // the landing demo video is served from /demo, same origin only
   `connect-src 'self' ${supabase} ${supabaseWs} https://vercel.live wss://ws-us3.pusher.com`,
   "frame-src https://vercel.live",
   "frame-ancestors 'none'",

@@ -6,6 +6,7 @@ import {
   Steps,
   TrustPoints,
 } from "@/components/marketing/sections";
+import { DemoVideo } from "@/components/marketing/demo-video";
 import { SkipToast } from "@/components/marketing/skip-toast";
 import { getSession } from "@/lib/auth/session";
 
@@ -22,14 +23,11 @@ export default async function Landing() {
     <>
       {session?.status === "ok" ? <SkipToast /> : null}
       <Hero />
-      <Section
-        id="how-it-works"
-        band="grey"
-        angled
-        title="How it works"
-        intro="Three steps from brand guide to approved post."
-      >
-        <Steps />
+      <Section id="how-it-works" band="grey" angled title="How it works">
+        <div className="space-y-12">
+          <DemoVideo />
+          <Steps />
+        </div>
       </Section>
       <section id="example" aria-labelledby="example-h" className="scroll-mt-24">
         <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 md:py-24">
