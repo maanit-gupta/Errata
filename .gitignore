@@ -55,12 +55,10 @@ scratch/
 docs/ui-redesign/PR.md
 docs/ui-redesign/README-rename-notes.md
 
-# Coding-agent context: instructions, build log, phase plans and session commands stay local.
+# Coding-agent context stays local. The build spec, phase plan and build log
+# (docs/SPEC.md, docs/PHASES.md, PROGRESS.md) stay tracked as judging evidence.
 .claude/
 CLAUDE.md
 AGENTS.md
-PROGRESS.md
-docs/SPEC.md
-docs/PHASES.md
 docs/ui-redesign/
 apps/web/video-src/brag-plan.md
