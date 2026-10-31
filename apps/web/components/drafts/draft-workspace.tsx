@@ -5,6 +5,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { AiPendingBanner } from "@/components/brand/ai-pending-banner";
 import { DegradedBanner } from "@/components/brand/degraded-banner";
 import { EmptyState } from "@/components/brand/empty-state";
 import { ErrorPanel } from "@/components/brand/error-panel";
@@ -18,7 +19,7 @@ import { fieldClass, Input } from "@/components/ui/input";
 import { countWords, MAX_WORDS, PDF_MAX_PAGES } from "@/lib/drafts/limits";
 import { cn } from "@/lib/utils";
 import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";
-import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
+import { LLM_MAX_ATTEMPTS, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 import { revise } from "@/lib/review/actions";
 import { CHANNELS, intentSchema, type Intent } from "@/lib/drafts/intent";
 import {
@@ -57,6 +58,10 @@ type Props = {
     status: string;
     degraded: boolean;
     error_code: string | null;
+    /** R3: deterministic findings are saved; the LLM pass is waiting for a retry. */
+    llm_pending?: boolean;
+    llm_attempts?: number;
+    llm_next_at?: string | null;
     provider: string | null;
     model: string | null;
     prompt: string | null;
@@ -342,6 +347,9 @@ export function DraftWorkspace({
   ).length;
   const checking =
     content.state === "ai_check" || run?.status === "queued" || run?.status === "running";
+  // R3: rule-based findings are in and shown (read-only); the AI pass fills in via Realtime.
+  const aiPending = checking && run?.status === "running" && run.llm_pending === true;
+  const showFindings = !checking || aiPending;
   const resubmitBlocked = content.state === "needs_revision" && openBlockers > 0;
   const fileKind = file
     ? file.type.startsWith("image/")
@@ -603,7 +611,7 @@ export function DraftWorkspace({
                 <PdfFindings
                   title={content.title}
                   pages={pdfPages}
-                  markers={checking ? [] : pdfMarkers}
+                  markers={showFindings ? pdfMarkers : []}
                   page={page}
                   onPageChange={(n) => {
                     setPage(n);
@@ -630,7 +638,7 @@ export function DraftWorkspace({
               <ImageFindings
                 src={imageUrl!}
                 alt={intent.alt_text || `${content.title} (uploaded image, version ${version!.n})`}
-                markers={checking ? [] : markers}
+                markers={showFindings ? markers : []}
                 active={active}
                 onFocus={focus}
               />
@@ -713,11 +721,20 @@ export function DraftWorkspace({
           <p className="sr-only" aria-live="polite">
             {run?.status === "done" && !checking
               ? `Check finished: ${counts.blocker} blockers, ${counts.warning} warnings, ${counts.suggestion} suggestions.`
-              : checking
-                ? "Check running."
-                : ""}
+              : aiPending
+                ? `Rule-based checks finished: ${counts.blocker} blockers, ${counts.warning} warnings, ${counts.suggestion} suggestions. AI check pending.`
+                : checking
+                  ? "Check running."
+                  : ""}
           </p>
 
+          {aiPending ? (
+            <AiPendingBanner
+              attempt={run?.llm_attempts ?? 1}
+              maxAttempts={LLM_MAX_ATTEMPTS}
+              nextAt={run?.llm_next_at ?? null}
+            />
+          ) : null}
           {run?.degraded && !checking ? (
             <DegradedBanner
               action={
@@ -747,6 +764,7 @@ export function DraftWorkspace({
                 timings: run.timings,
                 degraded: run.degraded,
                 errorCode: run.error_code,
+                llmPending: aiPending,
                 findings: findings.length,
               }}
             />
@@ -761,7 +779,7 @@ export function DraftWorkspace({
             </ErrorPanel>
           ) : null}
 
-          {pdfVersion && pdfPages.length && visible.length && !checking ? (
+          {pdfVersion && pdfPages.length && visible.length && showFindings ? (
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <p className="text-fg-muted m-0">
                 {allPages
@@ -780,7 +798,7 @@ export function DraftWorkspace({
           ) : null}
 
           <div className="min-h-0 flex-1 overflow-y-auto">
-            {checking ? (
+            {checking && !aiPending ? (
               <Spinner centered label="Checking against your brand vault…" />
             ) : shown.length ? (
               <ul className="space-y-2">
@@ -790,7 +808,7 @@ export function DraftWorkspace({
                     index={i}
                     finding={f}
                     active={active === f.id}
-                    canAct={canAct}
+                    canAct={canAct && !checking}
                     imageMode={fileVersion}
                     summaryView={summaryView}
                     marker={markerNumber.get(f.id)}

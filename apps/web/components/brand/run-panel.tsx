@@ -15,6 +15,8 @@ export type RunSummary = {
   /** `review_runs.timings` as written by the worker. */
   timings?: Record<string, unknown> | null;
   degraded?: boolean;
+  /** R3: rule-based stages done; the LLM pass is waiting for a retry. */
+  llmPending?: boolean;
   errorCode?: string | null;
   findings?: number;
   piiRedacted?: number;
@@ -48,6 +50,7 @@ export function runLog(run: RunSummary): {
   for (const [key, label] of STAGES) {
     const ms = num(t[key]);
     if (ms == null) continue;
+    if (key === "llm" && run.llmPending) continue;
     if (key === "llm") {
       lines.push(
         run.degraded
@@ -58,6 +61,10 @@ export function runLog(run: RunSummary): {
   }
   if (run.status === "done" || Object.keys(gate).length) {
     lines.push(`[06 citation gate] ${gateDrops} dropped`);
+  }
+  if (run.llmPending) {
+    const attempts = num(t.llm_attempts) ?? 1;
+    lines.push(`[05 llm pass] pending · rate-limited ${attempts}× · retrying automatically`);
   }
   if (run.status === "running" && lines.length === 0) lines.push("[01 ingest] parsing draft");
   let final: string | undefined;

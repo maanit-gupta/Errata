@@ -4,6 +4,12 @@ P06: stages 1–4 (ingest, protect, deterministic filters, retrieve). P07 adds t
 P11: images (OCR, logo, contrast, palette, alt text; one vision call).
 P12: PDFs (text layer with page boxes, hidden text, page renders to `renders/`, one LLM call per
 page chunk).
+R3: "AI check pending". If every provider is rate-limited (or 5xx/timeout), the deterministic
+findings are saved at once, the run stays `running` with `llm_pending`, the content stays in
+ai_check, and a delayed retry of this same job is queued in the same transaction. The retry re-runs
+the pipeline through the same gate and replaces the run's findings; after the last configured
+attempt the run finishes degraded, as before. Still one LLM pass per draft: a retry repeats the
+call that never returned.
 """
 
 from __future__ import annotations
@@ -45,6 +51,20 @@ class ReviewPayload(BaseModel):
     run_id: UUID
     version_id: UUID
     org_id: UUID
+    # R3: 0 for the first attempt; n for the n-th delayed retry of the LLM pass.
+    llm_attempt: int = 0
+
+
+def next_retry_delay(exc: DegradedError | None, attempt: int) -> int | None:
+    """Seconds until the next LLM retry, or None to finish this run now (with or without the LLM).
+
+    Only transient failures (every provider rate-limited, 5xx or timing out) are retried, at most
+    len(config.LLM_PENDING_RETRY_DELAYS_S) times. A bad model or invalid output degrades at once.
+    """
+    if exc is None or not exc.transient:
+        return None
+    delays = config.LLM_PENDING_RETRY_DELAYS_S
+    return delays[attempt] if 0 <= attempt < len(delays) else None
 
 
 async def load_vault(conn: Any, org_id: UUID, campaign_id: str, campaign_name: str) -> Vault:
@@ -186,6 +206,17 @@ async def review_version(ctx: JobContext) -> None:
     started = time.perf_counter()
 
     async with ctx.pool.connection() as conn:
+        cur = await conn.execute(
+            "select llm_attempts from public.review_runs where id = %s", (p.run_id,)
+        )
+        state = await cur.fetchone()
+        if state is not None and p.llm_attempt < state["llm_attempts"]:
+            # A duplicate or stale delivery: a later attempt is already scheduled or done.
+            log.info(
+                "stale review message; skipping",
+                extra={"run_id": str(p.run_id), "attempt": p.llm_attempt},
+            )
+            return
         await db.mark_run_running(conn, p.run_id)
         cur = await conn.execute(
             "select v.body, v.format::text as format, v.storage_path, v.intent, "
@@ -256,6 +287,7 @@ async def review_version(ctx: JobContext) -> None:
             raise JobError("unsupported_format") from exc
 
         llm: LLMStageResult | None = None
+        llm_error: DegradedError | None = None
         try:
             with tracer.trace_run(str(p.run_id), name="stages_5_6"):
                 llm = await run_stages_5_6(
@@ -293,25 +325,45 @@ async def review_version(ctx: JobContext) -> None:
                     latency_ms=meta.latency_ms,
                     metadata={"provider": meta.provider, "cache_hit": meta.cache_hit},
                 )
-        except DegradedError:
+        except DegradedError as exc:
+            llm_error = exc
             log.warning(
-                "llm unavailable; deterministic findings only", extra={"run_id": str(p.run_id)}
+                "llm unavailable",
+                extra={
+                    "run_id": str(p.run_id),
+                    "transient": exc.transient,
+                    "attempt": p.llm_attempt,
+                },
             )
+        retry_in = next_retry_delay(llm_error, p.llm_attempt)
         root.update(
             metadata={
                 "deterministic": len(result.findings),
                 "llm_kept": len(llm.findings) if llm else 0,
                 "gate_drops": llm.drops if llm else {},
                 "rewrite_failures": llm.rewrite_failures if llm else {},
-                "degraded": llm is None,
+                "degraded": llm is None and retry_in is None,
+                "llm_pending": retry_in is not None,
+                "llm_attempt": p.llm_attempt,
             }
         )
         trace_id = tracer.current_trace_id()
     tracer.flush()
 
     pages = await upload_renders(ctx, p, row["content_id"], result)
+    failed_attempts = p.llm_attempt + (1 if llm_error is not None and llm_error.transient else 0)
     await persist(
-        ctx, p, row["content_id"], vault, result, started, llm=llm, trace_id=trace_id, pages=pages
+        ctx,
+        p,
+        row["content_id"],
+        vault,
+        result,
+        started,
+        llm=llm,
+        trace_id=trace_id,
+        pages=pages,
+        retry_in=retry_in,
+        failed_attempts=failed_attempts,
     )
 
 
@@ -343,7 +395,11 @@ async def persist(
     llm: LLMStageResult | None,
     trace_id: str | None,
     pages: list[dict[str, Any]] | None = None,
+    retry_in: int | None = None,
+    failed_attempts: int = 0,
 ) -> None:
+    """Write the run's findings and finish it, or (retry_in set) save the deterministic findings,
+    keep the run pending and queue the delayed LLM retry in the same transaction."""
     codes_by_id = {r.id: r.code for r in vault.rules} | {f.id: f.code for f in vault.facts}
     rows = [to_row(f, result.doc, codes_by_id) for f in result.findings]
     if llm:
@@ -370,6 +426,22 @@ async def persist(
         }
 
     async with ctx.pool.connection() as conn, conn.transaction():
+        # Lock the run: a duplicate delivery that finishes second must not write twice.
+        cur = await conn.execute(
+            "select status::text as status, (timings ->> 'pending_since')::bigint as pending_since "
+            "from public.review_runs where id = %s for update",
+            (p.run_id,),
+        )
+        run_row = await cur.fetchone()
+        if run_row is None or run_row["status"] == "done":
+            log.info("run already finished; not writing again", extra={"run_id": str(p.run_id)})
+            return
+        now_ms = round(time.time() * 1000)
+        timings["llm_attempts"] = failed_attempts
+        if retry_in is not None:
+            timings["pending_since"] = run_row["pending_since"] or now_ms
+        elif run_row["pending_since"]:
+            timings["pending_ms"] = now_ms - run_row["pending_since"]
         cur = await conn.execute(
             "select f.dimension::text as dimension, f.rule_id::text as rule_id, "
             "f.fact_id::text as fact_id, f.quote, f.status::text as status, "
@@ -401,10 +473,51 @@ async def persist(
                     r.get("resolved_by"), r.get("status", "open"),
                 ),
             )  # fmt: skip
+        if retry_in is not None:
+            await conn.execute(
+                "update public.review_runs set retrieved = %s, timings = timings || %s, "
+                "degraded = false, error_code = 'llm_rate_limited', llm_pending = true, "
+                "llm_attempts = %s, llm_next_at = now() + make_interval(secs => %s), pages = %s "
+                "where id = %s",
+                (
+                    Jsonb(result.retrieved),
+                    Jsonb(timings),
+                    failed_attempts,
+                    retry_in,
+                    Jsonb(pages or []),
+                    p.run_id,
+                ),
+            )
+            retry = ReviewPayload(
+                run_id=p.run_id,
+                version_id=p.version_id,
+                org_id=p.org_id,
+                llm_attempt=failed_attempts,
+            )
+            await conn.execute(
+                "select pgmq.send(%s, %s::jsonb, %s::int)",
+                (
+                    ctx.queue,
+                    Jsonb({"type": "review_version", **retry.model_dump(mode="json")}),
+                    retry_in,
+                ),
+            )
+            log.info(
+                "review pending llm",
+                extra={
+                    "run_id": str(p.run_id),
+                    "findings": len(rows),
+                    "attempt": failed_attempts,
+                    "retry_in_s": retry_in,
+                    "timings": timings,
+                },
+            )
+            return
         await conn.execute(
             "update public.review_runs set status = 'done', finished_at = now(), retrieved = %s, "
             "timings = timings || %s, degraded = %s, error_code = %s, provider = %s, "
-            "model_version = %s, prompt_version = %s, pages = %s where id = %s",
+            "model_version = %s, prompt_version = %s, pages = %s, llm_pending = false, "
+            "llm_next_at = null, llm_attempts = %s where id = %s",
             (
                 Jsonb(result.retrieved),
                 Jsonb(timings),
@@ -414,6 +527,7 @@ async def persist(
                 llm.model_version if llm else None,
                 llm.prompt_version if llm else None,
                 Jsonb(pages or []),
+                failed_attempts,
                 p.run_id,
             ),
         )

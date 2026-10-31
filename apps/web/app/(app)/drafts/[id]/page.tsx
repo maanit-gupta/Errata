@@ -47,7 +47,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
     ? await supabase
         .from("review_runs")
         .select(
-          "id, status, degraded, error_code, version_id, pages, provider, model_version, prompt_version, timings, versions!inner(content_id)",
+          "id, status, degraded, error_code, llm_pending, llm_attempts, llm_next_at, version_id, pages, provider, model_version, prompt_version, timings, versions!inner(content_id)",
         )
         .eq("versions.content_id", content.id)
         .order("created_at", { ascending: false })
@@ -200,6 +200,9 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
                 status: run.status,
                 degraded: run.degraded,
                 error_code: run.error_code,
+                llm_pending: run.llm_pending,
+                llm_attempts: run.llm_attempts,
+                llm_next_at: run.llm_next_at,
                 provider: run.provider,
                 model: run.model_version,
                 prompt: run.prompt_version,

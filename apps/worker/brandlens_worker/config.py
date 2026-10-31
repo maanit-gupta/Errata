@@ -84,3 +84,9 @@ MCP_MAX_RESULTS: Final = 10  # search_brand_rules limit cap
 MCP_MAX_QUERY_CHARS: Final = 500
 MCP_MAX_BODY_BYTES: Final = 32_768
 MCP_AUTH_FAILURES_PER_MINUTE: Final = 30  # bad/missing tokens per client address
+
+# R3: "AI check pending". When every LLM provider is rate-limited (or 5xx/timeout), the run saves
+# its deterministic findings at once and retries the LLM pass after these delays (seconds, one per
+# attempt) via a delayed pgmq message. After the last one it finishes degraded, as before. The
+# first delay is at least LLM_RATE_LIMIT_COOLDOWN_S so the retry doesn't hit a cooling provider.
+LLM_PENDING_RETRY_DELAYS_S: Final[tuple[int, ...]] = (60, 120, 240, 480)

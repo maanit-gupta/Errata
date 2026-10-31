@@ -27,6 +27,7 @@ from brandlens_worker.llm.base import (
     ProviderError,
     RateLimited,
     T,
+    TransientError,
 )
 from brandlens_worker.llm.cache import LLMCache, cache_key
 
@@ -99,6 +100,7 @@ class LLMRouter:
                 return parsed, meta
 
         failures: list[str] = []
+        transient = True  # stays True only if every provider failed for a reason that can pass
         for provider, key in zip(self.providers, keys, strict=True):
             model = provider.model_for(vision=bool(vision_images))
             if self._clock() < self._cooling_until.get(provider.name, 0.0):
@@ -110,6 +112,7 @@ class LLMRouter:
                 )
             except ProviderError as exc:
                 failures.append(str(exc))
+                transient = transient and isinstance(exc, RateLimited | TransientError)
                 if isinstance(exc, RateLimited) and self.cooldown_s > 0:
                     wait = max(self.cooldown_s, exc.retry_after or 0.0)
                     self._cooling_until[provider.name] = self._clock() + wait
@@ -120,6 +123,7 @@ class LLMRouter:
                 continue
             except Exception as exc:  # unexpected SDK behaviour: treat as a provider failure
                 failures.append(f"{provider.name}: {type(exc).__name__}")
+                transient = False
                 log.exception("llm provider crashed", extra={"provider": provider.name})
                 continue
 
@@ -129,7 +133,9 @@ class LLMRouter:
             )
             return parsed, meta
 
-        raise DegradedError("; ".join(failures) or "no providers succeeded")
+        raise DegradedError(
+            "; ".join(failures) or "no providers succeeded", transient=transient and bool(failures)
+        )
 
     async def _call_with_retries(
         self,

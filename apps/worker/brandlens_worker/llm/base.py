@@ -67,7 +67,16 @@ class InvalidOutput(ProviderError):
 
 
 class DegradedError(Exception):
-    """Every provider failed. Callers return deterministic findings only (`degraded = true`)."""
+    """Every provider failed. Callers return deterministic findings only (`degraded = true`).
+
+    `transient` is True when every failure was a rate limit, a 5xx/timeout or a provider cool-down,
+    so trying again later can succeed (R3: the run goes `llm_pending` instead of degraded). A bad
+    model, invalid output or a crash makes it False: retrying won't help.
+    """
+
+    def __init__(self, message: str, *, transient: bool = False) -> None:
+        super().__init__(message)
+        self.transient = transient
 
 
 class LLMProvider(Protocol):

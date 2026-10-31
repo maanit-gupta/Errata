@@ -791,6 +791,9 @@ export type Database = {
           error_code: string | null
           finished_at: string | null
           id: string
+          llm_attempts: number
+          llm_next_at: string | null
+          llm_pending: boolean
           model_version: string | null
           org_id: string
           pages: Json
@@ -808,6 +811,9 @@ export type Database = {
           error_code?: string | null
           finished_at?: string | null
           id?: string
+          llm_attempts?: number
+          llm_next_at?: string | null
+          llm_pending?: boolean
           model_version?: string | null
           org_id: string
           pages?: Json
@@ -825,6 +831,9 @@ export type Database = {
           error_code?: string | null
           finished_at?: string | null
           id?: string
+          llm_attempts?: number
+          llm_next_at?: string | null
+          llm_pending?: boolean
           model_version?: string | null
           org_id?: string
           pages?: Json

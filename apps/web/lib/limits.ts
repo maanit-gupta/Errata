@@ -6,3 +6,7 @@ export const MAX_UPLOAD_LABEL = "4 MB";
 // Signed Storage URLs (drafts, renders, assets, guides) are minted per server render; 15 minutes
 // covers a review session (Realtime refreshes re-mint them) without leaving long-lived links.
 export const SIGNED_URL_TTL_S = 900;
+
+// R3 "AI check pending": total LLM attempts per run = 1 + len(LLM_PENDING_RETRY_DELAYS_S) in
+// apps/worker/brandlens_worker/config.py (a worker test keeps the two in sync).
+export const LLM_MAX_ATTEMPTS = 5;

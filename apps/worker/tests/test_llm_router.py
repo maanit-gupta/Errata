@@ -204,3 +204,47 @@ async def test_cached_fallback_response_replays_without_calling_primary(tmp_path
     assert meta.provider == "gemini"
     assert meta.cache_hit is True
     assert primary.calls == 0  # eval/CI replay is deterministic even after a fallback
+
+
+# --- R3: transient vs permanent failures (decides "AI check pending" vs degraded) ---------------
+
+
+async def test_all_rate_limited_is_transient() -> None:
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429")] * 3)
+    fallback = ScriptedProvider("gemini", [TransientError("gemini", "503")] * 3)
+    with pytest.raises(DegradedError) as exc:
+        await router(primary, fallback).generate("s", "u", Answer, prompt_version="smoke@1")
+    assert exc.value.transient is True
+
+
+async def test_a_permanent_failure_is_not_transient() -> None:
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429")] * 3)
+    fallback = ScriptedProvider("gemini", [ModelUnavailable("gemini", "set GEMINI_MODEL_TEXT")])
+    with pytest.raises(DegradedError) as exc:
+        await router(primary, fallback).generate("s", "u", Answer, prompt_version="smoke@1")
+    assert exc.value.transient is False
+
+
+async def test_invalid_output_and_crashes_are_not_transient() -> None:
+    bad = ScriptedProvider("groq", [InvalidOutput("groq", "schema")])
+    with pytest.raises(DegradedError) as exc:
+        await router(bad).generate("s", "u", Answer, prompt_version="smoke@1")
+    assert exc.value.transient is False
+    crash = ScriptedProvider("groq", [RuntimeError("sdk bug")])
+    with pytest.raises(DegradedError) as exc:
+        await router(crash).generate("s", "u", Answer, prompt_version="smoke@1")
+    assert exc.value.transient is False
+
+
+async def test_cooling_provider_counts_as_transient() -> None:
+    now = [0.0]
+    primary = ScriptedProvider("groq", [RateLimited("groq", "429")] * 3)
+    r = LLMRouter(
+        [primary], cache=LLMCache(enabled=False), sleep=Sleeps(), cooldown_s=60,
+        clock=lambda: now[0],
+    )  # fmt: skip
+    with pytest.raises(DegradedError):
+        await r.generate("s", "u", Answer, prompt_version="smoke@1")
+    with pytest.raises(DegradedError) as exc:  # skipped without a call while cooling
+        await r.generate("s", "u", Answer, prompt_version="smoke@1")
+    assert exc.value.transient is True and primary.calls == 3
