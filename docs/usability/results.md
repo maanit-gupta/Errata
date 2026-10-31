@@ -30,13 +30,19 @@ _No sessions recorded yet. Fill in `docs/usability/sessions.csv`, then run `pyth
 
 ### Per participant
 
-| Participant | Order | A time | A found | A wrong | B time | B found | B wrong | B IDs | T1 | T2 | T3 | T4 | SUS |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Participant | Order | A time | A found | A wrong | B time | B found | B wrong | B IDs | T1 | T2 | T3 | T4 | T5 | T6 | Pending banner understood | SUS |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 
 ### Task completion
 
 | Task | Completed | With help | Not completed |
 |---|---|---|---|
+
+### "AI check pending" comprehension probe
+
+| Asked | Understood | Not understood |
+|---|---|---|
+| 0 | 0 | 0 |
 
 ### SUS
 

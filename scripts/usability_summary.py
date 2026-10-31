@@ -29,7 +29,7 @@ END = "<!-- usability_summary:end -->"
 
 ISSUES = 4  # seeded issues per caption (tasks.md)
 SUS_TARGET = 70.0
-TASKS = ("t1", "t2", "t3", "t4")
+TASKS = ("t1", "t2", "t3", "t4", "t5", "t6")
 TASK_VALUES = {"Y": "completed", "H": "with help", "N": "not completed"}
 
 
@@ -50,12 +50,18 @@ class Session:
     b_ids_correct: int | None = None
     tasks: dict[str, str] = field(default_factory=dict)
     sus: list[int] | None = None
+    pending_understood: bool | None = None  # comprehension probe, tasks.md
 
     @property
     def has_data(self) -> bool:
-        return any(
-            v is not None for v in (self.a_time, self.a_found, self.b_time, self.b_found, self.sus)
-        ) or bool(self.tasks)
+        return (
+            any(
+                v is not None
+                for v in (self.a_time, self.a_found, self.b_time, self.b_found, self.sus)
+            )
+            or bool(self.tasks)
+            or self.pending_understood is not None
+        )
 
     @property
     def sus_score(self) -> float | None:
@@ -113,6 +119,10 @@ def parse(rows: list[dict[str, str]]) -> list[Session]:
                 raise SessionError(f"{pid}: {t} must be Y, H or N")
             if v:
                 s.tasks[t] = v
+        probe = (row.get("pending_understood") or "").strip().upper()
+        if probe and probe not in ("Y", "N"):
+            raise SessionError(f"{pid}: pending_understood must be Y or N")
+        s.pending_understood = None if not probe else probe == "Y"
         answers = [(row.get(f"sus_q{i}") or "").strip() for i in range(1, 11)]
         if any(answers):
             if not all(answers):
@@ -243,8 +253,8 @@ def render(sessions: list[Session], s: Summary) -> str:
         "### Per participant",
         "",
         "| Participant | Order | A time | A found | A wrong | B time | B found | B wrong | B IDs "
-        "| T1 | T2 | T3 | T4 | SUS |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| T1 | T2 | T3 | T4 | T5 | T6 | Pending banner understood | SUS |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for x in done:
         cells = [
@@ -258,6 +268,7 @@ def render(sessions: list[Session], s: Summary) -> str:
             "" if x.b_wrong is None else str(x.b_wrong),
             "" if x.b_ids_correct is None else str(x.b_ids_correct),
             *[x.tasks.get(t, "") for t in TASKS],
+            "" if x.pending_understood is None else ("Y" if x.pending_understood else "N"),
             _fmt(x.sus_score),
         ]
         lines.append("| " + " | ".join(cells) + " |")
@@ -275,6 +286,15 @@ def render(sessions: list[Session], s: Summary) -> str:
         "| Task | Completed | With help | Not completed |",
         "|---|---|---|---|",
         *task_rows,
+    ]
+    probe = [x.pending_understood for x in done if x.pending_understood is not None]
+    lines += [
+        "",
+        '### "AI check pending" comprehension probe',
+        "",
+        "| Asked | Understood | Not understood |",
+        "|---|---|---|",
+        f"| {len(probe)} | {sum(probe)} | {len(probe) - sum(probe)} |",
     ]
     lines += [
         "",

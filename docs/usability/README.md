@@ -8,7 +8,7 @@ session happens.
 |---|---|
 | [`checklist.md`](checklist.md) | Moderator checklist: the day before, each block, each session, afterwards |
 | [`consent.md`](consent.md) | Read out and record consent before each session |
-| [`tasks.md`](tasks.md) | Moderator script: A/B conditions, the two captions and their four seeded issues, T1–T4 with exact UI paths |
+| [`tasks.md`](tasks.md) | Moderator script: A/B conditions, the two captions and their four seeded issues, T1–T6 with exact UI paths and the "AI check pending" probe |
 | [`sus.md`](sus.md) | System Usability Scale questionnaire, with the scoring rule |
 | [`sessions.csv`](sessions.csv) | The raw record: one row per participant (order and caption pre-filled for counterbalancing) |
 | [`results.md`](results.md) | Generated summary (gates, medians, per participant, SUS) plus hand-written "top issues" |

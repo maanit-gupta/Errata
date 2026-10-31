@@ -4,7 +4,7 @@
 stopwatch: start when you finish reading the task aloud, stop when the participant says "done" or
 the state is visibly reached. Record everything in [`sessions.csv`](sessions.csv) during the session.
 
-UI labels below match the current build (checked against `e2e/core-loop.spec.ts`, 2026-10-31).
+UI labels below match the current build on `round3/improvements` (checked against the components and `e2e/core-loop.spec.ts`, 2026-10-31).
 
 ## A/B benchmark: manual guideline check vs Errata
 
@@ -49,12 +49,24 @@ Continue from the condition-B draft (or caption 1 if they did B first and it's b
 | T2 | Creator | "Send it back for checking." | State chip shows **Legal review** | **Resubmit for check** |
 | T3 | Legal | "Approve it, with a reason." | State shows **Approved**; reason in the Audit tab | Switch role to **Legal** → Review → open the draft → **Sign off** → reason → **Confirm sign-off** |
 | T4 | Brand admin | "Find the rule reviewers find unclear, and improve it." | TV-04 shows **v2** | **Insights** → Guideline watchlist → TV-04 (UNCLEAR) → **Review 3 examples** → keep the ones they like → **Approve N examples** |
+| T5 | Creator | "Connect your AI writing tool to Errata with a key that expires in 30 days, copy the Cursor setup, then switch the key off again." | The key shows **Revoked** in the list | **Settings** → **AI tools (MCP)** → **Connect Claude or Cursor** → name → Expires after **30 days** → **Generate key** → **Copy config** → **Done** → **Revoke** → **Revoke key** |
+| T6 | Brand admin | "On Insights, show only real reviews, without the illustrative history." | **Real reviews only** is selected; the **Illustrative data** pill is gone | **Insights** → **Real reviews only** (the filter shows only while simulated history is in the last 30 days) |
 
 T4 needs the generated examples to exist (checklist step 4). If they don't, skip T4 and leave its
 cell blank rather than marking it failed.
 
-Record per task in `t1`…`t4`: **Y** (completed alone), **H** (completed with help), **N** (not
+Record per task in `t1`…`t6`: **Y** (completed alone), **H** (completed with help), **N** (not
 completed). Put times, errors and any quote worth keeping (anonymised) in `notes`.
 
-After the tasks: hand over [`sus.md`](sus.md) and copy the ten answers into `sus_q1`…`sus_q10`,
+## Comprehension probe: "AI check pending"
+
+The pending state appears only when the AI provider is rate-limited, so it can't be staged on
+demand. Show the printed screenshot [`ai-pending-banner.png`](ai-pending-banner.png) and ask:
+"You just submitted this draft and see this. What happens next, and what would you do?"
+
+Record `pending_understood`: **Y** if they say, in their own words, that the rule-based findings are
+ready and the AI check will finish by itself without resubmitting; **N** otherwise. Put their words
+in `notes`. Don't explain the banner before they answer.
+
+After the tasks and the probe: hand over [`sus.md`](sus.md) and copy the ten answers into `sus_q1`…`sus_q10`,
 then ask: "What was most confusing? What would you change first?" (into `notes`).

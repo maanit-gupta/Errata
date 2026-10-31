@@ -94,3 +94,28 @@ def test_repo_template_is_valid_and_results_md_is_current() -> None:
         sessions = us.parse(list(csv.DictReader(fh)))
     assert len(sessions) >= 8
     assert us.main(["--check"]) == 0, "run: python scripts/usability_summary.py"
+
+
+FAKE_CSV = Path(__file__).parent / "fixtures" / "FAKE_usability_sessions.csv"
+
+
+def test_fake_fixture_end_to_end(tmp_path: Path) -> None:
+    """FAKE data, tests only: every row is labelled FAKE-P*, never real participants."""
+    results = tmp_path / "results.md"
+    results.write_text(f"# r\n\n{us.BEGIN}\n{us.END}\n\n## Top issues\n", encoding="utf-8")
+    assert us.main(["--csv", str(FAKE_CSV), "--results", str(results)]) == 0
+    out = results.read_text(encoding="utf-8")
+    assert "| FAKE-P1 | A→B |" in out and "| FAKE-P2 | B→A |" in out
+    assert "FAKE-P3" not in out  # planned row without results is skipped
+    assert "| 2 | 1 | 1 |" in out  # probe: asked 2, understood 1, not understood 1
+    assert "| T5 | 1 | 1 | 0 |" in out and "| T4 | 1 | 0 | 0 |" in out
+    assert "## Top issues" in out
+
+
+def test_probe_and_new_tasks_are_validated() -> None:
+    with pytest.raises(us.SessionError, match="pending_understood"):
+        us.parse([row("P1", pending_understood="maybe")])
+    with pytest.raises(us.SessionError, match="t6"):
+        us.parse([row("P1", t6="X")])
+    (s,) = us.parse([row("P1", pending_understood="n", t5="y")])
+    assert s.pending_understood is False and s.tasks == {"t5": "Y"} and s.has_data

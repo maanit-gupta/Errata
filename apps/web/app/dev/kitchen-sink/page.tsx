@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { ConfidenceChip } from "@/components/brand/confidence-chip";
+import { AiPendingBanner } from "@/components/brand/ai-pending-banner";
 import { DegradedBanner } from "@/components/brand/degraded-banner";
 import { DimensionLabel, DIMENSIONS } from "@/components/brand/dimension";
 import { EmptyState } from "@/components/brand/empty-state";
@@ -338,6 +339,7 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
         </ErrorPanel>
         <Forbidden role="Agency" action="open the brand vault" />
         <DegradedBanner />
+        <AiPendingBanner attempt={1} maxAttempts={5} nextAt="2026-10-31T13:12:00Z" />
       </Section>
 
       <Section title="AI tools (MCP) card">

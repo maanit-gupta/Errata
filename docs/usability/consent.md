@@ -1,4 +1,4 @@
-# Consent note (read aloud)
+# Consent note (print one per participant; read aloud)
 
 > Thanks for helping us test Errata, a student hackathon prototype that checks marketing drafts against brand rules. The session takes about 20 minutes. We're testing the product, not you. You can stop at any time without giving a reason.
 >
@@ -6,20 +6,11 @@
 >
 > Do you agree to take part? May we screen-record?
 
-| Participant | Role or background (no names) | Consent given | Recording allowed | Date |
-|---|---|---|---|---|
-| P1 | | ☐ | ☐ | |
-| P2 | | ☐ | ☐ | |
-| P3 | | ☐ | ☐ | |
-| P4 | | ☐ | ☐ | |
-| P5 | | ☐ | ☐ | |
-| P6 | | ☐ | ☐ | |
-| P7 | | ☐ | ☐ | |
-| P8 | | ☐ | ☐ | |
-| P9 | | ☐ | ☐ | |
-| P10 | | ☐ | ☐ | |
-| P11 | | ☐ | ☐ | |
-| P12 | | ☐ | ☐ | |
-| P13 | | ☐ | ☐ | |
-| P14 | | ☐ | ☐ | |
-| P15 | | ☐ | ☐ | |
+---
+
+**Participant number:** P____  **Date:** ____________
+
+☐ I agree to take part.  ☐ I agree to a screen recording (deleted after the results are tabulated).
+
+No names are recorded. The moderator copies these two answers into the `consent` and `notes`
+columns of `sessions.csv`. If the first box isn't ticked, the session doesn't happen.
