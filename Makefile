@@ -10,7 +10,7 @@ SUPABASE := $(shell command -v supabase >/dev/null 2>&1 && echo supabase || echo
 export SUPABASE
 
 .PHONY: help setup db-start db-stop db-reset db-new types dev dev-local dev-web dev-web-local dev-worker \
-        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision eval-pdf mcp-check seed-demo seed-assets-local simulate-activity
+        models test test-worker test-web test-db e2e lint lint-worker lint-web fmt check eval eval-vision eval-pdf mcp-check load-test seed-demo seed-assets-local simulate-activity
 
 help: ## List targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-12s %s\n", $$1, $$2}'
@@ -108,6 +108,9 @@ eval-pdf: ## P12 PDF eval: fixture deck labels + 40-page benchmark → apps/work
 
 mcp-check: ## R3: 20 scripted MCP calls against the LOCAL stack (needs make dev-local) → apps/worker/eval/mcp_check.md
 	@eval "$$(scripts/local-supabase-env.sh)" && $(UV) python ../../scripts/mcp_check.py --url http://localhost:8000 --db-url "$$DATABASE_URL" --out eval/mcp_check.md
+
+load-test: ## R3: 20 submissions on the LOCAL stack, simulated LLM rate limit → apps/worker/eval/load_report.md (stop make dev-worker first; note="…")
+	@eval "$$(scripts/local-supabase-env.sh)" && $(UV) python ../../scripts/load_test.py --simulate-rate-limit --report eval/load_report.md --note "$(note)"
 
 seed-demo: ## Load the PayWise demo into the cloud project: make seed-demo url=https://<ref>.supabase.co
 	@test -n "$(url)" || { echo "usage: make seed-demo url=<SUPABASE_URL>  (must match apps/worker/.env; local uses make db-reset)"; exit 1; }

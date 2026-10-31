@@ -6,6 +6,9 @@ or plain Postgres + pgvector + pgmq) and are skipped unless TEST_DATABASE_URL is
 
     TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest \
         tests/test_llm_pending.py
+
+They purge the review_jobs queue (don't run them while real reviews are queued) and restore the
+vault embeddings they swap out.
 """
 
 from __future__ import annotations
@@ -25,6 +28,7 @@ from brandlens_worker.llm.base import DegradedError, ModelUnavailable, RateLimit
 from brandlens_worker.llm.cache import LLMCache
 from brandlens_worker.llm.router import LLMRouter
 from brandlens_worker.queue import PgmqBackend, process_message
+from tests.db_helpers import restore_embeddings, snapshot_embeddings
 from tests.fakes import ScriptedProvider
 from tests.vault_fixture import HERO
 
@@ -95,6 +99,7 @@ async def pool() -> AsyncIterator[Any]:
     p = create_pool(DB or "", max_size=4)
     await p.open()
     async with p.connection() as conn:
+        snap = await snapshot_embeddings(conn, ORG)
         e0 = "[" + ",".join("1" if i == 0 else "0" for i in range(384)) + "]"
         e1 = "[" + ",".join("1" if i == 1 else "0" for i in range(384)) + "]"
         await conn.execute(
@@ -110,6 +115,7 @@ async def pool() -> AsyncIterator[Any]:
         await conn.execute("delete from private.rate_counters where user_id = %s", (CREATOR,))
     yield p
     async with p.connection() as conn:
+        await restore_embeddings(conn, snap)
         await conn.execute("delete from public.contents where title like %s", (TITLE + "%",))
         await conn.execute("select pgmq.purge_queue(%s)", (QUEUE,))
     await p.close()

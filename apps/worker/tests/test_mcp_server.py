@@ -21,6 +21,7 @@ import pytest
 from fastapi import FastAPI
 
 from brandlens_worker.mcp import PgMcpStore, build_router
+from tests.db_helpers import restore_embeddings, snapshot_embeddings
 
 DB = os.environ.get("TEST_DATABASE_URL")
 pytestmark = pytest.mark.skipif(not DB, reason="set TEST_DATABASE_URL (see module docstring)")
@@ -65,6 +66,7 @@ async def env() -> AsyncIterator[tuple[httpx.AsyncClient, dict[str, str], Any]]:
     keys = {who: "bl_mcp_" + secrets.token_hex(24) for who in ("creator", "agency", "expired")}
     e0 = "[" + ",".join("1" if i == 0 else "0" for i in range(384)) + "]"
     async with pool.connection() as conn:
+        snap = await snapshot_embeddings(conn, ORG)
         await conn.execute(
             "update public.rule_cards set embedding = %s::extensions.vector where org_id = %s",
             (e0, ORG),
@@ -100,6 +102,7 @@ async def env() -> AsyncIterator[tuple[httpx.AsyncClient, dict[str, str], Any]]:
     yield client, keys, pool
     await client.aclose()
     async with pool.connection() as conn:
+        await restore_embeddings(conn, snap)
         await conn.execute("delete from public.facts where code = %s", (f"NS-{tag}",))
         await conn.execute(
             "delete from public.mcp_api_keys where name like %s", (f"pytest {tag}%",)
