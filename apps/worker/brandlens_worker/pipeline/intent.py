@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from collections import Counter
 from collections.abc import Callable
+from dataclasses import dataclass
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -123,3 +124,32 @@ def verify_all(
             f.rewrite = None
             failures[reason] += 1
     return failures
+
+
+@dataclass(frozen=True)
+class DraftIntentCheck:
+    """Whole-draft intent check for the MCP precheck (R3). Same thresholds as rewrite checks."""
+
+    passed: bool
+    cta_retained: bool
+    cosine_similarity: float | None  # None when there is no baseline to compare against
+    failure_reason: str | None
+
+
+def check_draft_intent(
+    draft: str, intent: dict[str, Any], *, baseline: str | None, embed: Embed | None
+) -> DraftIntentCheck:
+    """The stated CTA must appear (fuzzy, as in `verify_rewrite`); with a baseline draft, the new
+    draft must also stay within config.INTENT_COSINE of it (meaning preserved)."""
+    cta = str(intent.get("cta") or "")
+    cta_ok = _contains_fuzzy(draft, cta)
+    cosine: float | None = None
+    if baseline and embed is not None:
+        vecs = embed([baseline, draft])
+        cosine = float(np.dot(vecs[0], vecs[1]))
+    reason = None
+    if not cta_ok:
+        reason = "cta_missing"
+    elif cosine is not None and cosine < config.INTENT_COSINE:
+        reason = "meaning_drift"
+    return DraftIntentCheck(reason is None, cta_ok, cosine, reason)

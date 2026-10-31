@@ -61,9 +61,13 @@ export default async function AuditPage() {
           ? `${e.from} → ${e.to}`
           : type === "finding_status"
             ? `finding ${e.from} → ${e.to}`
-            : type === "mcp_token"
-              ? `MCP token ${e.action === "revoke" ? "revoked" : "created"}`
-              : type,
+            : type === "mcp_key"
+              ? `MCP key ${e.action === "revoke" ? "revoked" : "created"}`
+              : type === "mcp_tool"
+                ? `MCP ${e.tool ?? "tool"} call`
+                : type === "mcp_resource"
+                  ? "MCP resource read"
+                  : type,
       reason: e.reason ?? null,
     };
   });

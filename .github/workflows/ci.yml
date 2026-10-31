@@ -55,7 +55,7 @@ jobs:
         run: supabase test db
       - name: Schema lint
         run: supabase db lint --level error
-      # R3: the "AI check pending" flow end to end (real job, pgmq, fake rate-limited LLM).
+      # R3: "AI check pending" (real job, pgmq, fake rate-limited LLM) and the MCP golden set.
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
@@ -63,7 +63,7 @@ jobs:
         working-directory: apps/worker
         env:
           TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55322/postgres
-        run: uv sync && uv run pytest -q tests/test_llm_pending.py
+        run: uv sync && uv run pytest -q tests/test_llm_pending.py tests/test_mcp_server.py
 
   worker-image:
     # The Render image builds (and bakes the embedding model). E2E is manual: it needs the worker

@@ -655,50 +655,46 @@ export type Database = {
           },
         ]
       }
-      mcp_tokens: {
+      mcp_api_keys: {
         Row: {
-          campaign_id: string
           created_at: string
-          created_by: string | null
+          expires_at: string
           id: string
-          label: string
+          key_hash: string
+          key_prefix: string
           last_used_at: string | null
+          name: string
           org_id: string
           revoked_at: string | null
-          token_hash: string
+          user_id: string
         }
         Insert: {
-          campaign_id: string
           created_at?: string
-          created_by?: string | null
+          expires_at: string
           id?: string
-          label: string
+          key_hash: string
+          key_prefix: string
           last_used_at?: string | null
+          name?: string
           org_id: string
           revoked_at?: string | null
-          token_hash: string
+          user_id: string
         }
         Update: {
-          campaign_id?: string
           created_at?: string
-          created_by?: string | null
+          expires_at?: string
           id?: string
-          label?: string
+          key_hash?: string
+          key_prefix?: string
           last_used_at?: string | null
+          name?: string
           org_id?: string
           revoked_at?: string | null
-          token_hash?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "mcp_tokens_org_id_campaign_id_fkey"
-            columns: ["org_id", "campaign_id"]
-            isOneToOne: false
-            referencedRelation: "campaigns"
-            referencedColumns: ["org_id", "id"]
-          },
-          {
-            foreignKeyName: "mcp_tokens_org_id_fkey"
+            foreignKeyName: "mcp_api_keys_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organisations"
@@ -1071,9 +1067,14 @@ export type Database = {
       can_edit_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_version: { Args: { p_version_id: string }; Returns: boolean }
-      create_mcp_token: {
-        Args: { p_campaign: string; p_label: string; p_org: string }
-        Returns: string
+      create_mcp_key: {
+        Args: { p_expires_in_days?: number; p_name: string; p_org: string }
+        Returns: {
+          expires_at: string
+          id: string
+          key_prefix: string
+          raw_key: string
+        }[]
       }
       decide_example_suggestion: {
         Args: { p_id: string; p_keep: number[] }
@@ -1161,12 +1162,13 @@ export type Database = {
           value: Json
         }[]
       }
-      resolve_mcp_token: {
+      resolve_mcp_key: {
         Args: { p_hash: string }
         Returns: {
-          campaign_id: string
+          key_id: string
           org_id: string
-          token_id: string
+          role: Database["public"]["Enums"]["member_role"]
+          user_id: string
         }[]
       }
       revise_rule_card: {
@@ -1206,7 +1208,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      revoke_mcp_token: { Args: { p_id: string }; Returns: boolean }
+      revoke_mcp_key: { Args: { p_id: string }; Returns: boolean }
       rule_gcs: {
         Args: { p_include_simulated?: boolean; p_org: string; p_since?: string }
         Returns: {

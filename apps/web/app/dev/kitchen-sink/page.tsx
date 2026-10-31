@@ -28,7 +28,7 @@ import { STATE_LABELS, StateBadge, type ContentState } from "@/components/brand/
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { WordCounter } from "@/components/brand/word-counter";
 import { Wordmark } from "@/components/brand/wordmark";
-import { McpTokens } from "@/components/settings/mcp-tokens";
+import { McpIntegration } from "@/components/settings/mcp-integration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
@@ -341,26 +341,34 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
       </Section>
 
       <Section title="AI tools (MCP) card">
-        <McpTokens
+        <McpIntegration
           endpoint="https://worker.example/v1/mcp"
-          previewToken={`ek_${"0".repeat(48)}`}
-          campaigns={[{ id: "20000000-0000-4000-8000-000000000001", name: "Diwali SIP 2026" }]}
-          tokens={[
+          canRevokeOthers
+          previewKey={theme === "light" ? `bl_mcp_${"0".repeat(48)}` : undefined}
+          keys={[
             {
-              id: `t1-${theme}`,
-              label: "Cursor – Diwali copy",
-              campaign: "Diwali SIP 2026",
+              id: `k1-${theme}`,
+              name: "Claude / Cursor",
+              keyPrefix: "bl_mcp_9f8a",
+              owner: "Priya (Creator)",
+              mine: false,
               createdAt: "2026-10-31T06:00:00Z",
               lastUsedAt: "2026-10-31T07:00:00Z",
+              expiresAt: "2027-01-29T06:00:00Z",
               revokedAt: null,
+              expired: false,
             },
             {
-              id: `t2-${theme}`,
-              label: "Old Claude token",
-              campaign: "Diwali SIP 2026",
+              id: `k2-${theme}`,
+              name: "Old laptop",
+              keyPrefix: "bl_mcp_1c2d",
+              owner: null,
+              mine: true,
               createdAt: "2026-10-20T06:00:00Z",
               lastUsedAt: null,
+              expiresAt: "2026-11-19T06:00:00Z",
               revokedAt: "2026-10-25T06:00:00Z",
+              expired: false,
             },
           ]}
         />

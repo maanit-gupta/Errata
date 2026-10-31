@@ -82,7 +82,7 @@ DB_POOL_MAX: Final = 8  # REVIEW_CONSUMERS + 1 vault long-polls, plus per-job qu
 MCP_RATE_PER_MINUTE: Final = 60  # calls per token per minute (in-process; one worker instance)
 MCP_MAX_RESULTS: Final = 10  # search_brand_rules limit cap
 MCP_MAX_QUERY_CHARS: Final = 500
-MCP_MAX_BODY_BYTES: Final = 32_768
+MCP_MAX_BODY_BYTES: Final = 131_072  # a 15,000-char draft in multi-byte UTF-8 fits
 MCP_AUTH_FAILURES_PER_MINUTE: Final = 30  # bad/missing tokens per client address
 
 # R3: "AI check pending". When every LLM provider is rate-limited (or 5xx/timeout), the run saves
@@ -90,3 +90,8 @@ MCP_AUTH_FAILURES_PER_MINUTE: Final = 30  # bad/missing tokens per client addres
 # attempt) via a delayed pgmq message. After the last one it finishes degraded, as before. The
 # first delay is at least LLM_RATE_LIMIT_COOLDOWN_S so the retry doesn't hit a cooling provider.
 LLM_PENDING_RETRY_DELAYS_S: Final[tuple[int, ...]] = (60, 120, 240, 480)
+MCP_CONTEXT_RULES: Final = 8  # rule cards returned by get_campaign_context (= TOPK)
+MCP_CLAIM_FACTS: Final = 3  # nearest facts returned by verify_claim_evidence
+# A claim counts as matching a fact at this cosine (bge-small). From the build spec, NOT calibrated
+# on the golden set yet; the verdict leans on the deterministic filters first (see tools.py).
+MCP_CLAIM_FACT_MIN_SIM: Final = 0.78
