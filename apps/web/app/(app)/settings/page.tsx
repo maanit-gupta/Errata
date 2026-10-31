@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { PageHeader } from "@/components/brand/page-header";
 import { ThemeRadioCards } from "@/components/brand/theme-toggle";
 import { DiscordTestButton, LandingToggle, ShortcutsToggle } from "@/components/settings/client";
+import { McpTokens, type McpTokenRow } from "@/components/settings/mcp-tokens";
 import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/auth/session";
 import { clientEnv, serverEnv } from "@/lib/env";
@@ -62,11 +63,42 @@ export default async function SettingsPage() {
     : [{ data: null }, { data: null }];
   const name = new Map((profiles ?? []).map((p) => [p.id, p.display_name ?? "—"]));
 
+  // AI tools (MCP), brand admin only. RLS returns this org's tokens; token_hash is never selected.
+  const [{ data: mcpRows }, { data: campaigns }] = admin
+    ? await Promise.all([
+        supabase
+          .from("mcp_tokens")
+          .select("id, label, campaign_id, created_at, last_used_at, revoked_at")
+          .eq("org_id", session.orgId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("campaigns")
+          .select("id, name, status")
+          .eq("org_id", session.orgId)
+          .order("starts_on", { ascending: false }),
+      ])
+    : [{ data: null }, { data: null }];
+  const campaignName = new Map((campaigns ?? []).map((c) => [c.id, c.name]));
+  const mcpTokens: McpTokenRow[] = (mcpRows ?? []).map((t) => ({
+    id: t.id,
+    label: t.label,
+    campaign: campaignName.get(t.campaign_id) ?? "Unknown campaign",
+    createdAt: t.created_at,
+    lastUsedAt: t.last_used_at,
+    revokedAt: t.revoked_at,
+  }));
+  const mcpEndpoint = `${(env.WORKER_URL ?? "https://<worker-url>").replace(/\/+$/, "")}/v1/mcp`;
+
   const sections = [
     ["profile", "Profile"],
     ["appearance", "Appearance"],
     ["notifications", "Notifications"],
-    ...(admin ? [["organisation", "Organisation"]] : []),
+    ...(admin
+      ? [
+          ["organisation", "Organisation"],
+          ["ai-tools", "AI tools (MCP)"],
+        ]
+      : []),
     ...(demo ? [["demo", "Demo"]] : []),
   ];
 
@@ -144,6 +176,33 @@ export default async function SettingsPage() {
                   </li>
                 ))}
               </ul>
+            </Cell>
+          ) : null}
+          {admin ? (
+            <Cell
+              id="ai-tools"
+              title="AI tools (MCP)"
+              description={
+                <>
+                  Give an AI writing tool (Cursor, Claude) read-only access to one campaign&apos;s
+                  live facts and approved rule cards, so drafts start on-brand. No write access,
+                  nothing marked never-send.{" "}
+                  <a
+                    href="https://github.com/maanit-gupta/Errata/blob/main/docs/MCP.md"
+                    className="text-accent-soft underline underline-offset-4"
+                  >
+                    Setup guide
+                  </a>
+                </>
+              }
+            >
+              <McpTokens
+                tokens={mcpTokens}
+                campaigns={(campaigns ?? [])
+                  .filter((c) => c.status !== "ended")
+                  .map((c) => ({ id: c.id, name: c.name }))}
+                endpoint={mcpEndpoint}
+              />
             </Cell>
           ) : null}
           {demo ? (

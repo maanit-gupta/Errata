@@ -33,7 +33,7 @@ The full transcript is in [`demo-video.tsx`](apps/web/components/marketing/demo-
 
 **Contents:** [The problem](#the-problem-and-what-errata-does) · [The workflow in screens](#the-workflow-in-screens) · [How a draft is checked](#how-a-draft-is-checked) · [Architecture](#how-it-works) · [Results](#results) · [Quick start](#quick-start) · [Deploying](#deploying) · [Security](#security-and-reliability) · [Changes since Round 1](#changes-since-round-1) · [AI assistance](#ai-assistance) · [Licences](#models-services-data-and-libraries) · [Team](#team-and-contributions)
 
-**Docs:** [Demo script](docs/DEMO.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
+**Docs:** [Demo script](docs/DEMO.md) · [MCP server](docs/MCP.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
 
 Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") by Maanit Gupta and Jagpreet Singh (SRMIST).
 

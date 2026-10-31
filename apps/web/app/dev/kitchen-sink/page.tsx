@@ -28,6 +28,7 @@ import { STATE_LABELS, StateBadge, type ContentState } from "@/components/brand/
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { WordCounter } from "@/components/brand/word-counter";
 import { Wordmark } from "@/components/brand/wordmark";
+import { McpTokens } from "@/components/settings/mcp-tokens";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
@@ -337,6 +338,32 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
         </ErrorPanel>
         <Forbidden role="Agency" action="open the brand vault" />
         <DegradedBanner />
+      </Section>
+
+      <Section title="AI tools (MCP) card">
+        <McpTokens
+          endpoint="https://worker.example/v1/mcp"
+          previewToken={`ek_${"0".repeat(48)}`}
+          campaigns={[{ id: "20000000-0000-4000-8000-000000000001", name: "Diwali SIP 2026" }]}
+          tokens={[
+            {
+              id: `t1-${theme}`,
+              label: "Cursor – Diwali copy",
+              campaign: "Diwali SIP 2026",
+              createdAt: "2026-10-31T06:00:00Z",
+              lastUsedAt: "2026-10-31T07:00:00Z",
+              revokedAt: null,
+            },
+            {
+              id: `t2-${theme}`,
+              label: "Old Claude token",
+              campaign: "Diwali SIP 2026",
+              createdAt: "2026-10-20T06:00:00Z",
+              lastUsedAt: null,
+              revokedAt: "2026-10-25T06:00:00Z",
+            },
+          ]}
+        />
       </Section>
 
       <Section title="Toasts and drawer">

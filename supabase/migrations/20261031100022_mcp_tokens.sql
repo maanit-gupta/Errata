@@ -30,7 +30,7 @@ revoke all on public.mcp_tokens from anon, authenticated;
 grant select (id, org_id, campaign_id, label, created_by, created_at, last_used_at, revoked_at)
   on public.mcp_tokens to authenticated;
 
--- Max live tokens per org. Keeps a leaked admin session from minting thousands.
+-- Brand admin only. At most 20 live tokens per org, so a leaked admin session can't mint thousands.
 create or replace function public.create_mcp_token(p_org uuid, p_campaign uuid, p_label text)
 returns text
 language plpgsql

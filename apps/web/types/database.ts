@@ -652,6 +652,57 @@ export type Database = {
           },
         ]
       }
+      mcp_tokens: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          last_used_at: string | null
+          org_id: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          last_used_at?: string | null
+          org_id: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          org_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mcp_tokens_org_id_campaign_id_fkey"
+            columns: ["org_id", "campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "mcp_tokens_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           created_at: string
@@ -1008,6 +1059,10 @@ export type Database = {
       can_edit_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_content: { Args: { p_content_id: string }; Returns: boolean }
       can_read_version: { Args: { p_version_id: string }; Returns: boolean }
+      create_mcp_token: {
+        Args: { p_campaign: string; p_label: string; p_org: string }
+        Returns: string
+      }
       decide_example_suggestion: {
         Args: { p_id: string; p_keep: number[] }
         Returns: {
@@ -1083,6 +1138,25 @@ export type Database = {
           value: Json
         }[]
       }
+      mcp_campaign_facts: {
+        Args: { p_campaign: string; p_org: string }
+        Returns: {
+          code: string
+          kind: string
+          required_disclaimer: string
+          statement: string
+          valid_until: string
+          value: Json
+        }[]
+      }
+      resolve_mcp_token: {
+        Args: { p_hash: string }
+        Returns: {
+          campaign_id: string
+          org_id: string
+          token_id: string
+        }[]
+      }
       revise_rule_card: {
         Args: {
           p_body: string
@@ -1120,6 +1194,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      revoke_mcp_token: { Args: { p_id: string }; Returns: boolean }
       rule_gcs: {
         Args: { p_org: string; p_since?: string }
         Returns: {
