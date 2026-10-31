@@ -48,6 +48,10 @@ def create_app(settings: Settings | None = None, *, run_queue: bool = True) -> F
 
     app = FastAPI(title="BrandLens worker", version=__version__, lifespan=lifespan)
 
+    from brandlens_worker.mcp import build_router
+
+    app.include_router(build_router())
+
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
         # Never include secrets here.
@@ -120,6 +124,11 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
     tracer = Tracer.from_settings(settings, enabled=settings.env.lower() != "test")
     services: dict[str, Any] = {"settings": settings, "tracer": tracer}
     app.state.services = services
+    from brandlens_worker.embeddings import Embedder
+    from brandlens_worker.mcp import PgMcpStore
+
+    services["mcp_store"] = PgMcpStore(pool)
+    services["embedder"] = Embedder(settings.embedding_model, settings.model_cache_dir)
 
     registry = build_registry()
     backend = PgmqBackend(pool)
