@@ -31,11 +31,36 @@ The full transcript is in [`demo-video.tsx`](apps/web/components/marketing/demo-
 
 > Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; some hosting, package and database names still use `brandlens` (see [Names that still say brandlens](#names-that-still-say-brandlens)).
 
-**Contents:** [The problem](#the-problem-and-what-errata-does) · [The workflow in screens](#the-workflow-in-screens) · [How a draft is checked](#how-a-draft-is-checked) · [Architecture](#how-it-works) · [Results](#results) · [Quick start](#quick-start) · [Deploying](#deploying) · [Security](#security-and-reliability) · [Changes since Round 1](#changes-since-round-1) · [AI assistance](#ai-assistance) · [Licences](#models-services-data-and-libraries) · [Team](#team-and-contributions)
+**Contents:** [Round 3 improvements](#round-3-improvements) · [The problem](#the-problem-and-what-errata-does) · [The workflow in screens](#the-workflow-in-screens) · [How a draft is checked](#how-a-draft-is-checked) · [Architecture](#how-it-works) · [Results](#results) · [Quick start](#quick-start) · [Deploying](#deploying) · [Security](#security-and-reliability) · [Changes since Round 1](#changes-since-round-1) · [AI assistance](#ai-assistance) · [Licences](#models-services-data-and-libraries) · [Team](#team-and-contributions)
 
-**Docs:** [Demo script](docs/DEMO.md) · [MCP server](docs/MCP.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
+**Docs:** [Final report](docs/REPORT.md) · [Change log](docs/CHANGELOG-R3.md) · [Privacy, security, accessibility](docs/PRIVACY-SECURITY-A11Y.md) · [MCP server](docs/MCP.md) · [Usability kit](docs/usability/) · [Load report](apps/worker/eval/load_report.md) · [Demo script](docs/DEMO.md) · [Build spec](docs/SPEC.md) · [Design system](docs/DESIGN.md) · [Security review](docs/SECURITY.md) · [Build log](PROGRESS.md)
 
-Built for the Inkloom AI brand-governance problem statement (Round 2, "Build") by Maanit Gupta and Jagpreet Singh (SRMIST).
+Built for the Inkloom AI brand-governance problem statement (We Code Coders; Round 2 "Build", Round 3 final) by team 9thHACK: Jagpreet Singh (team leader) and Maanit Gupta, SRMIST.
+
+## Round 3 improvements
+
+Status on 2026-10-31. Sources: **real stack** = local Supabase on the team's MacBook; **plain Postgres** = Postgres 16 with every migration, in the build sandbox; **sandbox** = build sandbox with stand-ins noted.
+
+| # | Improvement | Done when | Status |
+|---|---|---|---|
+| 1 | **Read-only MCP server** ([docs](docs/MCP.md)) | 20 test calls return only live facts for the requested campaign and no never-send text | ✅ Built. 20/20 on plain Postgres with three planted canaries (a negative control fails). ⏳ Real-stack `make mcp-check` pending |
+| 2 | **Real users** ([kit](docs/usability/)): A/B (manual vs Errata) + SUS; Clarity Score on real data | SUS ≥ 70, and more seeded issues caught with Errata than by hand | ⏳ **Sessions not run yet; no results.** ✅ Real-data filter built (pgTAP, real stack) |
+| 3 | **Hold up under load** ([report](apps/worker/eval/load_report.md)): "AI check pending" + repeatable load test | Non-LLM P95 < 15 s, 0 lost jobs, every pending run completes | ✅ Built. Sandbox: P95 4.5 s, 0 lost, 20/20 pending runs completed. ⏳ Real-stack `make load-test` pending |
+
+**MCP server** (`POST <worker>/v1/mcp`, Streamable HTTP, read-only, personal `bl_mcp_` keys from Settings → **AI tools (MCP)**):
+
+| Tool / resource | What it does |
+|---|---|
+| `get_campaign_context` | Live campaign facts, glossary and the most relevant approved rule cards for a campaign and intent |
+| `precheck_draft_fast` | Errata's deterministic checks plus a CTA/meaning check, no LLM, in milliseconds: `BLOCKED` or `PASS_DETERMINISTIC` with cited findings and fixes |
+| `verify_claim_evidence` | One claim against the Fact Vault and claims rules: verdict, facts to cite, required disclaimers. The claim-similarity threshold (0.78) is **uncalibrated**; deterministic findings decide a blocker first |
+| `brandvault://campaigns/active` (resource) | Every active campaign with its live, sendable facts |
+
+Never-send items, expired facts and other campaigns' facts are excluded in SQL; agency keys get rule summaries only; every call is audited.
+
+**AI check pending.** If every LLM provider is rate-limited, a review saves its rule-based findings at once, shows an "AI check pending" banner, keeps the draft out of reviewers' queues and retries the AI pass on its own (60/120/240/480 s, queued in the same transaction so it can't be lost). It fills in via Realtime. After the last retry it finishes degraded, as before. Still one LLM pass per draft, through the same citation gate.
+
+**Tests:** pgTAP 147 tests in 9 files, all pass; `make check` green (worker 239 passed / 7 DB-gated skipped, web 188) on the real stack. Everything that changed is in the [change log](docs/CHANGELOG-R3.md).
 
 ## The problem, and what Errata does
 
@@ -142,7 +167,7 @@ A deliberately broken prompt drops tone precision to 0.43, and the gate fails th
 
 **Images** ([`vision_report.md`](apps/worker/eval/vision_report.md)): logo found in 9/9 creatives with 0 false positives; WCAG contrast within ±0.1 of WebAIM on 40/40 PNG colour pairs; 1.1 s per creative. **PDF decks** ([`pdf_report.md`](apps/worker/eval/pdf_report.md)): 9/9 seeded issues found on the right page, including two hidden-text injections; a 40-page deck stays under 512 MB.
 
-**Usability:** A/B benchmark (manual guideline check vs Errata) and SUS templates are in [`docs/usability/`](docs/usability/). Not run yet.
+**Usability:** the A/B benchmark (manual guideline check vs Errata), tasks T1–T6, an "AI check pending" comprehension probe and SUS are ready in [`docs/usability/`](docs/usability/); `scripts/usability_summary.py` fills [`results.md`](docs/usability/results.md). **No sessions have been run yet, so there are no usability results.**
 
 ## Quick start
 
@@ -216,7 +241,7 @@ Image checks need the Tesseract binary (`brew install tesseract`, or `apt-get in
 
 The full checklist with evidence is in [`docs/SECURITY.md`](docs/SECURITY.md): RLS on every table (pgTAP), no secrets in client bundles, 15-minute signed URLs, private buckets with size limits, prompt-injection tests, a 10-per-minute submit limit enforced in SQL, 4 MB upload limits, and CSP plus security headers.
 
-**Degraded mode.** If both LLM providers fail (bad key, outage, or free-tier 429s after retries), a review still finishes with every deterministic finding (glossary, facts, campaign bleed, claims lexicon, tone heuristics, readability, contrast, ΔE, logo). The run is stored with `degraded = true`, and the draft page says only the deterministic checks ran. With invalid keys on the golden hero, claims and tone rows, blocker recall stayed at 1.00. A provider that stays rate-limited is skipped for 60 s, so queued jobs don't each wait through the same backoff.
+**AI check pending (Round 3).** Transient LLM failures (429, 5xx, timeouts) no longer degrade silently: the run saves its deterministic findings, waits in "AI check pending" and retries itself (see [Round 3 improvements](#round-3-improvements)). **Degraded mode** is what's left after the last retry, or at once for permanent failures. If both LLM providers fail (bad key, outage, or free-tier 429s after retries), a review still finishes with every deterministic finding (glossary, facts, campaign bleed, claims lexicon, tone heuristics, readability, contrast, ΔE, logo). The run is stored with `degraded = true`, and the draft page says only the deterministic checks ran. With invalid keys on the golden hero, claims and tone rows, blocker recall stayed at 1.00. A provider that stays rate-limited is skipped for 60 s, so queued jobs don't each wait through the same backoff.
 
 **Worker restarts.** Jobs are pgmq messages with a 120 s visibility timeout. If the worker dies mid-job, the message becomes visible again and the next read reruns it. Runs are idempotent: a finished run is skipped, and a rerun replaces its own findings. After 3 reads the message is archived and the run marked failed. `scripts/redelivery_test.py` shows this: an abandoned run was picked up after the timeout and finished.
 
@@ -227,12 +252,14 @@ The full checklist with evidence is in [`docs/SECURITY.md`](docs/SECURITY.md): R
 | Before the router cool-down (35-draft burst; snapshot when 32 had finished, then lost to a local DB reset) | 32 | 0 | 4 | ≥ 14 min | ≤ 2.3/min | mean 7.0 min | max 14.1 min |
 | After the cool-down (50 drafts) | 50 | 0 | 0 | 58 s | 51.6/min | 49.5 s | 57.5 s |
 
-The bottleneck is the free LLM tiers, not the pipeline. Groq and Gemini rate limits were already spent by the day's eval runs, so in the second run every review came back degraded (deterministic findings only, flagged in the UI) and none failed. Without rate limits, an LLM review takes P50 2.9 s and P95 15.2 s (recorded provider latency, `apps/worker/eval/report.md`). A paid tier or a per-org LLM budget is the fix for sustained bursts. We didn't load-test the deployed stack, so the live demo's quota stays intact; pass the cloud session-pooler `DATABASE_URL` to the same script to do it.
+**Round 3 load test** (`make load-test`; in-process consumers running the worker's code, a simulated LLM that answers 429 for 45 s; 20 submissions): 20/20 runs went "AI check pending" and 20/20 completed after the first retry; non-LLM-path P50 4.3 s, P95 4.5 s; 0 lost, 0 failed. This ran in the **build sandbox** (plain Postgres, stand-in embedder); the real-stack run replaces [`load_report.md`](apps/worker/eval/load_report.md).
+
+The bottleneck is the free LLM tiers, not the pipeline. Groq and Gemini rate limits were already spent by the day's eval runs, so in the second run every review came back degraded (deterministic findings only, flagged in the UI) and none failed. Without rate limits, an LLM review takes P50 2.9 s and P95 15.2 s (recorded provider latency, `apps/worker/eval/report.md`). A paid tier or a per-org LLM budget is the fix for sustained bursts. We didn't load-test the deployed stack, so the live demo's quota stays intact; the script now refuses non-local databases, and a cloud run needs the team's go-ahead.
 
 
 ## Changes since Round 1
 
-Mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md).
+Mirrors the "Deliberate deviations" table in [`CLAUDE.md`](CLAUDE.md). Round 3 additions (MCP server, real-data Clarity Score, AI check pending) and their reasons are in [`docs/CHANGELOG-R3.md`](docs/CHANGELOG-R3.md).
 
 | Area | Round 1 plan said | We built | Why |
 |---|---|---|---|
@@ -275,6 +302,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | Rename and repo move | User-facing rename to Errata, the list of identifiers that keep `brandlens`, and links pointing at the `maanit-gupta/Errata` repo |
 | Demo video | Capture script for real app screens, a HyperFrames composition (storyboard in `apps/web/video-src/brag-plan.md`), renders, captions, transcript and the landing-page embed |
 | Local stack | `make db-start lite=1`, the Supabase CLI fallback and local env defaults so a fresh clone runs |
+| Round 3 | Read-only MCP server (migration, worker package, settings UI, tests, acceptance script) built from the team's spec; `contents.simulated` and the real-data Insights filter; "AI check pending" (router classification, delayed pgmq retry, banner, DB tests); load test with a simulated rate limit; usability kit and summary script; the Round 3 documents. Run by Jagpreet with Claude Code on `round3/improvements` |
 
 ## Models, services, data and libraries
 
@@ -316,7 +344,10 @@ The source of truth is the dependency table in [`PROGRESS.md`](PROGRESS.md) (Dec
 
 ## Limitations and roadmap
 
-- **Free-tier LLMs are the throughput limit.** Under a burst, Groq and Gemini rate limits push reviews into degraded mode (deterministic findings only, clearly flagged). Next: a paid tier or a per-org LLM budget, and a queue-aware "LLM pass pending" state that fills in later.
+- **Free-tier LLMs are the throughput limit.** Under a burst, reviews now wait in "AI check pending" and fill in later; sustained bursts still need a paid tier or a per-org LLM budget.
+- **Usability results are pending** real sessions; none are reported until `scripts/usability_summary.py` has real rows.
+- **MCP:** the claim-similarity threshold (0.78) is uncalibrated; the rate limiter is per worker process; Claude Desktop needs the `mcp-remote` bridge.
+- **Privacy:** self-service export and erasure, retention rules and a breach runbook are roadmap; deleting a user who appears in the append-only audit trail is blocked ([details](docs/PRIVACY-SECURITY-A11Y.md)).
 - **PDFs:** vector-drawn logos aren't detected; scanned PDFs (no text layer) are rejected; picture warmth inside decks is counted, not judged.
 - **Images:** contrast on JPEG uploads is an estimate (chroma subsampling); PNG is exact.
 - **Worker memory:** a 40-page deck peaks at 484 MB on the 512 MB instance. Heavy jobs are serialised, but a 1 GB instance is safer for heavy PDF use.
@@ -327,8 +358,8 @@ The source of truth is the dependency table in [`PROGRESS.md`](PROGRESS.md) (Dec
 
 | Member | Role | Contribution |
 |---|---|---|
-| **Maanit Gupta** | AI and backend lead | Worker pipeline (ingest, redaction, deterministic filters, retrieval, LLM pass, citation gate, intent check), vision and PDF checks, schema, RLS and workflow SQL, eval golden set and CI gate, deployment, security hardening. Ran the Claude Code sessions for every phase, including the web UI phases. As of 2026-10-27, every commit in the git history is authored from Maanit's account (`maanit-gupta`). |
-| **Jagpreet Singh** | Product, frontend and UX lead | Co-author of the Round 1 plan and storyboard. Owns product and UX direction, usability testing (`docs/usability/`) and the live demo. Led the 2026-10-28 UI redesign (design study, the flat outlined design system, tokens and contrast test, restyled components, shell, landing and sign-in, original illustrations), the rename to Errata, the "How it works" demo video, and the local-stack fixes for fresh clones. Those commits are authored from Jagpreet's account and were developed on the `UI/UX_jagpreet` branch with Claude Code. |
+| **Maanit Gupta** | AI and backend lead | Worker pipeline (ingest, redaction, deterministic filters, retrieval, LLM pass, citation gate, intent check), vision and PDF checks, schema, RLS and workflow SQL, eval golden set and CI gate, deployment, security hardening. Ran the Claude Code sessions for every Round 2 phase, including the web UI phases. Commits up to 2026-10-27 are authored from Maanit's account (`maanit-gupta`). |
+| **Jagpreet Singh** (team leader) | Product, frontend and UX lead | Co-author of the Round 1 plan and storyboard. Owns product and UX direction, usability testing (`docs/usability/`) and the live demo. Led the 2026-10-28 UI redesign (design study, the flat outlined design system, tokens and contrast test, restyled components, shell, landing and sign-in, original illustrations), the rename to Errata and the "How it works" demo video. Led Round 3 on `round3/improvements`: the MCP server spec and build, the usability kit, the Clarity Score real-data filter, "AI check pending", the load test and the Round 3 documents. These commits are authored from Jagpreet's account, developed with Claude Code. |
 
 ## Names that still say brandlens
 

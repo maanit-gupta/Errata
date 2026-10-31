@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** P16 (partial, waiting on team items). All work is on `main`, including the U0–U2 Terminal Noir UI (restored 2026-10-27, DESIGN.md §13)
+**Current phase:** R3 (Round 3 improvements) on branch `round3/improvements`, not merged. Before that: P16 partial (team items), redesign merged to `main` 2026-10-29.
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -35,37 +35,36 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | R1 | Redesign foundation: DESIGN.md, tokens, fonts, lint | J | done | J (Claude) | UI/UX_jagpreet | 2026-10-28; DB-dependent gates not run here (local Supabase unavailable, see Handoff) |
 | R2–R6 | Primitives, illustrations, shell, landing, sign-in | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; first pass done; 21st.dev ports not yet; signed-in routes unverified here |
 | R7–R10 | Feature screens (drafts, review, vault, insights, audit, settings) | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; restyled via shared components only |
-| R3 | Round 3 improvements: MCP server (read-only, per build spec), real-user testing kit, AI-check-pending + load | Both | in-progress | J (Claude) | round3/improvements | 2026-10-31; branch only, not merged to main; MCP, usability kit, Clarity filter, pending state done; load report + deliverables next |
+| R3.1 | MCP server, read-only (build spec subset) | J | done (real-stack `make mcp-check` pending) | J (Claude) | round3/improvements | 2026-10-31; 20/20 on plain Postgres |
+| R3.2 | Usability kit + Clarity Score on real data | J | done (sessions pending) | J (Claude) | round3/improvements | 2026-10-31; no results yet |
+| R3.3 | AI check pending + load test | Both | done (real-stack `make load-test` pending) | J (Claude) | round3/improvements | 2026-10-31; sandbox PASS |
+| R3.4 | Deliverables: REPORT, CHANGELOG-R3, PRIVACY-SECURITY-A11Y, README | J | done | J (Claude) | round3/improvements | 2026-10-31 |
 
 ## Handoff (latest — overwrite each phase)
 
-- **UI redesign (branch `UI/UX_jagpreet` on https://github.com/maanit-gupta/Errata, 2026-10-28; fast-forwarded into `main` on 2026-10-29 at the owner's request, PR #1):** R0 study and R1 foundation are done. `docs/DESIGN.md` now describes the flat, outlined, light-first system (ink + yellow highlight, grey/pink bands, DM Sans/DM Mono, original inline-SVG illustrations). Tokens are one `light-dark()` block in `apps/web/app/globals.css` mirrored by `lib/design/tokens.ts`; the contrast test asserts 55 pairs per theme. Old screens pick up the new tokens; components are rebuilt from R2 (`docs/ui-redesign/STUDY.md` §7, R2–R11).
-  - **Gates not run in R1:** the local Supabase stack couldn't start on this machine (the image pull filled the disk, then Docker Desktop stopped responding), and there is no `apps/web/.env.local` here. So pgTAP, `ui.spec` signed-in routes, `keyboard.spec` sign-in tests, `a11y.spec` and the functional specs were not run. What ran: ESLint, Prettier, `tsc`, Vitest (incl. the token test), worker lint and pytest, and `ui.spec` axe on `/`, `/ai-use`, `/login`, `/dev/kitchen-sink` in both themes plus the kitchen-sink reduced-motion check, with the app on placeholder env and no DB.
-  - **After R1 (same day, owner: "replicate the site"):** first pass of R2–R6 plus a feature-panel pass is committed. Public pages (`/`, `/ai-use`, `/login`), the kitchen sink and a new dev-only `/dev/shell` preview pass axe in both themes and the 25-stop focus-outline check; signed-in routes have not been rendered here.
-  - **Local stack fixed (2026-10-28):** Docker Desktop's containerd image store held corrupted partial downloads (the disk filled mid-pull), so Docker was switched to the classic image store (`UseContainerdSnapshotter: false`; other projects' images are hidden, not deleted, until it's switched back). `make db-start lite=1`, `make seed-assets-local`, `make dev-local` now run on this machine with no `.env` files (placeholder LLM keys → degraded reviews). Green against it: `auth`, `keyboard`, `ui` (all routes × 2 themes), `a11y`, `drafts`, `review`, `vault`, `vault-import`, `core-loop` (F02–F05). Two first-run timeouts (cold compile, worker model download) passed on re-run.
-  - **Exact next step (was):** fix Docker and free disk; `make db-start && make db-reset && make seed-assets-local`; run `make check`, the full `ui.spec`, `keyboard.spec`, `a11y.spec`, `auth.spec`, `drafts.spec`, `review.spec`, `vault*.spec`, `insights.spec` and `core-loop.spec`; fix what they find; then R7–R10 page layouts and copy trims (STUDY.md §6).
-- **UI (2026-10-27, user request "complete the design.md"):** `main` runs the full Terminal Noir UI (DESIGN.md). It was re-applied from `ui/U2` as a 3-way patch on top of P15, so the P15 limits, CSP, signed-URL TTL and loading/error states are kept. The U2 follow-ups are closed (DESIGN.md §13): sticky DecisionBar with per-action dialogs, version switcher (`?v=N` read-only), "View as table" toggle, contrast/ΔE swatches, palette empty state.
-  - Gates: `make check` green; axe 38/38 (19 routes × 2 themes), keyboard and a11y specs green; core-loop, review and drafts e2e green on the local stack. E2E changes: sign-off and request-changes now go through dialogs ("Confirm sign-off", "Send request"); the P15 keyboard test uses the new nav labels ("Rule cards").
-  - **Deployed 2026-10-27:** Vercel production (https://brandlens-app.vercel.app) and Render worker (`b012ef6`, `/healthz` ok) both auto-deployed from `main`. Production UI gates: `ui.spec` + `keyboard.spec` + `a11y.spec` 49 passed, 1 skipped (dev-only kitchen sink). Real data surfaced three fixes, now shipped: tab-panel focus ring, toast focus ring, version-switcher accessible name.
-  - **Local Storage is broken after `make check`'s db reset:** every upload returns 500 (Postgres 42P10) from storage-api v1.72.1, so `make seed-assets-local`, `image-check.spec` and `pdf-check.spec` fail locally. Cloud Storage is unaffected. Try `supabase stop && supabase start` (or upgrade the CLI) before running those specs locally.
-- **Workflow (user rule 2026-10-27):** work and commit directly on `main`. No phase/UI branches and no worktrees.
-- **Phase / status:** P16 / **partial** (2026-10-27). Everything Claude can do is done; the rest needs the team (below). P14 and P15 are done (see their rows; P15 details are in `docs/SECURITY.md` and README "Security and reliability").
-- **What P16 added:**
-  - `README.md` restructured: pitch and problem, Mermaid architecture and key decisions, Results (golden set, images, PDFs, usability pending), Changes since Round 1 (full table, including the Render/Singapore hosting change), models/services/data/templates/libraries with licences, limitations and roadmap, team and contributions, AI assistance through P16.
-  - `docs/DEMO.md`: a 3:40 script over F01–F06 with exact clicks and lines to say, a pre-session checklist, and a fallback table (LLM rate-limited → the four hero findings are all deterministic; worker asleep; insights not reset).
-  - `scripts/reset_demo.sh <SUPABASE_URL> --yes` + `scripts/sql/reset_demo.sql`: clears every PayWise content, rolls rule cards back to v1 (undoing F06's TV-04 v2), sets example suggestions back to pending, re-seeds, re-simulates. The SQL was tested locally (157 contents → 0; TV-04 v2 → v1 approved). **Not run against cloud.**
-  - `docs/usability/`: consent note, moderator script (A/B manual vs BrandLens with two captions that each carry the same four deterministic issues, verified in-process; tasks T1–T4), SUS form with scoring, results tables.
-  - `docs/SECURITY.md`: git history secret scan (clean; the one webhook match is a test fixture).
-- **Waiting on the team (P16 acceptance):**
-  1. ~~Cloud migrations `…100020`/`…100021`~~: confirmed applied on cloud (Supabase migration list, 2026-10-27).
-  2. **Usability sessions** (Jagpreet): run `docs/usability/tasks.md`, fill in `results.md`, then replace "Results pending" in README → Results.
-  3. **Contributions** (Jagpreet): add specifics to README → Team and contributions. Git shows every commit from `maanit-gupta`.
-  4. **Make the repo public** (still PRIVATE; needs the user's go-ahead). `gitleaks git` is clean (2026-10-27; two fake test strings ignored in `.gitleaksignore`). Tag `v1.0-round2` is pushed (at `1e4a334`; move it if later commits must be included). Confirm the live link in README.
-  5. Optional: add `GROQ_API_KEY`/`GEMINI_API_KEY` as GitHub Actions secrets so `eval.yml` can run live on prompt changes.
-  6. Before judging: `scripts/reset_demo.sh`, then a recorded dry run per `docs/DEMO.md`.
-- **Gotchas:** `make check` resets the local DB (`make test-db`). Free-tier LLM quotas run out after a full eval plus a burst; keep load tests off the cloud stack on demo day.
-- **Final check (2026-10-27, /complete):** `make check` green (pytest, Vitest, 106 pgTAP).
-- **Exact next step:** the team items above (usability results, contributions, make the repo public, demo reset and dry run).
+- **Branch:** all Round 3 work is on `round3/improvements` (not merged; Vercel and Render still serve `main`). Commits are authored by Jagpreet Singh; `.claude/settings.json` turns off AI attribution trailers. `wip/r3-mcp-draft` is obsolete (don't merge it).
+- **What exists now (R3):**
+  - **MCP server** (`apps/worker/brandlens_worker/mcp/`, `POST /v1/mcp`): `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource `brandvault://campaigns/active`, prompt `brandlens-governed-draft`; personal `bl_mcp_` keys (migration `…100022`); Settings → AI tools (MCP). Docs: `docs/MCP.md`.
+  - **Clarity Score on real data:** `contents.simulated` + `p_include_simulated` (migration `…100023`); Insights "All data / Real reviews only".
+  - **AI check pending:** `review_runs.llm_pending/llm_attempts/llm_next_at` (migration `…100024`); delayed pgmq retry in the same transaction; banner on the draft page.
+  - **Load test:** `scripts/load_test.py`, `make load-test` (local only; in-process consumers; `--simulate-rate-limit`).
+  - **Usability kit:** `docs/usability/` (checklist, consent, tasks T1–T6 + pending probe, `sessions.csv`), `scripts/usability_summary.py`.
+  - **Docs:** `docs/REPORT.md`, `docs/CHANGELOG-R3.md`, `docs/PRIVACY-SECURITY-A11Y.md`, README "Round 3 improvements".
+- **Verified on the real stack (Jagpreet's MacBook, 2026-10-31, at `d19c525`):** `make db-reset` applies 24 migrations; `make check` green (worker 239 passed / 7 skipped, web 188); pgTAP 147 tests in 9 files pass. Use 147 in every doc.
+- **Verified only in the build sandbox (plain Postgres 16 + pgvector + pgmq + pgTAP, Supabase auth/storage stand-in; Docker registries and the embedding-model download were blocked):** `mcp_check.py` 20/20; load test 20/20 pending completed, non-LLM P95 4.5 s; the 7 DB-gated worker tests (9 incl. pure ones) pass; kitchen-sink axe 0 violations.
+- **Not run yet (exact next steps, real local stack):**
+  1. The 7 DB-gated tests: `make db-reset`, then `cd apps/worker && TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q tests/test_llm_pending.py tests/test_mcp_server.py` (they purge `review_jobs` and restore the vault embeddings they swap).
+  2. `make dev-local` (terminal 1), then `make mcp-check` (terminal 2) → rewrites `apps/worker/eval/mcp_check.md`.
+  3. Stop the worker, then `make load-test note="MacBook <model>, local Supabase"` → rewrites `apps/worker/eval/load_report.md`. Then update the "sandbox" lines in README → Round 3 improvements and `docs/REPORT.md` §3.
+  4. Signed-in axe on the Round 3 pages: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts` (with `make dev-local` running), and `E2E_WORKER=1 pnpm exec playwright test e2e/insights.spec.ts` after `make simulate-activity`.
+  5. Usability sessions (8–15) → `python scripts/usability_summary.py` → copy only its numbers into README and REPORT.
+  6. Merge: apply migrations `…100022`–`…100024` to cloud first, then PR → `main` (owner's go-ahead only).
+- **Gotchas:**
+  - `apps/web/types/database.ts`: the newer Supabase CLI formats generated output differently, so `make types` gives a huge formatting-only diff. Keep the committed file (the R3 additions were written in the generator's format and typecheck).
+  - Never `git add -A` in Jagpreet's checkout (unrelated untracked files); add files by name.
+  - Deleting a user who appears in `audit_events` fails (append-only trigger blocks the `on delete set null`); erasure needs a designed path (roadmap).
+  - `make check` resets the local DB. Keep load tests off the cloud stack.
+- **Still open from P16:** make the repo public (owner's go-ahead), move or add a release tag after the merge, `scripts/reset_demo.sh` and a recorded dry run before judging.
 
 ## Decisions log (append-only)
 
@@ -312,6 +311,12 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-31 | R3 | `contents.simulated` flag (backfilled from the "[Simulated] " title prefix; app users can't set it); `rule_gcs`/`insights_summary` take `p_include_simulated`; pill = simulated runs in the window and counted | Clarity Score on real data; the old pill came from append-only audit events and never turned off |
 | 2026-10-31 | R3 | "AI check pending": transient LLM failures save deterministic findings at once, keep content in ai_check, retry the same job via delayed pgmq message (60/120/240/480 s) sent in the same transaction; permanent failures still degrade at once | No silent degraded results; no lost retries; still one LLM pass per draft |
 | 2026-10-31 | R3 | Sandbox evidence ran on Postgres 16 + pgvector + pgmq 1.5.1 + pgTAP with a minimal Supabase auth/storage stand-in (Docker registries blocked); the full pgTAP suite passes there | Local Supabase images couldn't be pulled in the build sandbox |
+| 2026-10-31 | R3 | `.claude/settings.json`: `attribution.commit`/`attribution.pr` empty and `includeCoAuthoredBy: false`; Round 3 commits authored by Jagpreet Singh | Team rule; AI assistance stays disclosed in the README (General Rules 6–7) |
+| 2026-10-31 | R3 | Load test runs the worker's own `consume()` loop in-process with a quota-free fake LLM by default; `--simulate-rate-limit` answers 429 for a window; `--external-worker` uses the running worker (real LLM); refuses non-local DBs | Repeatable evidence without spending LLM quota; no live load test without the owner's go-ahead |
+| 2026-10-31 | R3 | "Non-LLM path" latency = submit → deterministic findings saved (`pending_since`, else `finished_at` minus the LLM stage); lost job = unfinished with no queued message | Matches the Round 3 done criterion |
+| 2026-10-31 | R3 | Usability tasks T5 (MCP key connect + revoke), T6 (Insights real-data filter) and a printed-banner comprehension probe for "AI check pending" | The pending state can't be staged on demand during a session |
+| 2026-10-31 | R3 | DB-gated worker tests restore the vault embeddings they replace | Running them on a dev stack must not break retrieval |
+| 2026-10-31 | R3 | Keep the committed `types/database.ts` despite the newer CLI's formatting | Regenerated diffs are formatting-only and huge |
 
 **Dependencies and licences** (append when adding any dependency):
 
