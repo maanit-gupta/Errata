@@ -112,6 +112,21 @@ def test_hero_draft_produces_exactly_the_expected_findings() -> None:
     ]
 
 
+def test_usability_caption_two_has_the_same_four_issues() -> None:
+    """docs/usability/tasks.md: both A/B captions carry the same four deterministic issues, so the
+    benchmark doesn't depend on LLM quota. Caption 1 is HERO (above)."""
+    caption_two = (
+        "Invest on Pay Wise this Diwali with 0% exit load and enjoy assured returns every year. "
+        "Meet our team on Oct 18 at Hall B, Chandigarh. Register now."
+    )
+    assert [(dim, codes) for dim, _, codes, _ in findings_for(caption_two)] == [
+        ("terms", ["G-07"]),
+        ("facts", ["F-048"]),
+        ("claims", ["CL-03"]),
+        ("facts", ["E-19", "E-11"]),
+    ]
+
+
 def test_hero_rewrites_are_deterministic_substitutions() -> None:
     doc = ingest("text", body=HERO)
     rewrites = {tuple(f.codes): f.rewrite for f in run_filters(doc, paywise_vault())}

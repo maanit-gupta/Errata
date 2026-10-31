@@ -6,8 +6,9 @@
 Writes ~200 archived "[Simulated]" contents with versions, finished review runs, findings,
 dismissals and review decisions, back-dated over the last 30 days, so the Guideline watchlist lands
 as in plan p.19: TV-04 UNCLEAR (~60), VS-02 watch (~73), CL-03 and G-07 clear. Every simulated
-content gets an `audit_events` row with `simulated: true`, which turns on the "Illustrative data"
-pill. Contents are archived through the real state machine (`private.apply_transition`) so they
+content is marked `contents.simulated = true` (R3), which turns on the "Illustrative data" pill
+while it is in the window and lets Insights leave it out ("Real reviews only"); it also gets an
+`audit_events` row with `simulated: true`. Contents are archived through the real state machine (`private.apply_transition`) so they
 never appear in anyone's drafts or review queue. Re-running first deletes earlier simulated
 contents (audit events are append-only and stay). Then `flag_unclear_rules` queues example
 generation for rules that crossed into UNCLEAR.
@@ -195,14 +196,15 @@ def apply(conn: Any, contents: list[SimContent]) -> None:
     facts = dict(cur.fetchall())
 
     conn.execute(
-        "delete from public.contents where org_id = %s and title like %s", (d.ORG_ID, PREFIX + "%")
+        "delete from public.contents where org_id = %s and (simulated or title like %s)",
+        (d.ORG_ID, PREFIX + "%"),
     )
     for c in contents:
         image = any(f.image for f in c.findings)
         content_id = conn.execute(
             "insert into public.contents (org_id, campaign_id, owner_id, title, channel, format, "
-            "created_at, updated_at) values (%s, %s, %s, %s, 'instagram_post', %s, %s, %s) "
-            "returning id",
+            "created_at, updated_at, simulated) "
+            "values (%s, %s, %s, %s, 'instagram_post', %s, %s, %s, true) returning id",
             (d.ORG_ID, d.DIWALI, CREATOR, c.title, "image" if image else "text", c.created,
              c.created),
         ).fetchone()[0]  # fmt: skip

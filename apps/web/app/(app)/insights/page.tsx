@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { EmptyState } from "@/components/brand/empty-state";
 import { IllustrativeDataPill } from "@/components/brand/illustrative-pill";
 import { KpiTile } from "@/components/brand/kpi-tile";
@@ -27,18 +28,22 @@ type Summary = {
   blockers_this_week: number;
   top_issues: Issue[];
   simulated: boolean;
+  simulated_versions: number;
+  include_simulated: boolean;
 };
 
 const ORDER: Record<GcsStatus, number> = { unclear: 0, watch: 1, clear: 2, insufficient: 3 };
 
-export default async function InsightsPage() {
+export default async function InsightsPage({ searchParams }: PageProps<"/insights">) {
   const session = await requireSession();
+  // R3: "Real reviews only" leaves out rows written by the activity simulator.
+  const realOnly = (await searchParams).data === "real";
   if (!can(session.role, "view_insights")) return <NoAccess what="insights" />;
   const supabase = await createClient();
 
   const [{ data: summaryRaw, error }, { data: scores }, { data: suggestions }] = await Promise.all([
-    supabase.rpc("insights_summary", { p_org: session.orgId }),
-    supabase.rpc("rule_gcs", { p_org: session.orgId }),
+    supabase.rpc("insights_summary", { p_org: session.orgId, p_include_simulated: !realOnly }),
+    supabase.rpc("rule_gcs", { p_org: session.orgId, p_include_simulated: !realOnly }),
     supabase
       .from("example_suggestions")
       .select("id, rule_id, examples, status")
@@ -122,10 +127,18 @@ export default async function InsightsPage() {
         description="Which rules are clear, which keep getting dismissed, and where reviews slow down."
         meta={summary.simulated ? <IllustrativeDataPill /> : null}
       />
+      {summary.simulated_versions > 0 ? (
+        <DataFilter realOnly={realOnly} simulated={summary.simulated_versions} />
+      ) : null}
 
       {!summary.versions_checked && !rows.length ? (
-        <EmptyState glyph="chart" title="Not enough reviews yet">
-          Guideline Clarity Scores appear once a rule has at least 10 findings.
+        <EmptyState
+          glyph="chart"
+          title={realOnly ? "No real reviews yet" : "Not enough reviews yet"}
+        >
+          {realOnly
+            ? "Everything in this window is simulated. Real reviews appear here as people submit drafts."
+            : "Guideline Clarity Scores appear once a rule has at least 10 findings."}
         </EmptyState>
       ) : (
         <div className="space-y-10">
@@ -184,5 +197,41 @@ export default async function InsightsPage() {
         </div>
       )}
     </>
+  );
+}
+
+/** Show or hide simulator rows. Two links, not tabs: it filters the same page. */
+function DataFilter({ realOnly, simulated }: { realOnly: boolean; simulated: number }) {
+  const item = (active: boolean) =>
+    `inline-flex h-8 items-center rounded-[2px] px-3 text-sm font-semibold whitespace-nowrap ${
+      active ? "bg-accent text-accent-fg" : "text-fg hover:bg-hover"
+    }`;
+  return (
+    <div className="mb-8 flex flex-wrap items-center gap-3">
+      <nav
+        aria-label="Data shown"
+        className="border-outline bg-elevated inline-flex gap-1 rounded-sm border-2 p-1"
+      >
+        <Link
+          href="/insights"
+          aria-current={!realOnly ? "true" : undefined}
+          className={item(!realOnly)}
+        >
+          All data
+        </Link>
+        <Link
+          href="/insights?data=real"
+          aria-current={realOnly ? "true" : undefined}
+          className={item(realOnly)}
+        >
+          Real reviews only
+        </Link>
+      </nav>
+      <p className="text-fg-muted text-sm">
+        {realOnly
+          ? `Hiding ${simulated} simulated version${simulated === 1 ? "" : "s"} from this window.`
+          : `Includes ${simulated} simulated version${simulated === 1 ? "" : "s"} (illustrative history).`}
+      </p>
+    </div>
   );
 }

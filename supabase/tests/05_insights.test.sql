@@ -98,8 +98,8 @@ select is((public.insights_summary('00000000-0000-4000-8000-0000000000a1') ->> '
   'not simulated');
 insert into public.audit_events (org_id, event)
 values ('00000000-0000-4000-8000-0000000000a1', '{"type":"simulated_activity","simulated":true}');
-select is((public.insights_summary('00000000-0000-4000-8000-0000000000a1') ->> 'simulated')::boolean, true,
-  'a simulated audit event turns on the Illustrative data pill');
+select is((public.insights_summary('00000000-0000-4000-8000-0000000000a1') ->> 'simulated')::boolean, false,
+  'a simulated audit event alone no longer turns on the pill (R3: rows in the window decide)');
 
 -- Access
 set local role authenticated;

@@ -67,3 +67,34 @@ test("an UNCLEAR rule's generated examples are approved into a new version", asy
   await expect(row(page, "TV-04")).toContainText("added 2 generated examples");
   await expect(row(page, "TV-04")).toContainText("insufficient data");
 });
+
+// R3: "Real reviews only" drops simulator rows; the Illustrative pill follows what is shown.
+test("the real-data filter hides simulated rows and the Illustrative pill", async ({ page }) => {
+  test.skip(!RUN, "set E2E_WORKER=1 after `make simulate-activity` (local stack + worker)");
+  await signInAs(page, "Brand admin");
+  await page.goto("/insights");
+  const filter = page.getByRole("navigation", { name: "Data shown" });
+  await expect(filter.getByRole("link", { name: "All data" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await expect(page.getByText("Illustrative data")).toBeVisible();
+
+  await filter.getByRole("link", { name: "Real reviews only" }).click();
+  await page.waitForURL(/\?data=real$/);
+  await expect(filter.getByRole("link", { name: "Real reviews only" })).toHaveAttribute(
+    "aria-current",
+    "true",
+  );
+  await expect(page.getByText("Illustrative data")).toHaveCount(0);
+  await expect(page.getByText(/Hiding \d+ simulated version/)).toBeVisible();
+  // TV-04's simulated history is gone from the real-only watchlist.
+  await expect(page.getByText("TV-04 · GCS 60 · UNCLEAR")).toHaveCount(0);
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+    .analyze();
+  expect(
+    results.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
+});

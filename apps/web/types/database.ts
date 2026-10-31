@@ -256,6 +256,7 @@ export type Database = {
           owner_id: string
           risk_score: number | null
           route_to: string | null
+          simulated: boolean
           state: Database["public"]["Enums"]["content_state"]
           title: string
           updated_at: string
@@ -271,6 +272,7 @@ export type Database = {
           owner_id: string
           risk_score?: number | null
           route_to?: string | null
+          simulated?: boolean
           state?: Database["public"]["Enums"]["content_state"]
           title: string
           updated_at?: string
@@ -286,6 +288,7 @@ export type Database = {
           owner_id?: string
           risk_score?: number | null
           route_to?: string | null
+          simulated?: boolean
           state?: Database["public"]["Enums"]["content_state"]
           title?: string
           updated_at?: string
@@ -1113,7 +1116,7 @@ export type Database = {
         Returns: boolean
       }
       insights_summary: {
-        Args: { p_org: string; p_since?: string }
+        Args: { p_include_simulated?: boolean; p_org: string; p_since?: string }
         Returns: Json
       }
       is_org_member: { Args: { org: string }; Returns: boolean }
@@ -1196,7 +1199,7 @@ export type Database = {
       }
       revoke_mcp_token: { Args: { p_id: string }; Returns: boolean }
       rule_gcs: {
-        Args: { p_org: string; p_since?: string }
+        Args: { p_include_simulated?: boolean; p_org: string; p_since?: string }
         Returns: {
           card_status: Database["public"]["Enums"]["rule_status"]
           code: string
