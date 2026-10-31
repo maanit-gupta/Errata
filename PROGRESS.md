@@ -35,6 +35,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | R1 | Redesign foundation: DESIGN.md, tokens, fonts, lint | J | done | J (Claude) | UI/UX_jagpreet | 2026-10-28; DB-dependent gates not run here (local Supabase unavailable, see Handoff) |
 | R2–R6 | Primitives, illustrations, shell, landing, sign-in | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; first pass done; 21st.dev ports not yet; signed-in routes unverified here |
 | R7–R10 | Feature screens (drafts, review, vault, insights, audit, settings) | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; restyled via shared components only |
+| R3 | Round 3 improvements: MCP server, real-user testing kit, AI-check-pending + load | Both | in-progress | J (Claude) | round3/improvements | 2026-10-31; branch only, not merged to main |
 
 ## Handoff (latest — overwrite each phase)
 

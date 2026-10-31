@@ -77,3 +77,10 @@ REVIEW_CONSUMERS: Final = 3
 HEAVY_JOB_SLOTS: Final = 1
 LLM_RATE_LIMIT_COOLDOWN_S: Final = 60  # skip a provider this long after it stays 429 (router.py)
 DB_POOL_MAX: Final = 8  # REVIEW_CONSUMERS + 1 vault long-polls, plus per-job queries
+
+# R3: read-only MCP server (mcp.py).
+MCP_RATE_PER_MINUTE: Final = 60  # calls per token per minute (in-process; one worker instance)
+MCP_MAX_RESULTS: Final = 10  # search_brand_rules limit cap
+MCP_MAX_QUERY_CHARS: Final = 500
+MCP_MAX_BODY_BYTES: Final = 32_768
+MCP_AUTH_FAILURES_PER_MINUTE: Final = 30  # bad/missing tokens per client address

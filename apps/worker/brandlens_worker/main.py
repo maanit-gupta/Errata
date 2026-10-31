@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from brandlens_worker import __version__, config
 from brandlens_worker.jobs import build_registry
 from brandlens_worker.logs import configure_logging
+from brandlens_worker.mcp import build_router as build_mcp_router
 from brandlens_worker.settings import Settings, get_settings
 
 log = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ def create_app(settings: Settings | None = None, *, run_queue: bool = True) -> F
             await _stop(state, app)
 
     app = FastAPI(title="BrandLens worker", version=__version__, lifespan=lifespan)
+    app.include_router(build_mcp_router())  # R3: read-only MCP server, POST /v1/mcp
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
@@ -120,6 +122,12 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
     tracer = Tracer.from_settings(settings, enabled=settings.env.lower() != "test")
     services: dict[str, Any] = {"settings": settings, "tracer": tracer}
     app.state.services = services
+    # MCP shares the jobs' embedder (one ONNX model per process; it loads on first use).
+    from brandlens_worker.embeddings import Embedder
+    from brandlens_worker.mcp import PgMcpStore
+
+    services["embedder"] = Embedder(settings.embedding_model, settings.model_cache_dir)
+    services["mcp_store"] = PgMcpStore(pool)
 
     registry = build_registry()
     backend = PgmqBackend(pool)
