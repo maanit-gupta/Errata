@@ -100,4 +100,20 @@ Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%
 - **Limits:** the creator's draft page doesn't show the kill-switch reason yet (the review page and the audit trail do). File versions get a receipt without a content hash.
 - **Didn't run:** the real Supabase stack (CLI). The Realtime refresh of the badge needs the real stack.
 - **Verify on the MacBook:** `make db-reset && make test-db` (expect 172 pgTAP); `cd apps/worker && TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q tests/test_fact_kill_switch_db.py tests/test_llm_pending.py tests/test_mcp_server.py`.
-- **Next step:** Hero 5 (shadow sandbox): `/v1/heroes/simulate-rule` with authenticated, org-scoped access, the repo's real GCS definitions, bge-small only, "insufficient data" under 10 findings, labelled as a projection.
+- **Next step:** Hero 5 (done, see below).
+
+### 2026-11-01 14:56 IST: Hero 5, GCS shadow backtest (commit `9f93dc5`)
+
+- **Did:**
+  - `apps/worker/brandlens_worker/heroes/gcs_shadow.py` (pure) and `heroes/api.py`: `POST /v1/heroes/simulate-rule`.
+  - **Auth:** the caller's Supabase session token, verified with Supabase Auth (`GET /auth/v1/user`, cached for 60 s); the user must be brand admin or manager in the **rule's** org (a wrong role gets the same 404 as a missing rule); strict Pydantic input (`extra="forbid"`); 30 runs a minute per user; logs carry IDs, counts and ms only.
+  - **Current GCS** = SQL `rule_gcs()` (the dashboard's own number, same 90-day window and real-data filter).
+  - **Projection:** re-scores only the dismissal rate on the last 30 findings with the worker's embedder (closer to the "do" anchor than to the rule + "don't" anchor → stops triggering). False positives removed **and** true positives lost are both reported; override and low-confidence rates are held, not invented; fewer than 10 findings → "insufficient data" with no numbers.
+  - The spec's fallback numbers (60→91, 0.42→0.08), its `× 0.4` and its version-level decisions join are **not** used. Python `round()` matches SQL `round(double)` (both half-to-even; checked in psql: `round(72.5::double precision) = 72`).
+  - Web: server action `simulateRuleShadow` (forwards the user's own token, server-side; needs `WORKER_URL`) and `components/insights/gcs-shadow-simulator.tsx` in the suggested-examples drawer (idle, loading, error, insufficient-data and projection states; honours the Insights real-data filter).
+- **Measured (sandbox, stand-in embedder):** unit tests 12/12 (projection rules, insufficient data at n = 0/1/9, no current score → no numbers, API 401/404/422/429, logs). DB test on plain Postgres: 30 findings on TV-04 backtested **twice → identical output**; both calls together **0.15 s**; `current_gcs` equals SQL `rule_gcs`; insufficient data at 5 findings. Worker 309 passed / 19 skipped; web 191; DB tests 19/19; kitchen-sink axe 0 violations in both themes.
+- **PASS IF (Hero 5):** 30-draft backtest < 60 s and identical output twice → **PASS** (plain Postgres, stand-in embedder). Timing with real bge-small: needs the MacBook.
+- **Limits:** the "do vs don't anchor" rule (margin ≥ 0) is uncalibrated, like the MCP claim threshold; the projection is labelled as one in the UI and the API.
+- **Didn't run:** the real worker with real bge-small; the Next server action → worker call (needs `WORKER_URL` and a signed-in session on the real stack).
+- **Verify on the MacBook:** run the DB tests command (see Hero 2) plus `tests/test_gcs_shadow_db.py`; then with `make dev-local` and `WORKER_URL=http://localhost:8000` exported for the web app, `make simulate-activity`, sign in as Brand admin → Insights → TV-04 → Review 3 examples → "Run on recent findings".
+- **Next step:** docs (REPORT, CHANGELOG-R3, README, PROGRESS) marking Heroes 2–5 as extras with measured results; list migrations `…100025`/`…100026` for the cloud push.
