@@ -8,6 +8,7 @@ import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
 import type { Intent } from "@/lib/drafts/intent";
 import { createClient } from "@/lib/supabase/server";
+import { parseVisualFix } from "@/lib/drafts/visual-fix";
 import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 export const metadata = { title: "Draft" };
@@ -59,7 +60,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
     ? await supabase
         .from("findings")
         .select(
-          "id, dimension, severity, confidence, source, quote, span, explanation, rewrite, status, dismiss_reason, rule_id, fact_id, wcag_ref, model_version, prompt_version, resolved_at",
+          "id, dimension, severity, confidence, source, quote, span, explanation, rewrite, status, dismiss_reason, rule_id, fact_id, wcag_ref, model_version, prompt_version, resolved_at, visual_fix",
         )
         .eq("run_id", run.id)
         .neq("status", "superseded")
@@ -155,6 +156,7 @@ export default async function DraftPage({ params }: PageProps<"/drafts/[id]">) {
       target: spanTarget(r.span),
       box: spanBox(r.span),
       page: spanPage(r.span),
+      visualFix: parseVisualFix(r.visual_fix),
       citations,
     } as FindingView;
   });

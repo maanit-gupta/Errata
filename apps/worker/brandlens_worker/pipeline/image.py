@@ -15,6 +15,7 @@ from brandlens_worker import config
 from brandlens_worker.pipeline.filters.base import cap_severity
 from brandlens_worker.pipeline.types import Doc, Finding, Rule, Segment, Vault
 from brandlens_worker.vision import RGB, Box, decode_image, encode_png, overlap_fraction
+from brandlens_worker.vision.autoheal import suggest_fix
 from brandlens_worker.vision.colour import PaletteColour, Warmth, dominant_fills, warmth
 from brandlens_worker.vision.contrast import TextContrast, measure_text_contrast, rgb_to_hex
 from brandlens_worker.vision.logo import LogoMatch, LogoTemplate, clear_space, detect_logo
@@ -225,6 +226,14 @@ def check_image(
             continue
         if analysis.lossy:
             explanation += " (Measured on a JPEG, so treat the ratio as an estimate.)"
+        # Hero 3: an on-palette colour swap that passes, shown as a preview; applied only on Accept.
+        heal = (
+            suggest_fix(
+                rgb_to_hex(tc.glyph), rgb_to_hex(tc.background), kit.palette, large=tc.large
+            )
+            if not tc.passes
+            else None
+        )
         out.append(
             Finding(
                 dimension="access",
@@ -236,6 +245,7 @@ def check_image(
                 wcag_ref="1.4.3" if not tc.passes else None,
                 codes=([access.code] if access else []) + ([] if tc.passes else ["WCAG 1.4.3"]),
                 bbox=line.box,
+                visual_fix=heal.to_json() if heal else None,
             )
         )
 

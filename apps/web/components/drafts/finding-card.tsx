@@ -10,10 +10,12 @@ import { IntentCheckTag } from "@/components/brand/intent-check-tag";
 import { SeverityBadge, type Severity } from "@/components/brand/severity-badge";
 import { ColourSwatches } from "@/components/brand/colour-swatches";
 import { SourceTag } from "@/components/brand/source-tag";
+import { VisualAutoHealPreview } from "@/components/review/visual-auto-heal-preview";
 import { Button } from "@/components/ui/button";
 import { fieldClass } from "@/components/ui/input";
 import { DISMISS_REASONS } from "@/lib/drafts/intent";
 import { parseSwatches } from "@/lib/drafts/swatches";
+import type { VisualFix } from "@/lib/drafts/visual-fix";
 import { cn } from "@/lib/utils";
 
 export type Citation = {
@@ -48,6 +50,8 @@ export type FindingView = {
   resolved_at?: string | null;
   /** Display name of whoever resolved it (review page). */
   resolvedBy?: string | null;
+  /** Hero 3: palette-only contrast fix suggested on a WCAG 1.4.3 finding (never auto-applied). */
+  visualFix?: VisualFix | null;
 };
 
 export { HUMAN_CONFIDENCE };
@@ -261,6 +265,7 @@ export function FindingCard({
           </div>
           <p className="text-fg-muted">{f.explanation}</p>
           {swatches ? <ColourSwatches swatches={swatches} /> : null}
+          {f.visualFix ? <VisualAutoHealPreview fix={f.visualFix} sample={f.quote} /> : null}
 
           <div className="space-y-1.5">
             <p className="mono-label text-fg-faint flex items-center gap-2">
@@ -334,9 +339,20 @@ export function FindingCard({
 
           {canAct && !resolved && !editing ? (
             <div className="flex flex-wrap gap-2">
+              {fixInDesign && f.visualFix ? (
+                <Button
+                  size="sm"
+                  disabled={busy}
+                  aria-describedby={`${id}-design`}
+                  onClick={() => run(() => onApply(f, "", "accepted"))}
+                >
+                  <Check aria-hidden /> Accept palette fix
+                </Button>
+              ) : null}
               {fixInDesign ? (
                 <Button
                   size="sm"
+                  variant={f.visualFix ? "secondary" : undefined}
                   disabled={busy}
                   aria-describedby={`${id}-design`}
                   onClick={() => run(() => onApply(f, "", "edited"))}

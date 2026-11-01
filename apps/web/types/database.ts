@@ -517,6 +517,7 @@ export type Database = {
           span: Json
           status: Database["public"]["Enums"]["finding_status"]
           version_id: string
+          visual_fix: Json | null
           wcag_ref: string | null
         }
         Insert: {
@@ -542,6 +543,7 @@ export type Database = {
           span: Json
           status?: Database["public"]["Enums"]["finding_status"]
           version_id: string
+          visual_fix?: Json | null
           wcag_ref?: string | null
         }
         Update: {
@@ -567,6 +569,7 @@ export type Database = {
           span?: Json
           status?: Database["public"]["Enums"]["finding_status"]
           version_id?: string
+          visual_fix?: Json | null
           wcag_ref?: string | null
         }
         Relationships: [

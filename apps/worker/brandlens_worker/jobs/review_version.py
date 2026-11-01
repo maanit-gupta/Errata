@@ -176,6 +176,7 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         "source": f.source,
         "explanation": explanation,
         "rewrite": f.rewrite,
+        "visual_fix": f.visual_fix,
     }
 
 
@@ -461,9 +462,9 @@ async def persist(
                 "(org_id, version_id, run_id, dimension, rule_id, fact_id, "
                 "wcag_ref, quote, span, severity, confidence, source, explanation, rewrite, "
                 "model_version, prompt_version, status, dismiss_reason, dismiss_note, resolved_by, "
-                "resolved_at) "
+                "resolved_at, visual_fix) "
                 "values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, "
-                "%s, %s, %s, %s, case when %s <> 'open' then now() end)",
+                "%s, %s, %s, %s, case when %s <> 'open' then now() end, %s)",
                 (
                     p.org_id, p.version_id, p.run_id, r["dimension"], r["rule_id"], r["fact_id"],
                     r["wcag_ref"], r["quote"], Jsonb(r["span"]), r["severity"], r["confidence"],
@@ -471,6 +472,7 @@ async def persist(
                     r.get("model_version"), r.get("prompt_version"),
                     r.get("status", "open"), r.get("dismiss_reason"), r.get("dismiss_note"),
                     r.get("resolved_by"), r.get("status", "open"),
+                    Jsonb(r["visual_fix"]) if r.get("visual_fix") else None,
                 ),
             )  # fmt: skip
         if retry_in is not None:

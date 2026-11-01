@@ -166,6 +166,8 @@ class Finding:
     bbox: tuple[int, int, int, int] | None = None
     quote: str | None = None  # overrides the text slice (image and alt-text targets)
     page: int | None = None  # PDFs: 1-based page of an image-target finding
+    # R3 Hero 3: palette-only contrast fix suggestion (vision/autoheal.py); never auto-applied.
+    visual_fix: dict[str, Any] | None = None
 
     @property
     def cited(self) -> bool:

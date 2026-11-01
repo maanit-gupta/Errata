@@ -1,0 +1,29 @@
+{
+  "_about": "Hero 3 labelled samples: a failing text/background pair as measured by vision/contrast.py, the palette to fix it with, and whether an on-palette fix exists. 'paywise' is the seeded PayWise palette asset; 'pastel' is a palette with no passing pair.",
+  "palettes": {
+    "paywise": [["Vermilion", "#D63A24"], ["Ink", "#141414"], ["Paper", "#F8F7F4"], ["Sand", "#E9DFC9"], ["Terracotta", "#B5562F"], ["Leaf", "#2F6B3A"]],
+    "pastel": [["Paper", "#F8F7F4"], ["Sand", "#E9DFC9"], ["Blush", "#FFE0D6"]]
+  },
+  "samples": [
+    {"id": "01-grey-on-white", "text": "#888888", "bg": "#FFFFFF", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "02-vermilion-on-terracotta", "text": "#D63A24", "bg": "#B5562F", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "03-sand-on-paper", "text": "#E9DFC9", "bg": "#F8F7F4", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "04-terracotta-on-ink", "text": "#B5562F", "bg": "#141414", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "05-leaf-on-ink", "text": "#2F6B3A", "bg": "#141414", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "06-white-on-sand", "text": "#FFFFFF", "bg": "#E9DFC9", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "07-grey-on-paper", "text": "#A0A0A0", "bg": "#F8F7F4", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "08-grey-on-charcoal", "text": "#777777", "bg": "#222222", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "09-peach-on-white", "text": "#F0C0B0", "bg": "#FFFFFF", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "10-blue-on-leaf", "text": "#5A7FA0", "bg": "#2F6B3A", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "11-beige-on-white", "text": "#C8BCA0", "bg": "#FFFFFF", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "12-orange-on-white", "text": "#FF8A65", "bg": "#FFFFFF", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "13-grey-on-light-grey", "text": "#9E9E9E", "bg": "#EEEEEE", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "14-dark-grey-on-leaf", "text": "#4A4A4A", "bg": "#2F6B3A", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "15-sand-on-terracotta", "text": "#E9DFC9", "bg": "#B5562F", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "16-vermilion-on-ink", "text": "#D63A24", "bg": "#141414", "large": false, "palette": "paywise", "expect_fix": true},
+    {"id": "17-large-grey-on-white", "text": "#B0B0B0", "bg": "#FFFFFF", "large": true, "palette": "paywise", "expect_fix": true},
+    {"id": "18-large-vermilion-on-terracotta", "text": "#D63A24", "bg": "#B5562F", "large": true, "palette": "paywise", "expect_fix": true},
+    {"id": "19-pastel-sand-on-paper", "text": "#E9DFC9", "bg": "#F8F7F4", "large": false, "palette": "pastel", "expect_fix": false},
+    {"id": "20-pastel-grey-on-white", "text": "#DDDDDD", "bg": "#FFFFFF", "large": true, "palette": "pastel", "expect_fix": false}
+  ]
+}

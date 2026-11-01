@@ -20,6 +20,7 @@ import { signedPages } from "@/lib/drafts/pages";
 import { spanBox, spanPage } from "@/lib/drafts/span";
 import { createClient } from "@/lib/supabase/server";
 import { can as canDo } from "@/lib/workflow/permissions";
+import { parseVisualFix } from "@/lib/drafts/visual-fix";
 import { SIGNED_URL_TTL_S } from "@/lib/limits";
 
 export const metadata = { title: "Review" };
@@ -117,7 +118,7 @@ export default async function ReviewContentPage({
         ? supabase
             .from("findings")
             .select(
-              "id, version_id, run_id, dimension, severity, status, quote, span, explanation, source, confidence, resolved_by, resolved_at, dismiss_reason, rule_id, fact_id, wcag_ref, rewrite, model_version, prompt_version, created_at",
+              "id, version_id, run_id, dimension, severity, status, quote, span, explanation, source, confidence, resolved_by, resolved_at, dismiss_reason, rule_id, fact_id, wcag_ref, rewrite, model_version, prompt_version, created_at, visual_fix",
             )
             .in("version_id", versionIds)
             .order("created_at", { ascending: false })
@@ -241,6 +242,7 @@ export default async function ReviewContentPage({
       page: spanPage(f.span),
       explanation: f.explanation,
       rewrite: f.rewrite,
+      visualFix: parseVisualFix(f.visual_fix),
       status: f.status,
       dismiss_reason: f.dismiss_reason,
       model_version: f.model_version,

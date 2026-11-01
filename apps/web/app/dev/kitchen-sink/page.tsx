@@ -29,10 +29,12 @@ import { STATE_LABELS, StateBadge, type ContentState } from "@/components/brand/
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { WordCounter } from "@/components/brand/word-counter";
 import { Wordmark } from "@/components/brand/wordmark";
+import { VisualAutoHealPreview } from "@/components/review/visual-auto-heal-preview";
 import { McpIntegration } from "@/components/settings/mcp-integration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
+import { VISUAL_FIX_LARGE, VISUAL_FIX_NORMAL } from "./samples";
 import {
   DrawerDemo,
   FindingCardsDemo,
@@ -67,7 +69,7 @@ function Row({ children }: { children: ReactNode }) {
   return <div className="flex flex-wrap items-center gap-3">{children}</div>;
 }
 
-function Showcase({ theme }: { theme: "dark" | "light" }) {
+function Showcase({ theme, mcpPreview }: { theme: "dark" | "light"; mcpPreview: boolean }) {
   return (
     <div data-theme={theme} className="bg-canvas text-fg space-y-8 p-6">
       <p className="mono-label text-accent-soft">{theme} theme</p>
@@ -342,11 +344,16 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
         <AiPendingBanner attempt={1} maxAttempts={5} nextAt="2026-10-31T13:12:00Z" />
       </Section>
 
+      <Section title="Visual auto-heal preview (Hero 3)">
+        <VisualAutoHealPreview fix={VISUAL_FIX_NORMAL} sample="Register now" />
+        <VisualAutoHealPreview fix={VISUAL_FIX_LARGE} sample="Diwali SIP" />
+      </Section>
+
       <Section title="AI tools (MCP) card">
         <McpIntegration
           endpoint="https://worker.example/v1/mcp"
           canRevokeOthers
-          previewKey={theme === "light" ? `bl_mcp_${"0".repeat(48)}` : undefined}
+          previewKey={mcpPreview && theme === "light" ? `bl_mcp_${"0".repeat(48)}` : undefined}
           keys={[
             {
               id: `k1-${theme}`,
@@ -385,7 +392,10 @@ function Showcase({ theme }: { theme: "dark" | "light" }) {
 }
 
 /** Visual QA page and axe target for components (DESIGN.md §10). Not served in production. */
-export default function KitchenSink() {
+/** `?mcpPreview=1` opens the MCP key dialog in its "shown once" state (a modal: it makes the rest
+ * of the page inert, so axe runs on both views separately). */
+export default async function KitchenSink({ searchParams }: PageProps<"/dev/kitchen-sink">) {
+  const mcpPreview = (await searchParams).mcpPreview === "1";
   if (process.env.NODE_ENV === "production") notFound();
   return (
     <main id="main" className="min-h-dvh">
@@ -397,8 +407,8 @@ export default function KitchenSink() {
         />
       </div>
       <div className="grid xl:grid-cols-2">
-        <Showcase theme="dark" />
-        <Showcase theme="light" />
+        <Showcase theme="dark" mcpPreview={mcpPreview} />
+        <Showcase theme="light" mcpPreview={mcpPreview} />
       </div>
     </main>
   );
