@@ -118,7 +118,7 @@ Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%
 - **Verify on the MacBook:** run the DB tests command (see Hero 2) plus `tests/test_gcs_shadow_db.py`; then with `make dev-local` and `WORKER_URL=http://localhost:8000` exported for the web app, `make simulate-activity`, sign in as Brand admin → Insights → TV-04 → Review 3 examples → "Run on recent findings".
 - **Next step:** docs (done, see below).
 
-### 2026-11-01 15:00 IST: docs for the extras + handoff
+### 2026-11-01 14:58 IST: docs for the extras + handoff
 
 - **Did:** README (an "Extras" table under Round 3 improvements, test totals, an AI-assistance row), `docs/REPORT.md` (an extras table with PASS IF, result and source per hero), `docs/CHANGELOG-R3.md` (the extras plus a "spec said / built / why" deviations table), `docs/PRIVACY-SECURITY-A11Y.md` (new stored data, the `/v1/heroes` auth), `PROGRESS.md` (R3.5 row, 8 decisions, handoff; merge now needs migrations `…100022`–`…100026`).
 - **State at hand-off:** every hero meets its PASS IF in the sandbox or on plain Postgres; **none has run on the real stack**. Totals: pgTAP 172/172 (11 files), worker 309 passed / 19 skipped, web 191 passed, DB-gated tests 19/19, lint/mypy/tsc/Prettier green.
