@@ -1,0 +1,57 @@
+# Round 3 session log
+
+- **Project:** Errata (formerly BrandLens; internal identifiers still say `brandlens`). Team 9thHACK: Jagpreet Singh (team leader) and Maanit Gupta, SRMIST. Inkloom AI brand-governance problem statement, We Code Coders. Round 3 (final) submission: **2 Nov 2026**.
+- **Branch:** `round3/improvements` (never `main`). Repo: https://github.com/maanit-gupta/Errata
+- **How to resume:** read this file, then [`PROGRESS.md`](../PROGRESS.md) and [`CLAUDE.md`](../CLAUDE.md), then continue at the last **Next step** at the bottom of the running log.
+- **Rules in force (owner, 2026-10-31/11-01):** work only on `round3/improvements`; never push to `main`, merge or open a PR into `main` without the owner's go-ahead; no cloud actions (Supabase `db push`, Vercel/Render changes, live load tests) without the go-ahead; `make check` before every push; no secrets anywhere; no `Co-Authored-By` / `Claude-Session` / "Generated with Claude Code" lines; commit as Jagpreet Singh; add files by name (never `git add -A`; an unrelated untracked PDF sits in the owner's folder); keep the README AI-assistance disclosure accurate; report only measured numbers; never invent usability results; no history rewrite until the owner says "rewrite history".
+
+## History so far
+
+Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`, `docs/REPORT.md`, `docs/CHANGELOG-R3.md` and `git log`.
+
+- **Round 1 (25 Oct):** plan PDF submitted as BrandLens; renamed Errata and rebuilt on 29 Oct (27 pages, plus a Round 3 page and the repo link). *Not verifiable from the repo* (`docs/plan.pdf` is the only copy; PROGRESS.md doesn't record the submission date).
+- **Round 2:** P00–P16 done: the six-stage pipeline, citation gate, vault, workflow, image/PDF checks, Guideline Clarity Score, eval gate, hardening. Golden set: blocker recall 1.00, 0 uncited findings, P95 15.2 s (target 15 s, just missed; README → Results). UI redesign (flat, outlined, light-first) and the Errata rename merged to `main` on 29 Oct. Live app https://brandlens-app.vercel.app (Vercel) plus the Render worker. P16 is still `partial` in PROGRESS.md (team items: usability sessions, repo public, demo dry run).
+- **Round 3 commitments:** (1) read-only MCP server; (2) real-user testing plus the Clarity Score on real data; (3) load test plus an "AI check pending" state.
+- **Done on `round3/improvements` (none on `main`), from `git log origin/main..round3/improvements`:**
+
+  | Commit | What | Author |
+  |---|---|---|
+  | `7ed8614` | First MCP server (campaign-scoped tokens), later **replaced** | Claude |
+  | `6968cd7` | Its settings card, `mcp_check.py`, docs, later **replaced** | Claude |
+  | `eeae79e` | Clarity Score real-data filter (`contents.simulated`) + usability kit | Claude |
+  | `14d2d44` | "AI check pending" (delayed pgmq retry, banner, DB tests) | Claude |
+  | `0176583` | MCP server rebuilt from the build spec, read-only subset: `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource, prompt; personal `bl_mcp_` keys | Claude |
+  | `d19c525` | PROGRESS.md decisions-table fix | Claude |
+  | `e9f84ba` | `.claude/settings.json`: attribution trailers off | Jagpreet Singh |
+  | `a6ec0fb` | Load test (`make load-test`, simulated rate limit) | Jagpreet Singh |
+  | `5c0aa39` | Usability kit: T5/T6 and the pending-banner probe | Jagpreet Singh |
+  | `a6229a1` | REPORT, CHANGELOG-R3, PRIVACY-SECURITY-A11Y, README, handoff | Jagpreet Singh |
+
+  Hashes change if history is rewritten (prepared, not run; commands are in the 2026-10-31 chat and reproduced in the log below).
+- **Verified on Jagpreet's MacBook, real Supabase stack (2026-10-31, at `d19c525`):** `make db-reset` applies all 24 migrations; `make check` green; pgTAP 9 files / 147 tests pass; worker 239 passed / 7 skipped; web 188 passed. Use 147 everywhere.
+- **Not yet done by Jagpreet:** `make mcp-check` and `make load-test` on the MacBook; the 7 DB-gated worker tests on his stack; the usability sessions (8–15 people); the demo video; applying migrations `…100022`–`…100024` to the cloud project; merging; the form submission.
+
+### Mismatches found while checking
+
+1. The seed lists the MCP server as `0176583, 6968cd7, 7ed8614`. Only `0176583` is the shipped server: `7ed8614` and `6968cd7` were the first campaign-token version, which `0176583` replaced (migration `…100022` was rewritten before it was applied anywhere).
+2. The seed omits `d19c525` (PROGRESS fix) and `e9f84ba` (attribution settings).
+3. Six of the ten branch commits are still authored "Claude <noreply@anthropic.com>" with trailer lines; the four since `e9f84ba` are authored by Jagpreet Singh. The prepared history rewrite would fix the six.
+4. Test counts: the MacBook figure (worker 239 passed / 7 skipped) was measured at `d19c525`. Commit `5c0aa39` added 2 tests, so the MacBook should now show 241 / 7. *Expected, not measured.* The sandbox shows 239 passed / 9 skipped at `a6229a1` (2 extra skips need the embedding model).
+5. `docs/REPORT.md` and the README describe the MCP, load and DB-gated results as **sandbox / plain Postgres**. That's consistent with the seed's "not yet done by Jagpreet" list.
+
+## Running log (newest at the bottom)
+
+### 2026-11-01 14:30 IST: session continuity + plan for the V5 extras (Heroes 2–5)
+
+- **Did:** created this file; saved the owner's spec as [`docs/specs/V5_remaining_heroes_spec.md`](specs/V5_remaining_heroes_spec.md); checked the branch (`a6229a1` local = remote; no history rewrite yet); checked the seed against the repo (mismatches above).
+- **Commands:** `git fetch`, `git log origin/main..HEAD`, `grep` over PROGRESS.md.
+- **Plan (timebox ~5 h; build order 3 → 4 → 2 → 5; stop any hero that fails its own PASS IF):**
+
+  | Order | Hero | Budget | Approach (adapted to the repo) | Cut first if short |
+  |---|---|---|---|---|
+  | 1 | **3 Visual auto-heal** | 1 h | `vision/autoheal.py` reuses `vision/contrast.py`; candidates come only from the org's palette asset (no hardcoded hexes); the suggestion is stored on the WCAG contrast finding and shown as a preview; nothing is applied until **Accept**. 20 labelled samples as fixtures | The preview UI polish |
+  | 2 | **4 Cross-modal** | 1.25 h | `pipeline/cross_modal.py`: dates, percentages and times across caption, OCR text (from the existing OCR stage) and an optional landing-page text; cites the vault fact that applies, else no finding (citation gate); 20 labelled posts (10 conflicting, 10 consistent) | URL text input in the UI |
+  | 3 | **2 Manifest + kill-switch** | 1.5 h | New migration: `content_fact_dependencies`, `versions.content_hash`/`publish_manifest`; system transitions approved/publish_ready → needs_revision **through `private.apply_transition`** (reason + audit); trigger on fact edits plus a sweep function for expiry that the worker calls every minute; dependencies written from the deterministic facts stage; manifest recorded at publish_ready; badge in the review UI | The badge UI (data + tests first) |
+  | 4 | **5 Shadow sandbox** | 1.25 h | `/v1/heroes/simulate-rule` (authenticated, org-scoped); local bge-small only; the repo's real GCS formula; fewer than 10 findings → "insufficient data"; output labelled a projection; deterministic | Whole hero if time runs out |
+
+- **Next step:** Hero 3. Check how contrast findings are stored, read the palette asset, write `vision/autoheal.py` and its 20 fixtures.
