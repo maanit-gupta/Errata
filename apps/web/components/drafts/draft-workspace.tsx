@@ -559,6 +559,47 @@ export function DraftWorkspace({
           </p>
         </div>
       ) : null}
+      {showAlt ? (
+        <div className="space-y-1">
+          <label htmlFor={`${id}-caption`} className="text-sm font-medium">
+            Caption <span className="text-fg-faint font-normal">(optional)</span>
+          </label>
+          <textarea
+            id={`${id}-caption`}
+            rows={3}
+            maxLength={2200}
+            value={intent.caption ?? ""}
+            disabled={!canEdit}
+            aria-describedby={`${id}-caption-help`}
+            onChange={(e) => setIntent((s) => ({ ...s, caption: e.target.value }))}
+            className={fieldClass}
+          />
+          <p id={`${id}-caption-help`} className="text-fg-faint text-xs">
+            The text posted with the image. Dates, times and rates must match the image.
+          </p>
+        </div>
+      ) : null}
+      <details className="space-y-1">
+        <summary className="cursor-pointer text-sm font-medium">
+          Landing page text <span className="text-fg-faint font-normal">(optional)</span>
+        </summary>
+        <label htmlFor={`${id}-landing`} className="sr-only">
+          Landing page text
+        </label>
+        <textarea
+          id={`${id}-landing`}
+          rows={3}
+          maxLength={4000}
+          value={intent.landing_page_text ?? ""}
+          disabled={!canEdit}
+          aria-describedby={`${id}-landing-help`}
+          onChange={(e) => setIntent((s) => ({ ...s, landing_page_text: e.target.value }))}
+          className={fieldClass}
+        />
+        <p id={`${id}-landing-help`} className="text-fg-faint text-xs">
+          Paste the key lines of the page this post links to. Dates, times and rates must match.
+        </p>
+      </details>
     </section>
   );
 

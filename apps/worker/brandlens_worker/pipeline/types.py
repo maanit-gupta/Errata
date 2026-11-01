@@ -168,6 +168,10 @@ class Finding:
     page: int | None = None  # PDFs: 1-based page of an image-target finding
     # R3 Hero 3: palette-only contrast fix suggestion (vision/autoheal.py); never auto-applied.
     visual_fix: dict[str, Any] | None = None
+    # R3 Hero 4: a deterministic check's version (recorded as prompt_version, model_version
+    # "deterministic") and the other surface's span for cross-modal conflicts.
+    check: str | None = None
+    counterpart: dict[str, Any] | None = None
 
     @property
     def cited(self) -> bool:

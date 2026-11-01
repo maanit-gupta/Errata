@@ -10,6 +10,9 @@ export const intentSchema = z.object({
   notes: z.string().trim().max(500).optional(),
   // Images only (P11): checked for presence (WCAG 1.1.1) and judged for quality by the vision pass.
   alt_text: z.string().trim().max(500).optional(),
+  // R3 Hero 4 (cross-modal): the post's other surfaces, compared with the checked text.
+  caption: z.string().trim().max(2200).optional(), // images: the caption posted with it
+  landing_page_text: z.string().trim().max(4000).optional(), // any: the linked page's key text
 });
 export type Intent = z.infer<typeof intentSchema>;
 

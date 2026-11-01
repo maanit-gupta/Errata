@@ -1,0 +1,25 @@
+{
+  "_about": "Hero 4 labelled posts for the Diwali SIP campaign. 'document' is the checked text (OCR of the banner for image posts, the body for text posts); 'caption' (image posts) and 'landing' are the other surfaces. 'conflict' is the label; 'fact' is the vault fact that applies.",
+  "posts": [
+    {"id": "c01-date", "format": "image", "document": "Diwali Wealth Webinar Oct 18, 7 PM", "caption": "Join us on Oct 28 at 7 PM. Register now", "landing": "", "conflict": true, "fact": "E-19"},
+    {"id": "c02-time", "format": "image", "document": "Webinar 28 Oct, 6 PM", "caption": "Webinar Oct 28 at 7:00 PM IST", "landing": "", "conflict": true, "fact": "E-19"},
+    {"id": "c03-cagr", "format": "image", "document": "3-yr historical CAGR 12%", "caption": "Flexi-Cap 3-yr historical CAGR 14.2%", "landing": "", "conflict": true, "fact": "F-112"},
+    {"id": "c04-exit-load", "format": "image", "document": "Exit load 0.5% within a year", "caption": "1% exit load within 365 days", "landing": "", "conflict": true, "fact": "F-048"},
+    {"id": "c05-date-numeric", "format": "image", "document": "Register by 28/10", "caption": "Webinar on 30 October", "landing": "", "conflict": true, "fact": "E-19"},
+    {"id": "c06-time-8pm", "format": "image", "document": "Oct 28 · 8 PM IST", "caption": "Oct 28 at 7 PM", "landing": "", "conflict": true, "fact": "E-19"},
+    {"id": "c07-landing-date", "format": "image", "document": "Webinar Oct 28, 7 PM", "caption": "", "landing": "The webinar is on Oct 29 at 7 PM", "conflict": true, "fact": "E-19"},
+    {"id": "c08-cagr-15", "format": "image", "document": "CAGR 15%", "caption": "A 3-yr CAGR of 14.2%", "landing": "", "conflict": true, "fact": "F-112"},
+    {"id": "c09-day-before", "format": "image", "document": "Diwali Wealth Webinar — 28 Oct", "caption": "See you on 27 Oct!", "landing": "", "conflict": true, "fact": "E-19"},
+    {"id": "c10-text-landing-time", "format": "text", "document": "Join the Diwali Wealth Webinar on Oct 28 at 7 PM.", "caption": "", "landing": "Webinar: Oct 28, 6:30 PM", "conflict": true, "fact": "E-19"},
+    {"id": "k01-same-event", "format": "image", "document": "Oct 28, 7 PM", "caption": "Join us on 28 October at 7:00 PM IST", "landing": "", "conflict": false},
+    {"id": "k02-same-cagr", "format": "image", "document": "14.2% 3-yr CAGR (historical)", "caption": "A historical 3-yr CAGR of 14.2%", "landing": "", "conflict": false},
+    {"id": "k03-same-exit-load", "format": "image", "document": "1% exit load", "caption": "Exit load 1% within 365 days", "landing": "", "conflict": false},
+    {"id": "k04-banner-no-date", "format": "image", "document": "Register now", "caption": "Webinar Oct 28 at 7 PM", "landing": "", "conflict": false},
+    {"id": "k05-no-caption", "format": "image", "document": "Diwali SIP", "caption": "", "landing": "", "conflict": false},
+    {"id": "k06-subset", "format": "image", "document": "Webinar Oct 28", "caption": "Webinar Oct 28. Exit load 1%.", "landing": "", "conflict": false},
+    {"id": "k07-different-facts", "format": "image", "document": "Exit load 1%", "caption": "Returns: 14.2% 3-yr CAGR", "landing": "", "conflict": false},
+    {"id": "k08-text-landing", "format": "text", "document": "Webinar Oct 28, 7 PM", "caption": "", "landing": "Oct 28 · 7:00 PM IST", "conflict": false},
+    {"id": "k09-formats", "format": "image", "document": "Oct 28 7PM", "caption": "28/10 at 19:00", "landing": "", "conflict": false},
+    {"id": "k10-money-only", "format": "image", "document": "SIP from ₹500", "caption": "Start a SIP from ₹500 this Diwali", "landing": "", "conflict": false}
+  ]
+}

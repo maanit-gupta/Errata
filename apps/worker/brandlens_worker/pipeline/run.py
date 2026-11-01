@@ -13,6 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 from brandlens_worker import config
+from brandlens_worker.pipeline.cross_modal import Surface, check_cross_modal
 from brandlens_worker.pipeline.filters import run_filters
 from brandlens_worker.pipeline.image import (
     ImageAnalysis,
@@ -61,6 +62,17 @@ class VersionInput:
     def alt_text(self) -> str | None:
         alt = self.intent.get("alt_text")
         return alt.strip() if isinstance(alt, str) and alt.strip() else None
+
+    def other_surfaces(self) -> list[Surface]:
+        """Hero 4: the post's other surfaces from the intent (caption for images, landing page)."""
+        out = []
+        for key, name in (("caption", "caption"), ("landing_page_text", "landing_page")):
+            if key == "caption" and self.format != "image":
+                continue  # a text draft's caption is its body, already the checked document
+            val = self.intent.get(key)
+            if isinstance(val, str) and val.strip():
+                out.append(Surface(name, val.strip()))
+        return out
 
 
 @dataclass
@@ -122,6 +134,8 @@ async def run_stages_1_to_4(
     findings = run_filters(doc, vault) if doc.text.strip() else []
     if image is not None:
         findings += await asyncio.to_thread(check_image, image, doc, kit, vault, version.alt_text)
+    if doc.text.strip():
+        findings += check_cross_modal(doc, version.other_surfaces(), vault)  # Hero 4
     if pdf is not None:
         findings = (
             apply_hidden(findings, pdf, vault)

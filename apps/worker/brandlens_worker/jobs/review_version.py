@@ -159,6 +159,8 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         page = doc.page_for(f.start, f.end)
         if page:
             span["page"] = page
+        if f.counterpart:
+            span["counterpart"] = f.counterpart
     primary = {codes_by_id.get(x) for x in (f.rule_id, f.fact_id) if x} | {
         f.wcag_ref and f"WCAG {f.wcag_ref}"
     }
@@ -177,6 +179,8 @@ def to_row(f: Finding, doc: Doc, codes_by_id: dict[str, str]) -> dict[str, Any]:
         "explanation": explanation,
         "rewrite": f.rewrite,
         "visual_fix": f.visual_fix,
+        # Deterministic checks with a version (Hero 4) record it, so every finding shows its source.
+        **({"model_version": "deterministic", "prompt_version": f.check} if f.check else {}),
     }
 
 
