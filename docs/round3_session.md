@@ -41,7 +41,9 @@ Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`
 
 ## Running log (newest at the bottom)
 
-### 2026-11-01 14:30 IST: session continuity + plan for the V5 extras (Heroes 2–5)
+Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%M`). The first versions of the Hero 3/4/2 entries carried estimated times; corrected at 14:50.
+
+### 2026-11-01 14:29 IST: session continuity + plan for the V5 extras (Heroes 2–5)
 
 - **Did:** created this file; saved the owner's spec as [`docs/specs/V5_remaining_heroes_spec.md`](specs/V5_remaining_heroes_spec.md); checked the branch (`a6229a1` local = remote; no history rewrite yet); checked the seed against the repo (mismatches above).
 - **Commands:** `git fetch`, `git log origin/main..HEAD`, `grep` over PROGRESS.md.
@@ -56,7 +58,7 @@ Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`
 
 - **Next step:** Hero 3 (done, see below).
 
-### 2026-11-01 15:10 IST: Hero 3, visual auto-heal (commit `2b4dc25`)
+### 2026-11-01 14:38 IST: Hero 3, visual auto-heal (commit `2b4dc25`)
 
 - **Did:** `apps/worker/brandlens_worker/vision/autoheal.py` (reuses `vision/contrast.py` and the CIEDE2000 in `vision/colour.py`). For each failing WCAG 1.4.3 text line it picks the smallest on-palette change: text first, then background, then both; ties keep palette order. Candidates come only from the org's palette asset (no black/white fallbacks). Attached to the finding in `pipeline/image.py` as `visual_fix` (migration `20261101100025_visual_autoheal.sql`; worker-written only). Web: `lib/drafts/visual-fix.ts` (strict `#RRGGBB` zod parse, because the colours become inline styles), `components/review/visual-auto-heal-preview.tsx`, finding card "Accept palette fix" (records the status only; nothing touches the image), draft and review pages select `visual_fix`. 20 labelled samples in `apps/worker/tests/fixtures/autoheal_samples.json`.
 - **Measured (sandbox):** 20/20 labelled samples behave as labelled: 18 fixes, every one from the palette and ≥ 4.5:1 (≥ 3:1 for the 2 large-text cases), recomputed from the hexes; the 2 pastel-only cases get no suggestion; deterministic. The real `05-low-contrast.png` creative gets an on-palette preview with `applied: false`. Worker 266 passed / 9 skipped; web 191 passed; lint green; pgTAP `09_r3_heroes` 3/3 (plain Postgres); the pending-flow DB tests still pass through the changed findings INSERT (6/6).
@@ -66,7 +68,7 @@ Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`
 - **Verify on the MacBook:** `make db-reset && make check`; then `make dev-local`, upload `fixtures/paywise/creatives/05-low-contrast.png` as Creator, submit, and check the WCAG 1.4.3 card shows the preview and "Accept palette fix".
 - **Next step:** Hero 4 (done, see below).
 
-### 2026-11-01 15:45 IST: Hero 4, cross-modal reconciliation (commit `dff6208`)
+### 2026-11-01 14:42 IST: Hero 4, cross-modal reconciliation (commit `dff6208`)
 
 - **Did:** `apps/worker/brandlens_worker/pipeline/cross_modal.py`, run in stage 3 for every format. It compares the checked text (OCR of an image, or a text draft's body) with the post's other surfaces from the intent: `caption` (image posts; until now image posts had no caption at all, since `versions.body` is text-only) and `landing_page_text` (any post). It reuses `filters/entities.extract` (so "Oct 28" = "28/10", "7 PM" = "19:00") and `filters/facts.fact_attrs`. Every conflict cites the in-scope, unexpired vault fact that applies: the fact whose value appears on either surface, else the only fact of that kind. **No hardcoded E-19; with no applicable fact there's no finding** (invariant 1). Percentages count only next to that fact's keywords. Findings are anchored on the checked text (with the image box) and carry `span.counterpart` (surface, offsets, quote); `model_version` "deterministic" and `prompt_version` `cross_modal@1` are recorded. Web: optional Caption (images) and Landing page text fields. Neither goes to the LLM (only goal/audience/CTA/channel do). No migration needed.
 - **Measured (sandbox):** 20 labelled posts in `apps/worker/tests/fixtures/cross_modal_posts.json`: **10/10** conflicting posts flagged, each citing the right fact and both spans; **0/10** false flags on consistent posts. A banner rendered with OpenCV and read by the real OCR stage (Tesseract here) is flagged against its caption and anchored on the image box. Negative control: removing the keyword rule makes k07 false-flag (10/1), so the test catches it. Worker 292 passed / 9 skipped; web 191; lint/mypy green; DB tests 9/9 (plain Postgres).
@@ -76,7 +78,7 @@ Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`
 - **Verify on the MacBook:** `make check`; then `make dev-local`, upload an image whose text says "Oct 18, 7 PM", set Caption "Join us Oct 28 at 7 PM", submit, and expect an E-19 blocker naming both.
 - **Next step:** Hero 2 (done, see below).
 
-### 2026-11-01 16:35 IST: Hero 2, publish receipt + fact kill-switch (commit `4a17db7`)
+### 2026-11-01 14:49 IST: Hero 2, publish receipt + fact kill-switch (commit `4a17db7`)
 
 - **Did:** migration `20261101100026_fact_kill_switch.sql`:
   - `content_fact_dependencies` and `publish_manifests`, both with RLS (readable with the content; no user writes).
