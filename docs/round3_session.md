@@ -74,4 +74,28 @@ Seeded from the owner's summary (2026-11-01), then checked against `PROGRESS.md`
 - **Limits:** caption vs landing-page conflicts on an image post aren't compared unless the image text is involved (findings must anchor on the checked text). The caption itself isn't run through the LLM pass.
 - **Didn't run:** an image post end to end on the real stack (Storage plus the real worker).
 - **Verify on the MacBook:** `make check`; then `make dev-local`, upload an image whose text says "Oct 18, 7 PM", set Caption "Join us Oct 28 at 7 PM", submit, and expect an E-19 blocker naming both.
-- **Next step:** Hero 2 (manifest + kill-switch). Read `private.apply_transition`'s rule table, then write the migration (dependencies table, manifest columns, system transitions approved/publish_ready → needs_revision, fact-edit trigger, expiry sweep) and pgTAP.
+- **Next step:** Hero 2 (done, see below).
+
+### 2026-11-01 16:35 IST: Hero 2, publish receipt + fact kill-switch (commit `4a17db7`)
+
+- **Did:** migration `20261101100026_fact_kill_switch.sql`:
+  - `content_fact_dependencies` and `publish_manifests`, both with RLS (readable with the content; no user writes).
+  - **Versions are immutable** (`versions_immutable` trigger), so the receipt lives in `publish_manifests`, not on `versions` as the spec said.
+  - `private.apply_transition` redefined, generated from the original text plus one system-only branch: approved/publish_ready → needs_revision, reason required, audited like every transition.
+  - Entering publish_ready issues the receipt: SHA-256 of the trimmed, whitespace-collapsed body (file versions record no hash), the dependent facts and the earliest expiry. Leaving publish_ready revokes it.
+  - Trigger on facts: edits to value, statement or disclaimer, an expiry set by an edit, and deletes (a BEFORE trigger, so the dependency rows still exist).
+  - `public.sweep_expired_fact_dependencies()` for dates that simply pass, called by the worker every 60 s (`main.sweep_facts`, `config.FACT_SWEEP_INTERVAL_S`).
+  - The worker writes dependencies on every run from the facts stage (`filters/facts.dependent_fact_ids`, plus facts its findings cite).
+  - Review page: `components/review/publish-manifest-badge.tsx` (active receipt, revoked receipt, kill-switch notice); the audit log labels `fact_kill_switch`.
+  - `brandlens_worker/manifest.py` mirrors the hash.
+- **Measured (plain Postgres + sandbox):**
+  - pgTAP `10_fact_kill_switch` **22/22**. Editing F-048 moves approved A to needs_revision at once; draft D (same fact) and approved C (other fact) are untouched; the transition is audited with system=true and a reason; an embedding-only update does nothing; an expiry with the trigger disabled is caught by **one** sweep (the second sweep returns 0); the receipt hash equals SHA-256 of the normalised body; the receipt is revoked with the reason; deleting F-112 moves C; users can't revoke approvals or write dependencies; non-members see nothing.
+  - Negative control: dropping the edit trigger fails exactly the 3 "at once" assertions.
+  - Full pgTAP **172/172** (147 + 3 + 22).
+  - DB tests: a real review writes dependencies E-19/F-048/F-112; the SQL hash = Python hash on 6 inputs (tabs, NBSP, CJK, empty); the worker's real sweep loop moves an approved item whose fact expired silently.
+  - Worker 297 passed / 17 skipped (8 new DB-gated); web 191; lint green; kitchen-sink axe 0 violations in both themes.
+- **PASS IF (Hero 2):** edit → affected approved/publish_ready items back to revision at once; expiry within one sweep; unrelated untouched → **PASS** (plain Postgres).
+- **Limits:** the creator's draft page doesn't show the kill-switch reason yet (the review page and the audit trail do). File versions get a receipt without a content hash.
+- **Didn't run:** the real Supabase stack (CLI). The Realtime refresh of the badge needs the real stack.
+- **Verify on the MacBook:** `make db-reset && make test-db` (expect 172 pgTAP); `cd apps/worker && TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q tests/test_fact_kill_switch_db.py tests/test_llm_pending.py tests/test_mcp_server.py`.
+- **Next step:** Hero 5 (shadow sandbox): `/v1/heroes/simulate-rule` with authenticated, org-scoped access, the repo's real GCS definitions, bge-small only, "insufficient data" under 10 findings, labelled as a projection.
