@@ -45,6 +45,19 @@ reason, and Errata never publishes.
 
 Details: [`docs/MCP.md`](MCP.md), [`docs/usability/`](usability/), [`apps/worker/eval/load_report.md`](../apps/worker/eval/load_report.md), [`docs/CHANGELOG-R3.md`](CHANGELOG-R3.md).
 
+### Round 3 extras (stretch work, not commitments)
+
+These were Round 2 extensions E2–E5 in the plan, built on 2026-11-01 from the team's "Remaining Hero Features" spec ([`docs/specs/V5_remaining_heroes_spec.md`](specs/V5_remaining_heroes_spec.md)), adapted to the repo's invariants. Order built: 3, 4, 2, 5. None was allowed to put the merge at risk, and none has run on the real stack yet.
+
+| Hero | What it does | PASS IF | Result | Source |
+|---|---|---|---|---|
+| **3 Visual auto-heal** | For a failing WCAG 1.4.3 text line in an image, suggests the smallest **on-palette** colour change that passes (text, then background, then both). Shown as a preview; "Accept palette fix" only records the decision; nothing touches the image | Every fix from the palette and ≥ 4.5:1 (3:1 large) on 20 labelled samples; none applied without Accept | **PASS**: 18/18 fixable samples fixed from the palette and passing; the 2 pastel-only samples correctly get no suggestion | Sandbox |
+| **4 Cross-modal check** | Compares dates, times and percentages across the image text (OCR), the caption and the landing-page text; cites the vault fact that applies; anchors on the image text and names the other span | ≥ 9/10 conflicting posts flagged citing both spans; 0 flags on 10 consistent posts | **PASS**: 10/10 flagged, 0/10 false flags; a real OCR'd banner flagged too | Sandbox |
+| **2 Publish receipt + kill-switch** | At publish-ready, a receipt (SHA-256 of the normalised text, the facts it relies on, the earliest expiry). Editing or deleting a relied-on fact sends approved/publish-ready content back to revision at once; an expiry is caught by a sweep the worker runs every minute. All moves go through the workflow function, audited with a reason | Edit → back to revision at once; expiry within one sweep; unrelated items untouched | **PASS**: pgTAP 22/22 plus DB tests (incl. the worker's own sweep loop) | Plain Postgres |
+| **5 GCS shadow backtest** | Before approving new examples for an unclear rule, re-scores the rule's last 30 findings with the local embedding model and shows a labelled **projection** (false positives removed and true positives lost); fewer than 10 findings → "insufficient data" | 30-draft backtest < 60 s; identical output twice | **PASS**: identical output twice; 0.15 s for two runs (stand-in embedder) | Plain Postgres + stand-in embedder |
+
+Deviations from that spec, and why, are in [`CHANGELOG-R3.md`](CHANGELOG-R3.md#round-3-extras-heroes-25).
+
 ## 3. Results
 
 | Result | Value | Source |
@@ -53,7 +66,7 @@ Details: [`docs/MCP.md`](MCP.md), [`docs/usability/`](usability/), [`apps/worker
 | Rewrite intent check (`INTENT_COSINE` 0.74) | Keeps 15/16 good rewrites, rejects 24/24 bad ones | Eval |
 | Text review latency, 30 drafts | P50 3.0 s, P95 15.2 s (LLM time as recorded; target ≤ 15 s, just missed) | Eval |
 | Images / PDFs | Logo found in 9/9 creatives, 0 false positives; contrast within ±0.1 of WebAIM on 40/40 pairs; 9/9 seeded deck issues on the right page; 40-page deck under 512 MB | Eval |
-| Database tests (pgTAP) | **147 tests in 9 files, all pass** (RLS, workflow, retrieval, Clarity Score, rate limit, MCP keys, real-data split) | Real stack, 2026-10-31 |
+| Database tests (pgTAP) | **147 tests in 9 files, all pass** (RLS, workflow, retrieval, Clarity Score, rate limit, MCP keys, real-data split). With the extras: **172 in 11 files** | 147: real stack, 2026-10-31. 172: plain Postgres, 2026-11-01 (real-stack run pending) |
 | `make check` | Green: ruff, mypy, ESLint, Prettier, tsc; worker 239 passed / 7 skipped (the 7 need a database URL); web 188 passed | Real stack, 2026-10-31 (at `d19c525`) |
 | DB-gated worker tests (pending flow + MCP golden set) | 9 passed, including negative controls that fail when the logic is removed | Plain Postgres; CI runs them on Supabase Postgres |
 | MCP acceptance | 20/20 calls; 33 returned facts/rules checked against the database; 3 canaries never returned | Plain Postgres, stand-in embedder |
@@ -77,8 +90,8 @@ in §4.
   image build, and the golden-set precision gate on prompt changes.
 
 Still to run on the real stack before the merge (commands in `PROGRESS.md` → Handoff):
-`make mcp-check`, `make load-test`, the 7 DB-gated worker tests, and the signed-in axe pass on the
-Round 3 pages.
+`make mcp-check`, `make load-test`, the DB-gated worker tests (now 19, including the extras), the
+signed-in axe pass on the Round 3 pages, and the extras end to end.
 
 ## 5. Limitations and roadmap
 

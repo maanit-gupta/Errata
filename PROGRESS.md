@@ -39,6 +39,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | R3.2 | Usability kit + Clarity Score on real data | J | done (sessions pending) | J (Claude) | round3/improvements | 2026-10-31; no results yet |
 | R3.3 | AI check pending + load test | Both | done (real-stack `make load-test` pending) | J (Claude) | round3/improvements | 2026-10-31; sandbox PASS |
 | R3.4 | Deliverables: REPORT, CHANGELOG-R3, PRIVACY-SECURITY-A11Y, README | J | done | J (Claude) | round3/improvements | 2026-10-31 |
+| R3.5 | Extras: Heroes 2–5 (publish receipt + kill-switch, visual auto-heal, cross-modal, GCS shadow) | J | done (sandbox / plain Postgres; real stack pending) | J (Claude) | round3/improvements | 2026-11-01; all four meet their PASS IF; see docs/round3_session.md |
 
 ## Handoff (latest — overwrite each phase)
 
@@ -58,12 +59,13 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
   3. Stop the worker, then `make load-test note="MacBook <model>, local Supabase"` → rewrites `apps/worker/eval/load_report.md`. Then update the "sandbox" lines in README → Round 3 improvements and `docs/REPORT.md` §3.
   4. Signed-in axe on the Round 3 pages: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts` (with `make dev-local` running), and `E2E_WORKER=1 pnpm exec playwright test e2e/insights.spec.ts` after `make simulate-activity`.
   5. Usability sessions (8–15) → `python scripts/usability_summary.py` → copy only its numbers into README and REPORT.
-  6. Merge: apply migrations `…100022`–`…100024` to cloud first, then PR → `main` (owner's go-ahead only).
+  6. Merge: apply migrations `…100022`–`…100026` to cloud first, then PR → `main` (owner's go-ahead only).
 - **Gotchas:**
   - `apps/web/types/database.ts`: the newer Supabase CLI formats generated output differently, so `make types` gives a huge formatting-only diff. Keep the committed file (the R3 additions were written in the generator's format and typecheck).
   - Never `git add -A` in Jagpreet's checkout (unrelated untracked files); add files by name.
   - Deleting a user who appears in `audit_events` fails (append-only trigger blocks the `on delete set null`); erasure needs a designed path (roadmap).
   - `make check` resets the local DB. Keep load tests off the cloud stack.
+- **R3 extras (2026-11-01):** Heroes 3, 4, 2, 5 built in that order from `docs/specs/V5_remaining_heroes_spec.md`, adapted (deviations in `docs/CHANGELOG-R3.md`). New migrations `20261101100025_visual_autoheal.sql` and `20261101100026_fact_kill_switch.sql` (the latter redefines `private.apply_transition` with one system-only branch). The worker now runs a fact sweep every 60 s and serves `POST /v1/heroes/simulate-rule` (authenticated). pgTAP 172 in 11 files and worker 309 passed / 19 skipped on plain Postgres and in the sandbox. Real-stack verification: `docs/round3_session.md` → Next step. The live session log is `docs/round3_session.md`.
 - **Still open from P16:** make the repo public (owner's go-ahead), move or add a release tag after the merge, `scripts/reset_demo.sh` and a recorded dry run before judging.
 
 ## Decisions log (append-only)
@@ -317,6 +319,14 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-10-31 | R3 | Usability tasks T5 (MCP key connect + revoke), T6 (Insights real-data filter) and a printed-banner comprehension probe for "AI check pending" | The pending state can't be staged on demand during a session |
 | 2026-10-31 | R3 | DB-gated worker tests restore the vault embeddings they replace | Running them on a dev stack must not break retrieval |
 | 2026-10-31 | R3 | Keep the committed `types/database.ts` despite the newer CLI's formatting | Regenerated diffs are formatting-only and huge |
+| 2026-11-01 | R3 extras | Built Heroes 3, 4, 2, 5 as Round 3 extras (stretch), owner's order; each gated on its own PASS IF | Owner request; mustn't risk the merge |
+| 2026-11-01 | R3 extras | Kill-switch moves content via a new system-only branch in `private.apply_transition` (reason required, audited), triggered on fact edit/delete and by `sweep_expired_fact_dependencies()` every 60 s from the worker | Invariant 7; expiry never fires an UPDATE trigger |
+| 2026-11-01 | R3 extras | Publish receipts in `publish_manifests`, not on `versions` | Versions are immutable |
+| 2026-11-01 | R3 extras | Auto-heal candidates only from the org palette asset, no black/white fallback; suggestion stored in `findings.visual_fix` (worker-written) | "Every fix comes from the palette"; nothing applied without Accept |
+| 2026-11-01 | R3 extras | Cross-modal conflicts cite the in-scope vault fact that applies, or produce no finding; caption and landing text live in the intent and aren't sent to the LLM | Invariant 1; no hardcoded E-19; minimal LLM context |
+| 2026-11-01 | R3 extras | GCS shadow: "now" = SQL `rule_gcs`; only the dismissal rate is projected; override and low-confidence held; < 10 findings → insufficient data; Python round = SQL round(double) (half-to-even) | No fabricated numbers; same definitions as the dashboard |
+| 2026-11-01 | R3 extras | `/v1/heroes` auth = the user's Supabase session verified with Supabase Auth, plus a role check in the rule's org; the web forwards the token from a server action (needs `WORKER_URL`) | No unauthenticated org data; the browser's CSP never talks to the worker |
+| 2026-11-01 | R3 | Kitchen-sink MCP dialog preview moved behind `?mcpPreview=1` | The open modal made the page inert, so axe checked 26 of 33 rules |
 
 **Dependencies and licences** (append when adding any dependency):
 

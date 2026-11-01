@@ -116,4 +116,18 @@ Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%
 - **Limits:** the "do vs don't anchor" rule (margin ≥ 0) is uncalibrated, like the MCP claim threshold; the projection is labelled as one in the UI and the API.
 - **Didn't run:** the real worker with real bge-small; the Next server action → worker call (needs `WORKER_URL` and a signed-in session on the real stack).
 - **Verify on the MacBook:** run the DB tests command (see Hero 2) plus `tests/test_gcs_shadow_db.py`; then with `make dev-local` and `WORKER_URL=http://localhost:8000` exported for the web app, `make simulate-activity`, sign in as Brand admin → Insights → TV-04 → Review 3 examples → "Run on recent findings".
-- **Next step:** docs (REPORT, CHANGELOG-R3, README, PROGRESS) marking Heroes 2–5 as extras with measured results; list migrations `…100025`/`…100026` for the cloud push.
+- **Next step:** docs (done, see below).
+
+### 2026-11-01 15:00 IST: docs for the extras + handoff
+
+- **Did:** README (an "Extras" table under Round 3 improvements, test totals, an AI-assistance row), `docs/REPORT.md` (an extras table with PASS IF, result and source per hero), `docs/CHANGELOG-R3.md` (the extras plus a "spec said / built / why" deviations table), `docs/PRIVACY-SECURITY-A11Y.md` (new stored data, the `/v1/heroes` auth), `PROGRESS.md` (R3.5 row, 8 decisions, handoff; merge now needs migrations `…100022`–`…100026`).
+- **State at hand-off:** every hero meets its PASS IF in the sandbox or on plain Postgres; **none has run on the real stack**. Totals: pgTAP 172/172 (11 files), worker 309 passed / 19 skipped, web 191 passed, DB-gated tests 19/19, lint/mypy/tsc/Prettier green.
+- **Cloud migrations (not applied; owner's go-ahead needed), in order:** `20261031100022_mcp_api_keys.sql`, `20261031100023_insights_real_data.sql`, `20261031100024_llm_pending.sql`, `20261101100025_visual_autoheal.sql`, `20261101100026_fact_kill_switch.sql`.
+- **Next step (owner, on the MacBook, real Supabase stack):**
+  1. `git pull` on `round3/improvements`; `make db-reset && make check` (expect pgTAP 172 in 11 files; worker ~311 passed / 19 skipped, since the MacBook has the embedding model, *expected, not measured*; web 191).
+  2. DB-gated tests: `cd apps/worker && TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q tests/test_llm_pending.py tests/test_mcp_server.py tests/test_fact_kill_switch_db.py tests/test_gcs_shadow_db.py` (expect 19 passed).
+  3. `make dev-local` + `make mcp-check`; stop the worker, then `make load-test note="MacBook …"`.
+  4. Smoke the extras in the UI (commands in the Hero 3/4/2/5 entries above).
+  5. Signed-in axe: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts`.
+  6. Update the "sandbox / plain Postgres" labels in README, REPORT and this log with the MacBook numbers.
+  7. Usability sessions; then, on the owner's go-ahead: `supabase db push` (dry run first), PR → `main`, merge, and optionally "rewrite history".

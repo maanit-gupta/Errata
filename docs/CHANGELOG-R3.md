@@ -49,6 +49,32 @@ MacBook), **plain Postgres** (Postgres 16 with every migration applied, in the b
 | `.claude/settings.json` turns off AI attribution trailers; commits are authored by the team member | Team rule for Round 3; AI assistance stays disclosed in the README (General Rules 6–7) |
 | DB-gated worker tests run in CI against Supabase Postgres and restore the vault embeddings they swap | Evidence that runs on every PR, without breaking a local dev stack |
 
+## Round 3 extras: Heroes 2–5
+
+Stretch work (Round 2 extensions E2–E5), built 2026-11-01 from [`specs/V5_remaining_heroes_spec.md`](specs/V5_remaining_heroes_spec.md). The spec was treated as intent; every deviation is below.
+
+| Hero | What it does | PASS IF | Result | Source |
+|---|---|---|---|---|
+| **3 Visual auto-heal** | For a failing WCAG 1.4.3 text line in an image, suggests the smallest **on-palette** colour change that passes (text, then background, then both). Shown as a preview; "Accept palette fix" only records the decision; nothing touches the image | Every fix from the palette and ≥ 4.5:1 (3:1 large) on 20 labelled samples; none applied without Accept | **PASS**: 18/18 fixable samples fixed from the palette and passing; the 2 pastel-only samples correctly get no suggestion | Sandbox |
+| **4 Cross-modal check** | Compares dates, times and percentages across the image text (OCR), the caption and the landing-page text; cites the vault fact that applies; anchors on the image text and names the other span | ≥ 9/10 conflicting posts flagged citing both spans; 0 flags on 10 consistent posts | **PASS**: 10/10 flagged, 0/10 false flags; a real OCR'd banner flagged too | Sandbox |
+| **2 Publish receipt + kill-switch** | At publish-ready, a receipt (SHA-256 of the normalised text, the facts it relies on, the earliest expiry). Editing or deleting a relied-on fact sends approved/publish-ready content back to revision at once; an expiry is caught by a sweep the worker runs every minute. All moves go through the workflow function, audited with a reason | Edit → back to revision at once; expiry within one sweep; unrelated items untouched | **PASS**: pgTAP 22/22 plus DB tests (incl. the worker's own sweep loop) | Plain Postgres |
+| **5 GCS shadow backtest** | Before approving new examples for an unclear rule, re-scores the rule's last 30 findings with the local embedding model and shows a labelled **projection** (false positives removed and true positives lost); fewer than 10 findings → "insufficient data" | 30-draft backtest < 60 s; identical output twice | **PASS**: identical output twice; 0.15 s for two runs (stand-in embedder) | Plain Postgres + stand-in embedder |
+
+| Spec said | Built | Why |
+|---|---|---|
+| A trigger runs `UPDATE contents SET state = 'needs_revision'` | A new system-only branch in `private.apply_transition` (reason required, audited); the trigger and the sweep call it | Invariant 7: every state change goes through the workflow function |
+| Trigger on fact UPDATE only | Also a BEFORE DELETE trigger, and `sweep_expired_fact_dependencies()` called by the worker every minute | A date passing never fires an UPDATE trigger |
+| Store the hash and manifest on `versions` | A `publish_manifests` table, revoked when the content leaves publish-ready | Versions are immutable (a trigger rejects every update) |
+| Dependencies "during Stage 3" | `filters/facts.dependent_fact_ids` plus the facts the findings cite, rewritten on every run | Same code path as the facts filter |
+| Palette from the request, plus #111/#FFF fallbacks | Only the org's palette asset; no fallbacks; no suggestion if no palette colour passes | "Every fix comes from the palette" |
+| Hardcoded `E-19` citation for cross-modal drift | The in-scope, unexpired vault fact that applies; no applicable fact → no finding | Invariant 1 (no uncited findings), no hardcoding |
+| `versions.ocr_banner_text`, `target_url_text` columns | The OCR text from the existing image stage, plus optional `caption`/`landing_page_text` in the intent | Versions are immutable; the OCR output already exists in the pipeline |
+| Shadow sandbox fallback numbers (60→91, 0.42→0.08), `× 0.4` override factor, decisions joined on `version_id` | The dashboard's own `rule_gcs()` for "now"; only the dismissal rate is projected; override and low-confidence rates are held; "insufficient data" under 10 findings | The spec's numbers were fabricated and its join mixed decisions across findings |
+| Unauthenticated `/v1/heroes/*` endpoints | `simulate-rule` needs the user's Supabase session (verified with Supabase Auth) and a brand admin or manager role in the rule's org. Hero 3/4/2 need no endpoint (they run in the pipeline and SQL) | No unauthenticated reads of org data |
+| Inline Tailwind greys, vermilion styling | DESIGN.md tokens; colours from data validated as `#RRGGBB` before becoming inline styles | One design system; no CSS injection |
+
+New migrations: `20261101100025_visual_autoheal.sql`, `20261101100026_fact_kill_switch.sql`.
+
 ## Round 2 build (2026-10-20 to 2026-10-29): deviations from the Round 1 plan
 
 | Area | Round 1 plan said | We built | Why |

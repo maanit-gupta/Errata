@@ -18,6 +18,8 @@ compliance review.
 | Audit trail | `audit_events` (append-only) | Actor ids, reasons | Kept. The append-only trigger also blocks deleting a user who appears in it (see rights below) |
 | Review runs | `review_runs` | No (ids, timings, model versions) | With the content |
 | MCP keys | `mcp_api_keys` | Owner id; the key itself is stored only as a SHA-256 hash | Revocation or expiry (≤ 365 days), then kept as a record |
+| Fact dependencies and publish receipts (R3 extras) | `content_fact_dependencies`, `publish_manifests` | No (ids, a hash of the approved text, fact codes) | With the content |
+| Optional caption and landing-page text (R3 extras) | `versions.intent` | Can contain it (whatever the creator pastes) | With the version. Not sent to the LLM (only goal, audience, CTA and channel are) |
 | Brand vault (rules, facts, glossary, assets) | vault tables, `guides/`, `assets/` buckets | No (brand material) | Until edited or archived |
 
 ### What leaves Errata
@@ -57,6 +59,8 @@ The P15 checklist with evidence is in [`docs/SECURITY.md`](SECURITY.md). In shor
 - **Workflow:** state changes only through `transition_content()`, with an append-only audit trail; a 10-per-minute submit limit enforced in SQL.
 - **LLM:** prompt-injection fence, schema-bound output, a citation gate that drops anything uncited or unquoted, deterministic checks first.
 - **Web:** CSP and security headers (`script-src` still allows inline scripts; see SECURITY.md).
+
+- **Round 3 extras:** the only new HTTP endpoint, `POST /v1/heroes/simulate-rule`, needs the caller's Supabase session (verified with Supabase Auth) and a brand admin or manager role in the rule's organisation; it uses only the local embedding model, and logs ids, counts and time. The fact kill-switch and publish receipts are SQL behind RLS; the kill-switch moves content only through the audited workflow function. Contrast-fix colours are validated as `#RRGGBB` before they become inline styles.
 
 ### MCP key handling (Round 3)
 

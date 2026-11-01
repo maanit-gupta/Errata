@@ -47,6 +47,15 @@ Status on 2026-10-31. Sources: **real stack** = local Supabase on the team's Mac
 | 2 | **Real users** ([kit](docs/usability/)): A/B (manual vs Errata) + SUS; Clarity Score on real data | SUS ≥ 70, and more seeded issues caught with Errata than by hand | ⏳ **Sessions not run yet; no results.** ✅ Real-data filter built (pgTAP, real stack) |
 | 3 | **Hold up under load** ([report](apps/worker/eval/load_report.md)): "AI check pending" + repeatable load test | Non-LLM P95 < 15 s, 0 lost jobs, every pending run completes | ✅ Built. Sandbox: P95 4.5 s, 0 lost, 20/20 pending runs completed. ⏳ Real-stack `make load-test` pending |
 
+**Extras (stretch, not commitments; 2026-11-01).** Four more features from the plan's extension list, each with its own pass/fail target. All four pass in the sandbox or on plain Postgres; none has run on the real stack yet. Details: [report](docs/REPORT.md#round-3-extras-stretch-work-not-commitments).
+
+| Hero | Result |
+|---|---|
+| 3 Visual auto-heal: on-palette contrast fix preview, applied only on Accept | ✅ 18/18 fixable samples fixed from the palette; 0 off-palette suggestions (sandbox) |
+| 4 Cross-modal check: caption vs image text vs landing page, citing the vault fact | ✅ 10/10 conflicts flagged, 0/10 false flags (sandbox) |
+| 2 Publish receipt + fact kill-switch: edits and expiries send approved copy back to revision | ✅ pgTAP 22/22 (plain Postgres) |
+| 5 GCS shadow backtest: a labelled projection before approving rule examples | ✅ deterministic; 0.15 s for two 30-finding runs (plain Postgres, stand-in embedder) |
+
 **MCP server** (`POST <worker>/v1/mcp`, Streamable HTTP, read-only, personal `bl_mcp_` keys from Settings → **AI tools (MCP)**):
 
 | Tool / resource | What it does |
@@ -60,7 +69,7 @@ Never-send items, expired facts and other campaigns' facts are excluded in SQL; 
 
 **AI check pending.** If every LLM provider is rate-limited, a review saves its rule-based findings at once, shows an "AI check pending" banner, keeps the draft out of reviewers' queues and retries the AI pass on its own (60/120/240/480 s, queued in the same transaction so it can't be lost). It fills in via Realtime. After the last retry it finishes degraded, as before. Still one LLM pass per draft, through the same citation gate.
 
-**Tests:** pgTAP 147 tests in 9 files, all pass; `make check` green (worker 239 passed / 7 DB-gated skipped, web 188) on the real stack. Everything that changed is in the [change log](docs/CHANGELOG-R3.md).
+**Tests:** pgTAP 147 tests in 9 files, all pass; `make check` green (worker 239 passed / 7 DB-gated skipped, web 188) on the real stack (2026-10-31). With the extras: pgTAP 172 in 11 files and worker 309 passed / 19 DB-gated skipped, web 191 (sandbox and plain Postgres, 2026-11-01; real-stack run pending). Everything that changed is in the [change log](docs/CHANGELOG-R3.md).
 
 ## The problem, and what Errata does
 
@@ -302,6 +311,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | Rename and repo move | User-facing rename to Errata, the list of identifiers that keep `brandlens`, and links pointing at the `maanit-gupta/Errata` repo |
 | Demo video | Capture script for real app screens, a HyperFrames composition (storyboard in `apps/web/video-src/brag-plan.md`), renders, captions, transcript and the landing-page embed |
 | Local stack | `make db-start lite=1`, the Supabase CLI fallback and local env defaults so a fresh clone runs |
+| Round 3 extras | Heroes 2–5 from the team's spec: publish receipt and fact kill-switch (migration, workflow branch, sweep), palette-only contrast auto-heal, cross-modal date/time/rate check, GCS shadow backtest (authenticated worker endpoint); their tests, fixtures and UI. Run by Jagpreet with Claude Code |
 | Round 3 | Read-only MCP server (migration, worker package, settings UI, tests, acceptance script) built from the team's spec; `contents.simulated` and the real-data Insights filter; "AI check pending" (router classification, delayed pgmq retry, banner, DB tests); load test with a simulated rate limit; usability kit and summary script; the Round 3 documents. Run by Jagpreet with Claude Code on `round3/improvements` |
 
 ## Models, services, data and libraries
