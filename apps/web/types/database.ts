@@ -244,6 +244,30 @@ export type Database = {
           },
         ]
       }
+      content_fact_dependencies: {
+        Row: {
+          content_id: string
+          created_at: string
+          fact_id: string
+          org_id: string
+          version_id: string
+        }
+        Insert: {
+          content_id: string
+          created_at?: string
+          fact_id: string
+          org_id: string
+          version_id: string
+        }
+        Update: {
+          content_id?: string
+          created_at?: string
+          fact_id?: string
+          org_id?: string
+          version_id?: string
+        }
+        Relationships: []
+      }
       contents: {
         Row: {
           campaign_id: string
@@ -783,6 +807,42 @@ export type Database = {
         }
         Relationships: []
       }
+      publish_manifests: {
+        Row: {
+          content_hash: string | null
+          content_id: string
+          issued_at: string
+          manifest: Json
+          org_id: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          valid_until: string | null
+          version_id: string
+        }
+        Insert: {
+          content_hash?: string | null
+          content_id: string
+          issued_at?: string
+          manifest: Json
+          org_id: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          valid_until?: string | null
+          version_id: string
+        }
+        Update: {
+          content_hash?: string | null
+          content_id?: string
+          issued_at?: string
+          manifest?: Json
+          org_id?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          valid_until?: string | null
+          version_id?: string
+        }
+        Relationships: []
+      }
       review_runs: {
         Row: {
           created_at: string
@@ -1234,6 +1294,7 @@ export type Database = {
         Args: { p_name: string; p_segment: number }
         Returns: string
       }
+      sweep_expired_fact_dependencies: { Args: never; Returns: number }
       transition_content: {
         Args: {
           p_content_id: string

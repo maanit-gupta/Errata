@@ -129,6 +129,11 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
     services["embedder"] = Embedder(settings.embedding_model, settings.model_cache_dir)
     services["mcp_store"] = PgMcpStore(pool)
 
+    # R3 Hero 2: facts that expire don't fire an UPDATE trigger, so sweep every minute.
+    state["tasks"].append(
+        asyncio.create_task(sweep_facts(pool, state["stop"]), name="sweep:fact_kill_switch")
+    )
+
     registry = build_registry()
     backend = PgmqBackend(pool)
     consumers = [settings.pgmq_queue] * config.REVIEW_CONSUMERS + [config.VAULT_QUEUE]
@@ -146,6 +151,22 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
                 name=f"consume:{queue}:{i}",
             )
         )
+
+
+async def sweep_facts(pool: Any, stop: asyncio.Event) -> None:
+    """Call `sweep_expired_fact_dependencies()` every FACT_SWEEP_INTERVAL_S until `stop`. Never
+    raises: a failed sweep is logged and retried next interval."""
+    while not stop.is_set():
+        try:
+            async with pool.connection() as conn:
+                cur = await conn.execute("select public.sweep_expired_fact_dependencies() as n")
+                row = await cur.fetchone()
+            if row and row["n"]:
+                log.info("fact kill-switch sweep", extra={"moved": row["n"]})
+        except Exception as exc:
+            log.warning("fact sweep failed", extra={"error": type(exc).__name__})
+        with contextlib.suppress(TimeoutError):
+            await asyncio.wait_for(stop.wait(), timeout=config.FACT_SWEEP_INTERVAL_S)
 
 
 async def _stop(state: dict[str, Any], app: FastAPI) -> None:

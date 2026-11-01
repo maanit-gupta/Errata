@@ -67,7 +67,9 @@ export default async function AuditPage() {
                 ? `MCP ${e.tool ?? "tool"} call`
                 : type === "mcp_resource"
                   ? "MCP resource read"
-                  : type,
+                  : type === "fact_kill_switch"
+                    ? `approval revoked: ${e.fact_code} ${e.cause}`
+                    : type,
       reason: e.reason ?? null,
     };
   });

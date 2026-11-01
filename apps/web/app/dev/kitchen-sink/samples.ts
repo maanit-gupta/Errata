@@ -28,3 +28,24 @@ export const VISUAL_FIX_LARGE: VisualFix = {
   strategy: "text",
   source: "palette",
 };
+
+/** Hero 2 samples: an active receipt and a revoked one. */
+export const MANIFEST_ACTIVE = {
+  hash: "5d2a9c0f1e7b3a4c8d6e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
+  hashOf: "normalised body",
+  facts: [
+    { code: "E-19", valid_until: "2026-11-15T18:29:59Z" },
+    { code: "F-048", valid_until: null },
+  ],
+  validUntil: "2026-11-15T18:29:59Z",
+  issuedAt: "2026-11-01T06:00:00Z",
+  revokedAt: null,
+  revokedReason: null,
+};
+
+export const MANIFEST_REVOKED = {
+  ...MANIFEST_ACTIVE,
+  revokedAt: "2026-11-02T06:00:00Z",
+  revokedReason:
+    "Fact E-19 changed after approval (Diwali Wealth Webinar: online only, Oct 29, 7:00 PM IST). Re-check the copy against the vault.",
+};

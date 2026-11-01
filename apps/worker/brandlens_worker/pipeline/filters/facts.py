@@ -304,3 +304,24 @@ def _expired_finding(start: int, end: int, fact: Fact) -> Finding:
         fact_id=fact.id,
         codes=[fact.code],
     )
+
+
+def dependent_fact_ids(doc: Doc, vault: Vault) -> set[str]:
+    """R3 Hero 2: the in-scope facts this copy states correctly or should state: every fact with an
+    attribute an entity in the text matches (percent/money only next to the fact's keywords, as
+    `mentioned_facts`), plus the facts a check cites. If one of them later changes or expires,
+    the kill-switch sends approved copy back to revision."""
+    lower = doc.text.lower()
+    out: set[str] = set()
+    ents = extract(doc.text)
+    for f in vault.facts:
+        if not vault.in_scope(f):
+            continue
+        for a in fact_attrs(f):
+            for e in ents:
+                if not _matches(e, a):
+                    continue
+                if e.kind in ("percent", "money") and not _near(lower, e, a.keywords):
+                    continue
+                out.add(f.id)
+    return out

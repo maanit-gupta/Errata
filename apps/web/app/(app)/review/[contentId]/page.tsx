@@ -13,6 +13,11 @@ import { DecisionBar } from "@/components/review/decision-bar";
 import { HighlightedText } from "@/components/review/highlighted-text";
 import { VersionDiff } from "@/components/review/version-diff";
 import { StateBadge } from "@/components/brand/state-badge";
+import {
+  PublishManifestBadge,
+  type KillSwitchView,
+  type ManifestView,
+} from "@/components/review/publish-manifest-badge";
 import { VersionSwitcher } from "@/components/brand/version-switcher";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession } from "@/lib/auth/session";
@@ -329,6 +334,42 @@ export default async function ReviewContentPage({
     );
   });
 
+  // Hero 2: the publish receipt for this content and the last kill-switch on it.
+  const { data: manifestRow, error: manifestError } = await supabase
+    .from("publish_manifests")
+    .select("content_hash, manifest, valid_until, issued_at, revoked_at, revoked_reason")
+    .eq("content_id", content.id)
+    .order("issued_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const mf = (manifestRow?.manifest ?? {}) as {
+    hash_of?: string;
+    facts?: { code: string; valid_until: string | null }[];
+  };
+  const manifest: ManifestView | null = manifestRow
+    ? {
+        hash: manifestRow.content_hash,
+        hashOf: mf.hash_of ?? "normalised body",
+        facts: Array.isArray(mf.facts) ? mf.facts : [],
+        validUntil: manifestRow.valid_until,
+        issuedAt: manifestRow.issued_at,
+        revokedAt: manifestRow.revoked_at,
+        revokedReason: manifestRow.revoked_reason,
+      }
+    : null;
+  const lastKill = [...trail]
+    .reverse()
+    .find((a) => (a.event as Record<string, unknown>).type === "fact_kill_switch");
+  const killEvent = (lastKill?.event ?? null) as Record<string, string> | null;
+  const killSwitch: KillSwitchView | null =
+    killEvent && content.state === "needs_revision"
+      ? {
+          factCode: killEvent.fact_code ?? "?",
+          cause: killEvent.cause ?? "changed",
+          at: lastKill!.at,
+        }
+      : null;
+
   const comments: CommentView[] = (commentRows ?? []).map((c) => {
     const anchor = c.anchor as { type?: string; finding_id?: string } | null;
     const f = anchor?.finding_id ? findings.find((x) => x.id === anchor.finding_id) : undefined;
@@ -433,7 +474,7 @@ export default async function ReviewContentPage({
     <>
       <RealtimeRefresh
         orgId={content.org_id}
-        tables={["contents", "findings", "comments", "review_runs"]}
+        tables={["contents", "findings", "comments", "review_runs", "publish_manifests"]}
       />
       <SetCrumb label={content.title} />
       <header className="mb-6 space-y-2">
@@ -448,6 +489,11 @@ export default async function ReviewContentPage({
           <span className="mono-label bg-accent-deep text-accent-soft rounded-sm px-1.5 py-0.5">
             → {ROUTE_LABEL[content.route_to ?? "manager"]}
           </span>
+          <PublishManifestBadge
+            manifest={manifest}
+            killSwitch={killSwitch}
+            error={Boolean(manifestError)}
+          />
           {current ? (
             <VersionSwitcher
               current={current.n}

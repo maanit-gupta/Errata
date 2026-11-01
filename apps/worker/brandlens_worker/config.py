@@ -95,3 +95,6 @@ MCP_CLAIM_FACTS: Final = 3  # nearest facts returned by verify_claim_evidence
 # A claim counts as matching a fact at this cosine (bge-small). From the build spec, NOT calibrated
 # on the golden set yet; the verdict leans on the deterministic filters first (see tools.py).
 MCP_CLAIM_FACT_MIN_SIM: Final = 0.78
+
+# R3 Hero 2: how often the worker sweeps for facts that expired under approved content.
+FACT_SWEEP_INTERVAL_S: Final = 60

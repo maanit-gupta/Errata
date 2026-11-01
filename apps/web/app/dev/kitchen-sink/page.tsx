@@ -29,12 +29,13 @@ import { STATE_LABELS, StateBadge, type ContentState } from "@/components/brand/
 import { ThemeToggle } from "@/components/brand/theme-toggle";
 import { WordCounter } from "@/components/brand/word-counter";
 import { Wordmark } from "@/components/brand/wordmark";
+import { PublishManifestBadge } from "@/components/review/publish-manifest-badge";
 import { VisualAutoHealPreview } from "@/components/review/visual-auto-heal-preview";
 import { McpIntegration } from "@/components/settings/mcp-integration";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TOKEN_NAMES } from "@/lib/design/tokens";
-import { VISUAL_FIX_LARGE, VISUAL_FIX_NORMAL } from "./samples";
+import { MANIFEST_ACTIVE, MANIFEST_REVOKED, VISUAL_FIX_LARGE, VISUAL_FIX_NORMAL } from "./samples";
 import {
   DrawerDemo,
   FindingCardsDemo,
@@ -342,6 +343,15 @@ function Showcase({ theme, mcpPreview }: { theme: "dark" | "light"; mcpPreview: 
         <Forbidden role="Agency" action="open the brand vault" />
         <DegradedBanner />
         <AiPendingBanner attempt={1} maxAttempts={5} nextAt="2026-10-31T13:12:00Z" />
+      </Section>
+
+      <Section title="Publish receipt and kill-switch (Hero 2)">
+        <PublishManifestBadge manifest={MANIFEST_ACTIVE} killSwitch={null} />
+        <PublishManifestBadge manifest={MANIFEST_REVOKED} killSwitch={null} />
+        <PublishManifestBadge
+          manifest={null}
+          killSwitch={{ factCode: "F-048", cause: "changed", at: "2026-11-01T06:00:00Z" }}
+        />
       </Section>
 
       <Section title="Visual auto-heal preview (Hero 3)">

@@ -31,6 +31,7 @@ from brandlens_worker.embeddings import to_pgvector
 from brandlens_worker.jobs.common import get_embedder, get_router, get_storage, get_tracer
 from brandlens_worker.llm.base import DegradedError
 from brandlens_worker.notify import notify_needs_review
+from brandlens_worker.pipeline.filters.facts import dependent_fact_ids
 from brandlens_worker.pipeline.image import VisualKit
 from brandlens_worker.pipeline.ingest import IngestError
 from brandlens_worker.pipeline.routing import RoutingFinding, has_open_blockers, route
@@ -458,6 +459,22 @@ async def persist(
             (content_id, p.version_id),
         )
         carry_over(rows, list(await cur.fetchall()))
+        # Hero 2: the facts this version relies on (the kill-switch's dependency list). Replaced on
+        # every run, so it always describes the latest checked version.
+        deps = dependent_fact_ids(result.doc, vault) | {
+            f.fact_id for f in result.findings if f.fact_id
+        }
+        await conn.execute(
+            "delete from public.content_fact_dependencies where content_id = %s", (content_id,)
+        )
+        for fact_id in sorted(deps):
+            await conn.execute(
+                "insert into public.content_fact_dependencies "
+                "(org_id, content_id, version_id, fact_id) values (%s, %s, %s, %s) "
+                "on conflict do nothing",
+                (p.org_id, content_id, p.version_id, fact_id),
+            )
+        timings["fact_dependencies"] = len(deps)
         # Idempotent per run: a retried job replaces its own findings.
         await conn.execute("delete from public.findings where run_id = %s", (p.run_id,))
         for r in rows:
