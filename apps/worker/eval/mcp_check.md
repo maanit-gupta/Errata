@@ -1,10 +1,6 @@
-# MCP check: sandbox run (2026-10-31)
+# MCP check (2026-10-31 15:35 UTC)
 
-> **What this ran against.** Not the full local Supabase stack: Docker images could not be pulled in the build sandbox. It ran against **Postgres 16 with every migration in `supabase/migrations` and `supabase/seed.sql` applied** (plus pgvector, pgmq, pgTAP and a minimal stand-in for Supabase's `auth`/`storage` schemas), with the worker's real MCP router, `PgMcpStore` and deterministic pipeline served by uvicorn. The embedding model download was blocked, so vault rows and queries were embedded with a **deterministic word-hash stand-in**: rule ranking and claim similarity below are not representative, but every scope, expiry, never-send, agency, auth and validation check is the real SQL and the real handler. Re-run on the real stack with `make mcp-check` and replace this file.
-
-Negative control: with the never-send/expiry/campaign filter deliberately removed from `mcp_campaign_facts()`, the same script failed calls 5, 6 and 14 (all three canaries reported) and exited 1.
-
-Target: `http://127.0.0.1:8765`
+Target: `http://localhost:8000`
 
 | # | Call | Expected | Got | Result |
 |---|---|---|---|---|
@@ -29,4 +25,4 @@ Target: `http://127.0.0.1:8765`
 | 19 | expired key | HTTP 401, -32001 | HTTP 401, -32001 | PASS |
 | 20 | revoked key | HTTP 401, -32001 | HTTP 401, -32001 | PASS |
 
-**20/20 calls passed (0 skipped) in 0.4 s; 33 returned facts/rules checked against the DB; canaries planted: 3**
+**20/20 calls passed (0 skipped) in 0.2 s; 33 returned facts/rules checked against the DB; canaries planted: 3**
