@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from brandlens_worker import __version__, config
+from brandlens_worker.heroes.api import build_router as build_heroes_router
 from brandlens_worker.jobs import build_registry
 from brandlens_worker.logs import configure_logging
 from brandlens_worker.mcp import build_router as build_mcp_router
@@ -49,6 +50,7 @@ def create_app(settings: Settings | None = None, *, run_queue: bool = True) -> F
 
     app = FastAPI(title="BrandLens worker", version=__version__, lifespan=lifespan)
     app.include_router(build_mcp_router())  # R3: read-only MCP server, POST /v1/mcp
+    app.include_router(build_heroes_router())  # R3 extras: /v1/heroes (authenticated)
 
     @app.get("/healthz")
     def healthz() -> dict[str, str]:
@@ -128,6 +130,12 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
 
     services["embedder"] = Embedder(settings.embedding_model, settings.model_cache_dir)
     services["mcp_store"] = PgMcpStore(pool)
+    from brandlens_worker.heroes.api import PgHeroStore, SupabaseUserVerifier
+
+    services["hero_store"] = PgHeroStore(pool)
+    services["user_verifier"] = SupabaseUserVerifier(
+        settings.supabase_url, settings.supabase_secret_key.get_secret_value()
+    )
 
     # R3 Hero 2: facts that expire don't fire an UPDATE trigger, so sweep every minute.
     state["tasks"].append(

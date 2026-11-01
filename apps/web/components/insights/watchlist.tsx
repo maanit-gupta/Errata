@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { GcsShadowSimulator } from "@/components/insights/gcs-shadow-simulator";
 import { Button } from "@/components/ui/button";
 import { decideExamples } from "@/lib/insights/actions";
 import { cn } from "@/lib/utils";
@@ -46,7 +47,16 @@ export function StatusBadge({ status }: { status: GcsStatus }) {
  * rule with generated examples opens a drawer (a modal `<dialog>`) where a brand admin keeps or
  * drops each example; approving makes the next version of the card, which is re-embedded.
  */
-export function Watchlist({ rows, canDecide }: { rows: WatchRow[]; canDecide: boolean }) {
+export function Watchlist({
+  rows,
+  canDecide,
+  includeSimulated = true,
+}: {
+  rows: WatchRow[];
+  canDecide: boolean;
+  /** Hero 5: whether the shadow backtest counts simulated history (the Insights filter). */
+  includeSimulated?: boolean;
+}) {
   const [open, setOpen] = useState<WatchRow | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const show = (row: WatchRow) => {
@@ -130,6 +140,7 @@ export function Watchlist({ rows, canDecide }: { rows: WatchRow[]; canDecide: bo
             key={open.suggestion.id}
             row={open}
             canDecide={canDecide}
+            includeSimulated={includeSimulated}
             onDone={() => dialog.current?.close()}
           />
         ) : null}
@@ -141,10 +152,12 @@ export function Watchlist({ rows, canDecide }: { rows: WatchRow[]; canDecide: bo
 function SuggestionPanel({
   row,
   canDecide,
+  includeSimulated,
   onDone,
 }: {
   row: WatchRow;
   canDecide: boolean;
+  includeSimulated: boolean;
   onDone: () => void;
 }) {
   const id = useId();
@@ -219,6 +232,14 @@ function SuggestionPanel({
             </label>
           ))}
         </fieldset>
+        <GcsShadowSimulator
+          ruleId={row.ruleId}
+          doExamples={keep.filter((i) => examples[i]?.kind === "do").map((i) => examples[i].text)}
+          dontExamples={keep
+            .filter((i) => examples[i]?.kind === "dont")
+            .map((i) => examples[i].text)}
+          includeSimulated={includeSimulated}
+        />
       </div>
       <div className="border-line space-y-2 border-t p-4">
         {canDecide ? (

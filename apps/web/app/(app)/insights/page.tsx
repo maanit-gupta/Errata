@@ -186,7 +186,11 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
                   a rule starts a fresh score.
                 </p>
               </div>
-              <Watchlist rows={rows} canDecide={can(session.role, "define_vault")} />
+              <Watchlist
+                rows={rows}
+                canDecide={can(session.role, "define_vault")}
+                includeSimulated={!realOnly}
+              />
               {quiet > 0 ? (
                 <p className="text-fg-muted text-xs">
                   {quiet} more approved rule{quiet === 1 ? " has" : "s have"} no findings yet.

@@ -1,3 +1,4 @@
+import type { ShadowResult } from "@/lib/insights/actions";
 import type { VisualFix } from "@/lib/drafts/visual-fix";
 
 /** Kitchen-sink samples for Hero 3: sample 01 and 17 from apps/worker/tests/fixtures/autoheal_samples.json. */
@@ -48,4 +49,37 @@ export const MANIFEST_REVOKED = {
   revokedAt: "2026-11-02T06:00:00Z",
   revokedReason:
     "Fact E-19 changed after approval (Diwali Wealth Webinar: online only, Oct 29, 7:00 PM IST). Re-check the copy against the vault.",
+};
+
+/** Hero 5 samples (dev preview only, not measurements). */
+export const SHADOW_PROJECTION: ShadowResult = {
+  rule_code: "TV-04",
+  status: "projection",
+  sample_size: 30,
+  current_gcs: 60,
+  current_status: "unclear",
+  dismissal_rate_now: 0.49,
+  override_rate: 0.36,
+  low_confidence_rate: 0.27,
+  sample_dismissal_rate: 0.5,
+  projected_dismissal_rate: 0.2,
+  projected_gcs: 74,
+  projected_status: "watch",
+  false_positives_removed: 9,
+  true_positives_lost: 1,
+  note: "Projection, not a measurement: the dismissal rate is re-scored on the last findings with local embeddings; override and low-confidence rates are held at their current values.",
+  elapsed_ms: 120,
+};
+
+export const SHADOW_INSUFFICIENT: ShadowResult = {
+  ...SHADOW_PROJECTION,
+  status: "insufficient_data",
+  sample_size: 4,
+  projected_gcs: null,
+  projected_status: null,
+  sample_dismissal_rate: null,
+  projected_dismissal_rate: null,
+  false_positives_removed: 0,
+  true_positives_lost: 0,
+  note: "Needs at least 10 findings and at least one 'do' example.",
 };
