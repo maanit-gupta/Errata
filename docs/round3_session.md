@@ -131,3 +131,9 @@ Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%
   5. Signed-in axe: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts`.
   6. Update the "sandbox / plain Postgres" labels in README, REPORT and this log with the MacBook numbers.
   7. Usability sessions; then, on the owner's go-ahead: `supabase db push` (dry run first), PR → `main`, merge, and optionally "rewrite history".
+
+### 2026-11-02 14:28 IST: merge to main requested
+
+- **Owner:** "commit all changes to main, update the main branch". Asked first because Vercel and Render deploy from `main` and the code needs migrations `…100022`–`…100026` on the cloud DB; **the owner confirmed they are already applied** (not verified from here: no cloud access).
+- **Did:** confirmed everything is committed and pushed (`round3/improvements` 22 commits ahead of `main`, `main` 0 ahead: a clean fast-forward). Opened PR https://github.com/maanit-gupta/Errata/pull/2 (no PR template in the repo; no attribution lines). Subscribed to its CI events.
+- **Next step:** when CI (lint-and-test, pgtap with the DB-gated tests, worker-image, eval) is green, fast-forward `main` to the PR head (no force-push), then check the Vercel and Render deploys. If CI fails, fix it on `round3/improvements` first.
