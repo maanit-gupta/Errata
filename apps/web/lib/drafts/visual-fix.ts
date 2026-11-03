@@ -27,3 +27,14 @@ export function parseVisualFix(value: unknown): VisualFix | null {
   const parsed = VisualFixSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
+
+/** The fix as CSS a designer can paste (Hero 3). Built only from the validated hex values. */
+export function cssPatch(fix: VisualFix): string {
+  const named = (hex: string, palette: string | null) =>
+    palette ? `${hex}; /* ${palette} */` : `${hex};`;
+  return [
+    `/* Errata palette fix, WCAG 1.4.3: ${fix.healed_ratio} : 1 (needs ${fix.required_ratio} : 1) */`,
+    `color: ${named(fix.healed_text_hex, fix.healed_text_name)}`,
+    `background-color: ${named(fix.healed_bg_hex, fix.healed_bg_name)}`,
+  ].join("\n");
+}

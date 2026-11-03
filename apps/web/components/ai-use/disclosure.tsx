@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { LICENCE, REPO } from "@/components/marketing/links";
 import type { EvalSummary } from "@/lib/eval-report";
 import { cn } from "@/lib/utils";
 
@@ -241,6 +242,30 @@ export function QualityTable({ report }: { report: EvalSummary | null }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/** Licence disclosure: PyMuPDF (PDF parsing, P12) is AGPL-3.0, so Errata is AGPL-3.0 too. */
+export function OpenSourceNotice() {
+  const link = "text-fg inline-flex items-center gap-1 font-semibold underline underline-offset-4";
+  return (
+    <div className="bg-elevated border-outline max-w-4xl space-y-3 rounded-lg border-2 p-6 text-sm">
+      <p>
+        Errata reads PDFs with <span className="font-semibold">PyMuPDF</span>, which is licensed
+        under the <span className="font-semibold">GNU AGPL-3.0</span>. Because of that, Errata is
+        AGPL-3.0 as well: anyone who uses it over a network can get its complete source code.
+      </p>
+      <p className="flex flex-wrap gap-x-5 gap-y-2">
+        <a href={LICENCE} target="_blank" rel="noreferrer" className={link}>
+          Licence (AGPL-3.0) <ExternalLink aria-hidden className="size-3" />
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+        <a href={REPO} target="_blank" rel="noreferrer" className={link}>
+          Source code <ExternalLink aria-hidden className="size-3" />
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+      </p>
     </div>
   );
 }

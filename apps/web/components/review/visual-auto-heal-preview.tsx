@@ -1,4 +1,9 @@
-import type { VisualFix } from "@/lib/drafts/visual-fix";
+"use client";
+
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { cssPatch, type VisualFix } from "@/lib/drafts/visual-fix";
 
 const CHANGE: Record<VisualFix["strategy"], string> = {
   text: "Change the text colour",
@@ -22,6 +27,15 @@ function Chip({ fg, bg, label }: { fg: string; bg: string; label: string }) {
   );
 }
 
+async function copyCss(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success("CSS fix copied.");
+  } catch {
+    toast.error("Couldn't copy. Select the CSS and copy it by hand.");
+  }
+}
+
 /**
  * Hero 3: before/after preview of a palette-only contrast fix. A suggestion only: nothing changes
  * in the image, and accepting (on the finding card) records the choice for the design file.
@@ -29,6 +43,7 @@ function Chip({ fg, bg, label }: { fg: string; bg: string; label: string }) {
 export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample: string }) {
   const large = fix.required_ratio === 3;
   const name = (hex: string, palette: string | null) => (palette ? `${palette} ${hex}` : hex);
+  const css = cssPatch(fix);
   return (
     <figure
       aria-label="Suggested on-brand contrast fix"
@@ -59,6 +74,18 @@ export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample:
         {large ? " (large text)" : ""}. Colours come only from your approved palette. Nothing
         changes in the image until you update the design file.
       </p>
+      <div className="flex flex-wrap items-start gap-2">
+        <pre
+          tabIndex={0}
+          aria-label="CSS for this fix"
+          className="bg-code border-line min-w-0 flex-1 overflow-x-auto rounded-sm border p-2 font-mono text-xs"
+        >
+          {css}
+        </pre>
+        <Button variant="secondary" size="sm" type="button" onClick={() => copyCss(css)}>
+          <Copy aria-hidden /> Copy CSS fix
+        </Button>
+      </div>
     </figure>
   );
 }

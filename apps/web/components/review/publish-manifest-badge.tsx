@@ -1,4 +1,5 @@
 import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { ExpiryCountdown } from "@/components/review/expiry-countdown";
 
 export type ManifestView = {
   hash: string | null;
@@ -47,6 +48,7 @@ export function PublishManifestBadge({
               {first ? ` (${first})` : ""}
             </span>
           ) : null}
+          {manifest.validUntil ? <ExpiryCountdown until={manifest.validUntil} /> : null}
         </summary>
         <dl className="mt-2 grid grid-cols-[7rem_1fr] gap-x-2 gap-y-1">
           <dt className="text-fg-faint">SHA-256</dt>

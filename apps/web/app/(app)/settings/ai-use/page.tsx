@@ -1,4 +1,9 @@
-import { HowAiWorks, QualityTable, ServiceCells } from "@/components/ai-use/disclosure";
+import {
+  HowAiWorks,
+  OpenSourceNotice,
+  QualityTable,
+  ServiceCells,
+} from "@/components/ai-use/disclosure";
 import { PageHeader } from "@/components/brand/page-header";
 import { readEvalReport } from "@/lib/eval-report";
 import { requireSession } from "@/lib/auth/session";
@@ -134,6 +139,13 @@ export default async function AiUsePage() {
           Quality
         </h2>
         <QualityTable report={report} />
+      </section>
+
+      <section aria-labelledby="licence-heading" className="mt-12 space-y-3">
+        <h2 id="licence-heading" className="text-2xl">
+          Open-source licence
+        </h2>
+        <OpenSourceNotice />
       </section>
     </>
   );

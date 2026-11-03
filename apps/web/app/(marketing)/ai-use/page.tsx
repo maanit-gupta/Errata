@@ -1,4 +1,9 @@
-import { HowAiWorks, QualityTable, ServiceCells } from "@/components/ai-use/disclosure";
+import {
+  HowAiWorks,
+  OpenSourceNotice,
+  QualityTable,
+  ServiceCells,
+} from "@/components/ai-use/disclosure";
 import { ShieldSpot } from "@/components/illustrations";
 import { readEvalReport } from "@/lib/eval-report";
 
@@ -45,6 +50,12 @@ export default async function PublicAiUse() {
             Quality
           </h2>
           <QualityTable report={report} />
+        </section>
+        <section aria-labelledby="lic-h" className="space-y-6">
+          <h2 id="lic-h" className={h2}>
+            Open-source licence
+          </h2>
+          <OpenSourceNotice />
         </section>
       </div>
     </>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseVisualFix } from "@/lib/drafts/visual-fix";
+import { cssPatch, parseVisualFix } from "@/lib/drafts/visual-fix";
 
 const OK = {
   original_text_hex: "#888888",
@@ -29,5 +29,18 @@ describe("parseVisualFix (Hero 3)", () => {
     expect(parseVisualFix({ ...OK, source: "model" })).toBeNull();
     expect(parseVisualFix(null)).toBeNull();
     expect(parseVisualFix({})).toBeNull();
+  });
+});
+
+describe("cssPatch (Hero 3 copy button)", () => {
+  it("gives paste-ready declarations from the validated palette colours", () => {
+    const fix = parseVisualFix(OK)!;
+    expect(cssPatch(fix)).toBe(
+      [
+        "/* Errata palette fix, WCAG 1.4.3: 4.84 : 1 (needs 4.5 : 1) */",
+        "color: #B5562F; /* Terracotta */",
+        "background-color: #FFFFFF;",
+      ].join("\n"),
+    );
   });
 });
