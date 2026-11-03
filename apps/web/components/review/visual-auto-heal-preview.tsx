@@ -1,6 +1,7 @@
 "use client";
 
-import { Copy } from "lucide-react";
+import { Check, Copy } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cssPatch, type VisualFix } from "@/lib/drafts/visual-fix";
@@ -27,12 +28,14 @@ function Chip({ fg, bg, label }: { fg: string; bg: string; label: string }) {
   );
 }
 
-async function copyCss(text: string) {
+async function copyCss(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     toast.success("CSS fix copied.");
+    return true;
   } catch {
     toast.error("Couldn't copy. Select the CSS and copy it by hand.");
+    return false;
   }
 }
 
@@ -44,6 +47,12 @@ export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample:
   const large = fix.required_ratio === 3;
   const name = (hex: string, palette: string | null) => (palette ? `${palette} ${hex}` : hex);
   const css = cssPatch(fix);
+  const [copied, setCopied] = useState(false);
+  const onCopy = async () => {
+    if (!(await copyCss(css))) return;
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <figure
       aria-label="Suggested on-brand contrast fix"
@@ -58,7 +67,10 @@ export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample:
           bg={fix.original_bg_hex}
           label={`Now: text ${fix.original_text_hex} on ${fix.original_bg_hex}, ${fix.original_ratio} to 1`}
         />
-        <span className="font-mono text-xs">{fix.original_ratio} : 1</span>
+        <span className="font-mono text-xs">
+          {fix.original_text_hex} · {fix.original_ratio}:1{" "}
+          <span className="border-danger text-danger rounded-sm border px-1">FAIL</span>
+        </span>
         <span aria-hidden>→</span>
         <span
           className={`border-outline inline-flex items-center rounded-sm border-2 px-3 py-1 ${large ? "text-2xl font-bold" : "text-sm font-semibold"}`}
@@ -66,7 +78,10 @@ export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample:
         >
           {sample.slice(0, 24) || "Aa"}
         </span>
-        <span className="font-mono text-xs">{fix.healed_ratio} : 1</span>
+        <span className="font-mono text-xs">
+          {fix.healed_text_hex} · {fix.healed_ratio}:1{" "}
+          <span className="border-outline rounded-sm border px-1">WCAG AA PASS</span>
+        </span>
       </div>
       <p className="text-fg-muted text-xs">
         {CHANGE[fix.strategy]}: text {name(fix.healed_text_hex, fix.healed_text_name)} on{" "}
@@ -82,8 +97,9 @@ export function VisualAutoHealPreview({ fix, sample }: { fix: VisualFix; sample:
         >
           {css}
         </pre>
-        <Button variant="secondary" size="sm" type="button" onClick={() => copyCss(css)}>
-          <Copy aria-hidden /> Copy CSS fix
+        <Button variant="secondary" size="sm" type="button" onClick={() => void onCopy()}>
+          {copied ? <Check aria-hidden /> : <Copy aria-hidden />}
+          <span aria-live="polite">{copied ? "✓ Copied" : "Copy CSS fix"}</span>
         </Button>
       </div>
     </figure>

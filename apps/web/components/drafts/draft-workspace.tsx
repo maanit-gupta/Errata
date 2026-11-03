@@ -22,6 +22,7 @@ import { resolveFinding, submitForCheck } from "@/lib/drafts/actions";
 import { LLM_MAX_ATTEMPTS, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/limits";
 import { revise } from "@/lib/review/actions";
 import { CHANNELS, intentSchema, type Intent } from "@/lib/drafts/intent";
+import { groundedSeedKey } from "@/lib/mcp/grounded";
 import {
   FindingHighlights,
   currentRange,
@@ -32,6 +33,7 @@ import { docToText, spanToRange, textToDocJSON } from "@/lib/editor/offsets";
 import { FindingCard, type FindingView } from "./finding-card";
 import { ImageFindings, type ImageMarker } from "./image-findings";
 import { PdfFindings, pageSummary, type PdfMarker } from "./pdf-findings";
+import { SamplePresets } from "./sample-presets";
 import type { PdfPageView } from "@/lib/drafts/pages";
 
 const SEVERITY_ORDER = { blocker: 0, warning: 1, suggestion: 2 } as const;
@@ -130,6 +132,23 @@ export function DraftWorkspace({
   const [words, setWords] = useState(() => countWords(version?.body ?? ""));
   const editor = useEditor({
     onUpdate: ({ editor: e }) => setWords(countWords(docToText(e.state.doc))),
+    // "Send grounded draft to editor" (MCP drawer): prefill a brand-new draft once, then forget it.
+    onCreate: ({ editor: e }) => {
+      if (version || !canEdit) return;
+      const key = groundedSeedKey(content.id);
+      let seed: { body?: unknown; intent?: Partial<Intent> } | null = null;
+      try {
+        seed = JSON.parse(sessionStorage.getItem(key) ?? "null");
+        sessionStorage.removeItem(key);
+      } catch {
+        return;
+      }
+      if (!seed || typeof seed.body !== "string") return;
+      const body = seed.body;
+      e.commands.setContent(textToDocJSON(body));
+      setWords(countWords(body));
+      setIntent((cur) => ({ ...cur, ...seed.intent }));
+    },
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -620,6 +639,21 @@ export function DraftWorkspace({
         <p id={`${id}-submit-help`} className="text-fg-muted -mt-2 text-xs" aria-live="polite">
           {submitWhy}
         </p>
+      ) : null}
+
+      {canEdit && !version ? (
+        <SamplePresets
+          onPoster={(f, seed) => {
+            void pickFile(f);
+            setIntent((cur) => ({ ...cur, ...seed }));
+          }}
+          onText={(body, seed) => {
+            void pickFile(null);
+            editor?.commands.setContent(textToDocJSON(body));
+            setWords(countWords(body));
+            setIntent((cur) => ({ ...cur, ...seed }));
+          }}
+        />
       ) : null}
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[280px_minmax(0,1fr)_400px]">

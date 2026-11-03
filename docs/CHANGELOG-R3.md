@@ -88,6 +88,9 @@ An audit of every item in the team's master engineering checklist (80 items: sch
 | Services & AI use: open-source licence section (PyMuPDF → AGPL-3.0, licence and source links), in-app and public | The licence was only in the marketing footer | Rendered on `/ai-use` |
 | Visual auto-heal: CSS shown, plus "Copy CSS fix" | Designers can paste the fix; built only from validated `#RRGGBB` values, so no schema change | `visual-fix.test.ts` |
 | Vault: delete a fact. Approved dependants go back to revision via the existing BEFORE DELETE kill-switch; a fact that findings cite is **retired** (expires now) instead, because `findings.fact_id` keeps the citation | Invariant 1 and audit history; both paths are audited | pgTAP `11_fact_delete` (10 tests) |
+| Grounded MCP assistant drawer on Drafts and Vault: drafts a caption only from facts and approved rules loaded with the `get_campaign_context` filters, cites their IDs, checks never-send canaries, and can prefill a new draft | Shows the MCP grounding in the app, not just in an IDE; deterministic, so no extra LLM call | `grounded.test.ts` |
+| Demo mode: "Simulate Vault Edit on E-19" / "Restore" on the review page fire the real fact kill-switch | Judges can watch a publish-ready item go back to revision without editing the vault by hand | Uses the existing `facts_kill_switch` trigger |
+| Sample presets on a new draft: low-contrast poster and a cross-modal caption | Heroes 3–4 can be demoed without local files | Fictional PayWise data |
 
 **Real-stack results (local Supabase on the MacBook, 2026-11-03).** At the audit, before these changes:
 
@@ -98,7 +101,7 @@ An audit of every item in the team's master engineering checklist (80 items: sch
 After these changes:
 
 - Worker: 313 passed, 17 skipped; **330 passed, 0 skipped** with `TEST_DATABASE_URL`.
-- Vitest 196, pgTAP 182 in 12 files.
+- Vitest 196 (199 after the demo additions), pgTAP 182 in 12 files.
 - ruff, mypy, ESLint, Prettier and tsc clean; `next build` 19 routes.
 
 ## Round 2 build (2026-10-20 to 2026-10-29): deviations from the Round 1 plan

@@ -107,6 +107,19 @@ the Round 3 pages and the extras end to end in the UI. `make mcp-check`, `make l
   ([`PRIVACY-SECURITY-A11Y.md`](PRIVACY-SECURITY-A11Y.md)).
 - **Checks:** vector-drawn logos in PDFs aren't detected; scanned PDFs are rejected; JPEG contrast
   is an estimate.
+- **Not built from the Round 1 plan** (from the 2026-10-27 plan audit): URL/HTML drafts and
+  copy-plus-image posts in one version; threaded, span- or region-anchored comments and
+  @mentions (comments are flat, optionally tied to a finding); font checks and ΔE on type;
+  the ASCI claim rule pack, bulk campaign review and a per-team brand-fit trend (COULD tier);
+  org retention, export and delete; a CMS review webhook; inclusive-language rule cards.
+- **Other deviations from the plan:** `INTENT_COSINE` is 0.74, not 0.82 (calibrated on the
+  golden set); facts and glossary come from CSV import, not LLM drafting; Tesseract is the
+  default OCR (PaddleOCR optional); email is coded but off, past the plan's "keep email"
+  cut-line; all work went straight to `main` with no PR review, so the eval workflow (PR or
+  manual trigger only) has not gated a change in CI; uploads are capped at 4 MB (Vercel body
+  limit); brand-fit is `100 − 10·blockers − 3·warnings`; a creator can one-click accept a
+  high-confidence blocker that has a cited fix (low-confidence and fix-less findings can't
+  be), and publish-ready still needs a recorded approval.
 - **Roadmap:** Google sign-in, Slack, a CMS hand-off (still human-approved), multilingual rule
   cards, per-channel rule scoping, an MCP submit tool once the read-only server has proven itself.
 

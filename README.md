@@ -9,7 +9,20 @@ Errata checks every marketing draft against your approved brand rules and facts 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black)](apps/web)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)](apps/worker)
 
-**Live app: https://brandlens-app.vercel.app** · pick a role under "Try a demo role" on the login page (no password). All data is the fictional PayWise brand.
+**Live app: https://brandlens-app.vercel.app/** · pick a role under **"Try a demo role"** on the login page for one-click sign-in (no password). All data is the fictional PayWise brand.
+
+### Round 3 deliverables
+
+| # | Requirement | Where |
+|---|---|---|
+| 1 | Live link | https://brandlens-app.vercel.app/ (demo roles on the login page) |
+| 2 | Repository | https://github.com/maanit-gupta/Errata |
+| 3 | Final report | [`docs/REPORT.md`](docs/REPORT.md) (Round 1 plan: [`docs/plan.pdf`](docs/plan.pdf)) |
+| 4 | Complete feature list | [What Errata does](#the-problem-and-what-errata-does) · [Workflow in screens](#the-workflow-in-screens) · [How a draft is checked](#how-a-draft-is-checked) |
+| 5 | Architecture summary | [How it works](#how-it-works) · [`docs/SPEC.md`](docs/SPEC.md) |
+| 6 | R2/R3 improvements delivered | [Round 3 improvements](#round-3-improvements) · [`docs/CHANGELOG-R3.md`](docs/CHANGELOG-R3.md) · [Changes since Round 1](#changes-since-round-1) |
+| 7 | Testing and reliability | [Results](#results) · [Security and reliability](#security-and-reliability) · [REPORT §4](docs/REPORT.md#4-testing-and-reliability-evidence) |
+| 8 | Roadmap and local setup | [Limitations and roadmap](#limitations-and-roadmap) · [Quick start](#quick-start) · [Running locally](#running-locally) |
 
 ![The Errata landing page: the headline "Every draft, checked before it ships", Try the demo and How it works buttons, and an illustration of a draft with the rule IDs CL-03 and E-19 flagged](docs/screens/readme/01-landing-hero.webp)
 
@@ -155,7 +168,7 @@ Key decisions:
 
 - **Deterministic first.** Anything checkable without a model (brand terms, fees, dates, venues, campaign bleed, contrast, colour ΔE, logo placement) never goes to the LLM. The LLM judges only tone and claims nuance, in **one call per draft**.
 - **The LLM is untrusted.** The draft is redacted and delimited data; output is schema-bound (Pydantic); quotes are matched and offsets computed locally. A finding survives the **citation gate** only if it cites a rule or fact retrieved for this run, in the matching dimension, with a quote that is really in the draft.
-- **Humans decide.** Every state change goes through one SQL function (`transition_content`) that enforces the state machine and permissions and writes the audit log. Blockers and low-confidence findings can't be one-click accepted; overrides need a reason.
+- **Humans decide.** Every state change goes through one SQL function (`transition_content`) that enforces the state machine and permissions and writes the audit log. Low-confidence findings and findings without a suggested fix can't be one-click accepted; a high-confidence blocker with a cited fix can be accepted by the creator, and the content still needs a recorded approval before it is publish-ready. Overrides need a reason.
 - **Measured, then gated.** A 60-row golden set runs in CI. Any dimension under 85% precision is demoted to suggestion-only.
 
 ## Results

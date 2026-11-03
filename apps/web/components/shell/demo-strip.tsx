@@ -2,6 +2,7 @@
 
 import { Popover } from "@base-ui/react/popover";
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { DEMO_ROLE_BLURB } from "@/lib/auth/demo-roles";
 import { DEMO_USERS } from "@/lib/auth/demo-users";
 import { signInAsDemo } from "@/lib/auth/actions";
@@ -46,6 +47,15 @@ export function DemoRoleList({ currentEmail }: { currentEmail?: string }) {
   );
 }
 
+/** Judge quick-jump: one link per Round 3 highlight, so a cold visitor can tour them in a minute. */
+const TOUR = [
+  { href: "/drafts/new", label: "Pre-check & auto-heal" },
+  { href: "/drafts?mcp=open", label: "MCP firewall" },
+  { href: "/review", label: "Risk queue & diff" },
+  { href: "/vault?tab=facts", label: "Fact kill-switch" },
+  { href: "/insights", label: "GCS shadow eval" },
+] as const;
+
 /** Demo strip (DESIGN.md §7.2): `DEMO · PayWise (fictional) · signed in as Creator · Switch role ▾`. */
 export function DemoStrip({
   orgName,
@@ -65,8 +75,19 @@ export function DemoStrip({
       <span className="truncate">
         {orgName} (fictional) · {roleLabel}
       </span>
+      <nav aria-label="Demo tour" className="ml-auto hidden items-center gap-1 xl:flex">
+        {TOUR.map((t, i) => (
+          <Link
+            key={t.href}
+            href={t.href}
+            className="hover:bg-elevated border-outline rounded-sm border px-1.5 py-0.5 font-mono text-xs whitespace-nowrap"
+          >
+            {i + 1}. {t.label}
+          </Link>
+        ))}
+      </nav>
       <Popover.Root>
-        <Popover.Trigger className="text-fg hover:bg-elevated ml-auto inline-flex h-7 items-center gap-1 rounded-sm px-2 font-semibold underline underline-offset-4">
+        <Popover.Trigger className="text-fg hover:bg-elevated ml-auto inline-flex h-7 items-center gap-1 rounded-sm px-2 font-semibold underline underline-offset-4 xl:ml-0">
           Switch role <ChevronDown aria-hidden className="size-3" />
         </Popover.Trigger>
         <Popover.Portal>

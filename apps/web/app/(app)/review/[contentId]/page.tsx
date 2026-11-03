@@ -20,6 +20,8 @@ import {
 } from "@/components/review/publish-manifest-badge";
 import { VersionSwitcher } from "@/components/brand/version-switcher";
 import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
+import { KillSwitchDemo } from "@/components/review/kill-switch-demo";
+import { clientEnv } from "@/lib/env";
 import { requireSession } from "@/lib/auth/session";
 import { signedPages } from "@/lib/drafts/pages";
 import { spanBox, spanPage } from "@/lib/drafts/span";
@@ -370,6 +372,15 @@ export default async function ReviewContentPage({
         }
       : null;
 
+  // Hero 2 demo: fire (and undo) the real kill-switch on E-19 from this page.
+  const reliesOnE19 = Boolean(manifest?.facts.some((f) => f.code === "E-19"));
+  const canSimulateE19 =
+    reliesOnE19 &&
+    !manifest?.revokedAt &&
+    (content.state === "approved" || content.state === "publish_ready");
+  const demoE19 =
+    clientEnv.NEXT_PUBLIC_DEMO_MODE && (reliesOnE19 || killSwitch?.factCode === "E-19");
+
   const comments: CommentView[] = (commentRows ?? []).map((c) => {
     const anchor = c.anchor as { type?: string; finding_id?: string } | null;
     const f = anchor?.finding_id ? findings.find((x) => x.id === anchor.finding_id) : undefined;
@@ -494,6 +505,7 @@ export default async function ReviewContentPage({
             killSwitch={killSwitch}
             error={Boolean(manifestError)}
           />
+          {demoE19 ? <KillSwitchDemo canSimulate={canSimulateE19} /> : null}
           {current ? (
             <VersionSwitcher
               current={current.n}

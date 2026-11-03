@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/brand/page-header";
 import { ThemeRadioCards } from "@/components/brand/theme-toggle";
 import { DiscordTestButton, LandingToggle, ShortcutsToggle } from "@/components/settings/client";
 import { McpIntegration, type McpKeyRow } from "@/components/settings/mcp-integration";
+import { mcpEndpoint } from "@/lib/mcp/config";
 import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/auth/session";
 import { clientEnv, serverEnv } from "@/lib/env";
@@ -83,7 +84,7 @@ export default async function SettingsPage() {
     revokedAt: k.revoked_at,
     expired: k.expires_at <= renderedAt,
   }));
-  const mcpEndpoint = `${(env.WORKER_URL ?? "https://<worker-url>").replace(/\/+$/, "")}/v1/mcp`;
+  const mcpEndpointUrl = mcpEndpoint(env.WORKER_URL);
 
   const sections = [
     ["profile", "Profile"],
@@ -168,7 +169,7 @@ export default async function SettingsPage() {
               </>
             }
           >
-            <McpIntegration keys={mcpKeys} endpoint={mcpEndpoint} canRevokeOthers={admin} />
+            <McpIntegration keys={mcpKeys} endpoint={mcpEndpointUrl} canRevokeOthers={admin} />
           </Cell>
           {admin ? (
             <Cell

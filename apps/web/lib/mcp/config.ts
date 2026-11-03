@@ -26,3 +26,7 @@ export function mcpConfigs(endpoint: string, key: string) {
     ),
   };
 }
+
+/** The worker's MCP endpoint as shown to users (placeholder when WORKER_URL isn't set). */
+export const mcpEndpoint = (workerUrl: string | undefined) =>
+  `${(workerUrl ?? "https://<worker-url>").replace(/\/+$/, "")}/v1/mcp`;

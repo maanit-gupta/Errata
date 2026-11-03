@@ -1,3 +1,4 @@
+import { McpAssistantDrawer } from "@/components/mcp/mcp-assistant-drawer";
 import { NoAccess } from "@/components/no-access";
 import { PageHeader } from "@/components/brand/page-header";
 import { AssetsTab } from "@/components/vault/assets-tab";
@@ -9,6 +10,8 @@ import { RuleCardsTab } from "@/components/vault/rule-cards-tab";
 import { StatusTabs } from "@/components/vault/status-tabs";
 import { VAULT_TABS, type VaultTab } from "@/components/vault/vault-tabs";
 import { requireSession } from "@/lib/auth/session";
+import { serverEnv } from "@/lib/env";
+import { mcpEndpoint } from "@/lib/mcp/config";
 import { can, roleLabel } from "@/lib/workflow/permissions";
 
 export const metadata = { title: "Vault" };
@@ -34,6 +37,12 @@ export default async function VaultPage({ searchParams }: PageProps<"/vault">) {
         eyebrow="Brand vault"
         title="Rules, facts and assets"
         description="Every draft is checked against what's approved here, and every finding cites it."
+        actions={
+          <McpAssistantDrawer
+            endpoint={mcpEndpoint(serverEnv().WORKER_URL)}
+            canSubmit={can(session.role, "submit_content")}
+          />
+        }
       />
       <StatusTabs
         label="Vault sections"

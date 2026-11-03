@@ -55,7 +55,7 @@ export function GcsShadowSimulator({
           focusableWhenDisabled
           onClick={run}
         >
-          {pending ? "Backtesting…" : "Run on recent findings"}
+          {pending ? "Backtesting…" : "Run shadow backtest (last 30 findings)"}
         </Button>
       </div>
       <p className="text-fg-muted text-xs">
@@ -87,10 +87,15 @@ export function GcsShadowSimulator({
                   {result.projected_gcs} ({result.projected_status})
                 </span>
               </p>
+              <p className="font-mono text-xs">
+                Dismissals {pct(result.sample_dismissal_rate)} →{" "}
+                {pct(result.projected_dismissal_rate)} · Low-confidence{" "}
+                {pct(result.low_confidence_rate)} (held) · Projected GCS {result.current_gcs ?? "–"}{" "}
+                → {result.projected_gcs ?? "–"}
+              </p>
               <p className="text-fg-muted text-xs">
-                On {result.sample_size} recent findings: dismissed as “doesn&apos;t apply”{" "}
-                {pct(result.sample_dismissal_rate)} → {pct(result.projected_dismissal_rate)};{" "}
-                {result.false_positives_removed} would no longer be flagged.
+                On {result.sample_size} recent findings, {result.false_positives_removed} dismissed
+                as “doesn&apos;t apply” would no longer be flagged.
                 {result.true_positives_lost
                   ? ` ${result.true_positives_lost} accepted finding${result.true_positives_lost === 1 ? "" : "s"} would also stop being flagged: check the examples aren't too broad.`
                   : " No accepted findings would be lost."}

@@ -7,8 +7,11 @@ import { IntentCheckTag } from "@/components/brand/intent-check-tag";
 import { DocumentSpot } from "@/components/illustrations";
 import { SeverityBadge } from "@/components/brand/severity-badge";
 import { DraftsTable, type DraftRow } from "@/components/drafts/drafts-table";
+import { McpAssistantDrawer } from "@/components/mcp/mcp-assistant-drawer";
 import { requireSession } from "@/lib/auth/session";
 import { CHANNELS } from "@/lib/drafts/intent";
+import { serverEnv } from "@/lib/env";
+import { mcpEndpoint } from "@/lib/mcp/config";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/workflow/permissions";
 
@@ -122,7 +125,15 @@ export default async function DraftsPage() {
 
   return (
     <>
-      <PageHeader title="Drafts" actions={rows.length ? newDraft : null} />
+      <PageHeader
+        title="Drafts"
+        actions={
+          <>
+            <McpAssistantDrawer endpoint={mcpEndpoint(serverEnv().WORKER_URL)} canSubmit />
+            {rows.length ? newDraft : null}
+          </>
+        }
+      />
       {rows.length ? <DraftsTable rows={rows} /> : <Onboarding />}
     </>
   );
