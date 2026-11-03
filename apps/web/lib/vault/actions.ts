@@ -249,6 +249,76 @@ export async function saveFact(input: FactEdit): Promise<ActionResult> {
   }
 }
 
+/**
+ * Delete a fact (R3 Hero 2). The BEFORE DELETE kill-switch trigger sends approved and publish-ready
+ * content that relies on it back to revision, audited with a reason. A fact that past findings cite
+ * can't be deleted (findings.fact_id keeps the citation, invariant 1): the delete then fails as a
+ * whole, trigger moves included, and the fact is retired instead: it expires now, which fires the
+ * same kill-switch through the UPDATE trigger.
+ */
+export async function deleteFact(id: string): Promise<ActionResult> {
+  try {
+    const session = await admin();
+    if (!z.uuid().safeParse(id).success) return { ok: false, error: "Unknown fact." };
+    const supabase = await createClient();
+    const { data: fact, error: readError } = await supabase
+      .from("facts")
+      .select("code, valid_until")
+      .eq("id", id)
+      .eq("org_id", session.orgId)
+      .maybeSingle();
+    if (readError) return { ok: false, error: readError.message };
+    if (!fact) return { ok: false, error: "That fact no longer exists." };
+
+    // For the message only: how many approved items the kill-switch is about to move.
+    const { data: deps } = await supabase
+      .from("content_fact_dependencies")
+      .select("content_id")
+      .eq("fact_id", id);
+    const dependants = (deps ?? []).map((d) => d.content_id);
+    const { count } = dependants.length
+      ? await supabase
+          .from("contents")
+          .select("id", { count: "exact", head: true })
+          .in("id", dependants)
+          .in("state", ["approved", "publish_ready"])
+      : { count: 0 };
+    const live = count ?? 0;
+    const moved = live
+      ? ` ${live} approved item${live === 1 ? "" : "s"} went back to revision.`
+      : "";
+
+    const { error } = await supabase
+      .from("facts")
+      .delete()
+      .eq("id", id)
+      .eq("org_id", session.orgId);
+    if (!error) {
+      revalidatePath("/vault");
+      return { ok: true, message: `${fact.code} deleted.${moved}` };
+    }
+    if (error.code !== "23503") return { ok: false, error: error.message };
+
+    // Cited by past findings: retire it so the audit history keeps its citation.
+    const expired = fact.valid_until !== null && new Date(fact.valid_until) <= new Date();
+    if (!expired) {
+      const { error: retireError } = await supabase
+        .from("facts")
+        .update({ valid_until: new Date().toISOString() })
+        .eq("id", id)
+        .eq("org_id", session.orgId);
+      if (retireError) return { ok: false, error: retireError.message };
+    }
+    revalidatePath("/vault");
+    return {
+      ok: true,
+      message: `${fact.code} is cited by past findings, so it was retired (expired ${expired ? "already" : "now"}) instead of deleted.${expired ? "" : moved}`,
+    };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
 // ------------------------------------------------------------------ campaigns
 
 const campaign = z

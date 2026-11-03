@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/brand/empty-state";
 import { IdCode } from "@/components/brand/id-badge";
 import { Button } from "@/components/ui/button";
 import { fieldClass, Input } from "@/components/ui/input";
-import { saveFact } from "@/lib/vault/actions";
+import { deleteFact, saveFact } from "@/lib/vault/actions";
 import { toastResult } from "./use-action-toast";
 
 export type FactRow = {
@@ -155,6 +155,7 @@ function FactEditor({ fact, onDone }: { fact: FactRow; onDone: () => void }) {
   const [disclaimer, setDisclaimer] = useState(fact.required_disclaimer ?? "");
   const [validUntil, setValidUntil] = useState(toLocal(fact.valid_until));
   const [neverSend, setNeverSend] = useState(fact.never_send);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const p = `fact-${fact.id}`;
   return (
     <Drawer
@@ -252,6 +253,58 @@ function FactEditor({ fact, onDone }: { fact: FactRow; onDone: () => void }) {
           </span>
         </label>
       </form>
+      <section
+        aria-labelledby={`${p}-del`}
+        className="border-line mt-8 space-y-3 border-t pt-5 text-sm"
+      >
+        <h3 id={`${p}-del`} className="font-semibold">
+          Delete fact
+        </h3>
+        {confirmDelete ? (
+          <div role="alert" className="border-danger space-y-3 rounded-sm border-2 p-3">
+            <p>
+              Approved or publish-ready content that relies on {fact.code} goes back to revision,
+              with the reason recorded in the audit log. If past findings cite {fact.code}, it is
+              retired instead (it expires now) so their citations stay intact.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                disabled={pending}
+                onClick={() =>
+                  start(async () => {
+                    const r = await deleteFact(fact.id);
+                    toastResult(r);
+                    if (r.ok) onDone();
+                  })
+                }
+              >
+                {pending ? "Deleting…" : `Delete ${fact.code}`}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setConfirmDelete(false)}
+              >
+                Keep it
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="danger"
+            size="sm"
+            disabled={pending}
+            onClick={() => setConfirmDelete(true)}
+          >
+            Delete {fact.code}…
+          </Button>
+        )}
+      </section>
     </Drawer>
   );
 }
