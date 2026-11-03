@@ -39,7 +39,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | R3.2 | Usability kit + Clarity Score on real data | J | done (sessions pending) | J (Claude) | round3/improvements | 2026-10-31; no results yet |
 | R3.3 | AI check pending + load test | Both | done | J (Claude) | round3/improvements | 2026-10-31; real-stack load test 2026-11-01 (MacBook Air): 20/20 pending runs completed, non-LLM P95 8.46 s, 0 lost |
 | R3.4 | Deliverables: REPORT, CHANGELOG-R3, PRIVACY-SECURITY-A11Y, README | J | done | J (Claude) | round3/improvements | 2026-10-31 |
-| R3.5 | Extras: Heroes 2–5 (publish receipt + kill-switch, visual auto-heal, cross-modal, GCS shadow) | J | done | J (Claude) | round3/improvements | 2026-11-01; all four meet their PASS IF; hero tests pass on the real stack 2026-11-03; see docs/round3_session.md |
+| R3.5 | Extras: Heroes 2–5 (publish receipt + kill-switch, visual auto-heal, cross-modal, GCS shadow) | J | done | J (Claude) | round3/improvements | 2026-11-01; all four meet their PASS IF; hero tests pass on the real stack 2026-11-03 |
 | R3.6 | Audit follow-ups (master checklist): live review queue, embedder warm-up, demo dates, receipt countdown, licence notice, CSS copy, fact delete | J | done | J (Claude) | round3/improvements | 2026-11-03; see Handoff |
 
 ## Handoff (latest — overwrite each phase)

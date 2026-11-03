@@ -1,1 +1,0 @@
-Read `UI_INTEGRATION_AND_FINAL_POLISH.md` (first 1–50 lines). Identify the first `[ ] PENDING` phase in the Phase Tracker. Then read only the files scoped for that phase, implement the changes concisely, run the phase’s fast check, and mark the phase `[x] DONE` in `UI_INTEGRATION_AND_FINAL_POLISH.md`. Finally, ask me to run `/clear` and `/next`.

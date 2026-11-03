@@ -42,3 +42,11 @@ supabase/.temp/
 # Demo video build output (apps/web/video-src): renders and HyperFrames caches stay local.
 apps/web/video-src/composition/renders/
 apps/web/video-src/composition/.hyperframes/
+
+# Local agent tooling and internal working notes (kept on disk, never pushed)
+.claude/
+docs/round3_session.md
+docs/ui-redesign/PR.md
+docs/ui-redesign/README-rename-notes.md
+apps/web/video-src/brag-plan.md
+apps/web/video-src/share-copy.txt
