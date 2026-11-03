@@ -1,6 +1,7 @@
 import { NoAccess } from "@/components/no-access";
 import { PageHeader } from "@/components/brand/page-header";
 import { ReviewQueue, type QueueRow } from "@/components/review/review-queue";
+import { RealtimeRefresh } from "@/components/vault/realtime-refresh";
 import { requireSession, type Session } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { can, roleLabel } from "@/lib/workflow/permissions";
@@ -105,6 +106,8 @@ export default async function ReviewPage() {
         title="Review queue"
         description="Content waiting for a decision, highest risk first."
       />
+      {/* New submissions, routing and kill-switch revocations arrive without a reload. */}
+      <RealtimeRefresh orgId={session.orgId} tables={["contents", "findings"]} />
       <ReviewQueue rows={rows} tabs={tabs} />
     </>
   );
