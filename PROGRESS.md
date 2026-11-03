@@ -345,6 +345,7 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-11-03 | R3.6 | README opens with an 8-row Round 3 deliverables map; the plan-audit gaps and deviations (from the scratch `deviate.md`) moved into REPORT §5; README wording on one-click accept now matches `finding-card.tsx` (high-confidence blocker with a cited fix is acceptable) | Scratch files deleted before submission, so their disclosures had to land in a kept doc; README must not claim more than the code does |
 | 2026-11-03 | R3.6 | Grounded MCP assistant in the web app is deterministic (no LLM) and reads as the signed-in user under RLS, mirroring `get_campaign_context` filters | Every number/date/venue traces to a cited fact; never-send items provably absent; no new external call |
 | 2026-11-03 | R3.6 | E-19 kill-switch demo uses the admin client from a server action, gated on `NEXT_PUBLIC_DEMO_MODE`, scoped to the caller's org and two fixed statements | Non-admin demo roles can't write facts under RLS; the real trigger must fire for the demo to be honest |
+| 2026-11-03 | deploy | Cloud Supabase was missing migration `…100023_insights_real_data` (contents.simulated, `p_include_simulated` on `rule_gcs`/`insights_summary`); applied in one transaction with its real version in `schema_migrations` (user go-ahead). Cloud now has all 26 | The deployed web already called the new signatures, so Insights failed in production |
 
 **Dependencies and licences** (append when adding any dependency):
 
