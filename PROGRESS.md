@@ -2,7 +2,7 @@
 
 > This is the memory between `/clear`s. Claude reads it first in every session and rewrites **Handoff** at the end of every phase.
 
-**Current phase:** R3 (Round 3 improvements) on branch `round3/improvements`, not merged. Before that: P16 partial (team items), redesign merged to `main` 2026-10-29.
+**Current phase:** R3 (Round 3 improvements), merged to `main` 2026-11-02 (PR #2); audit follow-ups 2026-11-03 on `round3/improvements`. Before that: P16 partial (team items), redesign merged to `main` 2026-10-29.
 **Build window:** Day 1 = `2026-10-20`. Milestones: Day 7 core loop · Day 11 feature complete · Day 14 submit.
 
 ## Phase status
@@ -35,37 +35,41 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | R1 | Redesign foundation: DESIGN.md, tokens, fonts, lint | J | done | J (Claude) | UI/UX_jagpreet | 2026-10-28; DB-dependent gates not run here (local Supabase unavailable, see Handoff) |
 | R2–R6 | Primitives, illustrations, shell, landing, sign-in | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; first pass done; 21st.dev ports not yet; signed-in routes unverified here |
 | R7–R10 | Feature screens (drafts, review, vault, insights, audit, settings) | J | partial | J (Claude) | UI/UX_jagpreet | 2026-10-28; restyled via shared components only |
-| R3.1 | MCP server, read-only (build spec subset) | J | done (real-stack `make mcp-check` pending) | J (Claude) | round3/improvements | 2026-10-31; 20/20 on plain Postgres |
+| R3.1 | MCP server, read-only (build spec subset) | J | done | J (Claude) | round3/improvements | 2026-10-31; `make mcp-check` 20/20 on the real stack (2026-10-31 and 2026-11-03), 0 of 3 canaries leaked |
 | R3.2 | Usability kit + Clarity Score on real data | J | done (sessions pending) | J (Claude) | round3/improvements | 2026-10-31; no results yet |
-| R3.3 | AI check pending + load test | Both | done (real-stack `make load-test` pending) | J (Claude) | round3/improvements | 2026-10-31; sandbox PASS |
+| R3.3 | AI check pending + load test | Both | done | J (Claude) | round3/improvements | 2026-10-31; real-stack load test 2026-11-01 (MacBook Air): 20/20 pending runs completed, non-LLM P95 8.46 s, 0 lost |
 | R3.4 | Deliverables: REPORT, CHANGELOG-R3, PRIVACY-SECURITY-A11Y, README | J | done | J (Claude) | round3/improvements | 2026-10-31 |
-| R3.5 | Extras: Heroes 2–5 (publish receipt + kill-switch, visual auto-heal, cross-modal, GCS shadow) | J | done (sandbox / plain Postgres; real stack pending) | J (Claude) | round3/improvements | 2026-11-01; all four meet their PASS IF; see docs/round3_session.md |
+| R3.5 | Extras: Heroes 2–5 (publish receipt + kill-switch, visual auto-heal, cross-modal, GCS shadow) | J | done | J (Claude) | round3/improvements | 2026-11-01; all four meet their PASS IF; hero tests pass on the real stack 2026-11-03; see docs/round3_session.md |
+| R3.6 | Audit follow-ups (master checklist): live review queue, embedder warm-up, demo dates, receipt countdown, licence notice, CSS copy, fact delete | J | done | J (Claude) | round3/improvements | 2026-11-03; see Handoff |
 
 ## Handoff (latest — overwrite each phase)
 
-- **Branch:** all Round 3 work is on `round3/improvements` (not merged; Vercel and Render still serve `main`). Commits are authored by Jagpreet Singh; `.claude/settings.json` turns off AI attribution trailers. `wip/r3-mcp-draft` is obsolete (don't merge it).
+- **Branch:** Round 3 is on `main` (PR #2, fast-forwarded 2026-11-02; Vercel and Render deploy from `main`). The 2026-11-03 audit follow-ups are on `round3/improvements`, rebased onto `origin/round3/improvements`, **not pushed yet** (owner reviews `git status` / `git log` first). Commits are authored by Jagpreet Singh; `.claude/settings.json` turns off AI attribution trailers. `wip/r3-mcp-draft` is obsolete.
 - **What exists now (R3):**
-  - **MCP server** (`apps/worker/brandlens_worker/mcp/`, `POST /v1/mcp`): `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource `brandvault://campaigns/active`, prompt `brandlens-governed-draft`; personal `bl_mcp_` keys (migration `…100022`); Settings → AI tools (MCP). Docs: `docs/MCP.md`.
+  - **MCP server** (`apps/worker/brandlens_worker/mcp/`, `POST /v1/mcp`, read-only): `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource `brandvault://campaigns/active`, prompt `brandlens-governed-draft`; personal `bl_mcp_` keys (migration `…100022`); Settings → AI tools (MCP). Docs: `docs/MCP.md`.
   - **Clarity Score on real data:** `contents.simulated` + `p_include_simulated` (migration `…100023`); Insights "All data / Real reviews only".
   - **AI check pending:** `review_runs.llm_pending/llm_attempts/llm_next_at` (migration `…100024`); delayed pgmq retry in the same transaction; banner on the draft page.
-  - **Load test:** `scripts/load_test.py`, `make load-test` (local only; in-process consumers; `--simulate-rate-limit`).
-  - **Usability kit:** `docs/usability/` (checklist, consent, tasks T1–T6 + pending probe, `sessions.csv`), `scripts/usability_summary.py`.
-  - **Docs:** `docs/REPORT.md`, `docs/CHANGELOG-R3.md`, `docs/PRIVACY-SECURITY-A11Y.md`, README "Round 3 improvements".
-- **Verified on the real stack (Jagpreet's MacBook, 2026-10-31, at `d19c525`):** `make db-reset` applies 24 migrations; `make check` green (worker 239 passed / 7 skipped, web 188); pgTAP 147 tests in 9 files pass. Use 147 in every doc.
-- **Verified only in the build sandbox (plain Postgres 16 + pgvector + pgmq + pgTAP, Supabase auth/storage stand-in; Docker registries and the embedding-model download were blocked):** `mcp_check.py` 20/20; load test 20/20 pending completed, non-LLM P95 4.5 s; the 7 DB-gated worker tests (9 incl. pure ones) pass; kitchen-sink axe 0 violations.
-- **Not run yet (exact next steps, real local stack):**
-  1. The 7 DB-gated tests: `make db-reset`, then `cd apps/worker && TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55322/postgres uv run pytest -q tests/test_llm_pending.py tests/test_mcp_server.py` (they purge `review_jobs` and restore the vault embeddings they swap).
-  2. `make dev-local` (terminal 1), then `make mcp-check` (terminal 2) → rewrites `apps/worker/eval/mcp_check.md`.
-  3. Stop the worker, then `make load-test note="MacBook <model>, local Supabase"` → rewrites `apps/worker/eval/load_report.md`. Then update the "sandbox" lines in README → Round 3 improvements and `docs/REPORT.md` §3.
-  4. Signed-in axe on the Round 3 pages: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts` (with `make dev-local` running), and `E2E_WORKER=1 pnpm exec playwright test e2e/insights.spec.ts` after `make simulate-activity`.
+  - **Heroes 2–5:** publish receipt + fact kill-switch (`…100026`, sweep every 60 s), visual auto-heal (`…100025`), cross-modal check, GCS shadow backtest (`POST /v1/heroes/simulate-rule`, authenticated).
+  - **Audit follow-ups (2026-11-03, from the master engineering checklist; deliberate deviations kept as they were):**
+    - `/review` queue refreshes live via Realtime (`contents`, `findings`), like the detail pages.
+    - The worker warms bge-small in `lifespan` before serving (`main.warm_embedder`; never raises). Measured on the MacBook: cold first call ~415 ms, warm median 4.8 ms.
+    - Demo dates: the Diwali SIP 2026 campaign `ends_on` and E-19 `valid_until` moved from 2026-11-15 to **2027-03-31** in `seed.sql`, `scripts/demo_data.py` and `fixtures/paywise/facts.csv` (fixed dates, not `now()`-relative, so tests and eval stay deterministic). F-112 still expires 2026-12-31 (deliberate: "as of Q3 2026").
+    - Publish receipt: live "expires in …" countdown (`components/review/expiry-countdown.tsx`, `lib/review/countdown.ts`), warning style within 7 days.
+    - Services & AI use (in-app and public): open-source licence section, PyMuPDF → AGPL-3.0, with licence and source links.
+    - Visual auto-heal preview: shows the CSS and a "Copy CSS fix" button (`cssPatch` in `lib/drafts/visual-fix.ts`, built only from validated hexes; no schema change).
+    - Vault → Facts → edit drawer → "Delete F-…": `deleteFact` deletes; the BEFORE DELETE kill-switch sends approved dependants back to revision. A fact that findings cite can't be deleted (FK keeps the citation); the delete fails atomically and the fact is **retired** instead (`valid_until = now()`, same kill-switch). pgTAP `11_fact_delete` (10 tests).
+- **Verified on the real stack (Jagpreet's MacBook, local Supabase, 2026-11-03):** 26 migrations; ruff, mypy, ESLint, Prettier, tsc clean; worker **313 passed / 17 skipped** without a DB URL, **330 passed / 0 skipped** with `TEST_DATABASE_URL` (the 4 DB-gated files: 19 passed); Vitest **196**; pgTAP **182 in 12 files**; `next build` 19 routes; `make mcp-check` 20/20 (0 of 3 canaries leaked). At the audit, before the follow-ups: worker 311 + 19 DB-gated, Vitest 191, pgTAP 172 in 11 files.
+- **Next steps:**
+  1. Owner: review `git log`, then `git push` `round3/improvements` and fast-forward `main` (owner's go-ahead only).
+  2. Cloud data (owner's go-ahead; no migration needed, seed data only): in the cloud SQL editor, `update public.campaigns set ends_on = '2027-03-31' where name = 'Diwali SIP 2026';` and `update public.facts set valid_until = '2027-03-31T23:59:59+05:30' where code = 'E-19';` (this fires no kill-switch: value and statement are unchanged and the new date is in the future). Or re-run `make seed-demo url=…`.
+  3. Restore `apps/web/.env.local` and `apps/worker/.env` on the MacBook from the team's secret store (missing on 2026-11-03: `pnpm build` fails env validation without them; `make dev-local` works without them).
+  4. Signed-in axe on the Round 3 pages: `cd apps/web && pnpm exec playwright test e2e/ui.spec.ts e2e/keyboard.spec.ts e2e/a11y.spec.ts` (with `make dev-local` running), plus a manual look at the fact delete drawer, the receipt countdown and the Copy CSS fix button.
   5. Usability sessions (8–15) → `python scripts/usability_summary.py` → copy only its numbers into README and REPORT.
-  6. Merge: apply migrations `…100022`–`…100026` to cloud first, then PR → `main` (owner's go-ahead only).
 - **Gotchas:**
-  - `apps/web/types/database.ts`: the newer Supabase CLI formats generated output differently, so `make types` gives a huge formatting-only diff. Keep the committed file (the R3 additions were written in the generator's format and typecheck).
+  - `apps/web/types/database.ts`: the newer Supabase CLI formats generated output differently, so `make types` gives a huge formatting-only diff. Keep the committed file. Its R3 tables have no `Relationships`, so PostgREST embeds like `content_fact_dependencies → contents(...)` don't typecheck; query in two steps (see `deleteFact`).
   - Never `git add -A` in Jagpreet's checkout (unrelated untracked files); add files by name.
   - Deleting a user who appears in `audit_events` fails (append-only trigger blocks the `on delete set null`); erasure needs a designed path (roadmap).
   - `make check` resets the local DB. Keep load tests off the cloud stack.
-- **R3 extras (2026-11-01):** Heroes 3, 4, 2, 5 built in that order from `docs/specs/V5_remaining_heroes_spec.md`, adapted (deviations in `docs/CHANGELOG-R3.md`). New migrations `20261101100025_visual_autoheal.sql` and `20261101100026_fact_kill_switch.sql` (the latter redefines `private.apply_transition` with one system-only branch). The worker now runs a fact sweep every 60 s and serves `POST /v1/heroes/simulate-rule` (authenticated). pgTAP 172 in 11 files and worker 309 passed / 19 skipped on plain Postgres and in the sandbox. Real-stack verification: `docs/round3_session.md` → Next step. The live session log is `docs/round3_session.md`.
 - **Still open from P16:** make the repo public (owner's go-ahead), move or add a release tag after the merge, `scripts/reset_demo.sh` and a recorded dry run before judging.
 
 ## Decisions log (append-only)
@@ -327,6 +331,11 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-11-01 | R3 extras | GCS shadow: "now" = SQL `rule_gcs`; only the dismissal rate is projected; override and low-confidence held; < 10 findings → insufficient data; Python round = SQL round(double) (half-to-even) | No fabricated numbers; same definitions as the dashboard |
 | 2026-11-01 | R3 extras | `/v1/heroes` auth = the user's Supabase session verified with Supabase Auth, plus a role check in the rule's org; the web forwards the token from a server action (needs `WORKER_URL`) | No unauthenticated org data; the browser's CSP never talks to the worker |
 | 2026-11-01 | R3 | Kitchen-sink MCP dialog preview moved behind `?mcpPreview=1` | The open modal made the page inert, so axe checked 26 of 33 rules |
+| 2026-11-03 | R3.6 | Audit against the master engineering checklist: 21 checklist items built differently on purpose and 5 left out by decision (read-only MCP, 0.74 intent cosine, kill-switch through `apply_transition`, heroes inside the pipeline, no fabricated numbers) kept as they are | They protect invariants 1 and 7 and recorded owner decisions |
+| 2026-11-03 | R3.6 | Demo campaign end and E-19 expiry moved to 2027-03-31 (fixed date, not `now()`-relative) | Demos after 2026-11-15 would show the webinar fact as expired; fixed dates keep tests and eval deterministic. Replaces the 2026-10-26 P01 date |
+| 2026-11-03 | R3.6 | Fact delete falls back to retiring (`valid_until = now()`) when findings cite the fact | `findings.fact_id` must keep its citation (invariant 1, audit history); both paths fire the kill-switch |
+| 2026-11-03 | R3.6 | Embedder warmed in `lifespan` before serving (blocking, ~0.4 s on the MacBook; failure logged, not fatal) | The first review or MCP pre-check after boot paid the cold load |
+| 2026-11-03 | R3.6 | Auto-heal CSS built in the web app from the validated hexes, not stored by the worker | Works for existing findings; no schema or worker change; nothing unvalidated reaches the clipboard |
 
 **Dependencies and licences** (append when adding any dependency):
 

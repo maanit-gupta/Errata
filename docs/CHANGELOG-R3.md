@@ -39,7 +39,7 @@ MacBook), **plain Postgres** (Postgres 16 with every migration applied, in the b
 |---|---|---|
 | When every LLM provider is rate-limited or failing transiently, the run saves its deterministic findings at once, stays `llm_pending`, keeps the content in ai_check and queues a delayed retry (60/120/240/480 s) **in the same transaction**; after the last retry it finishes degraded as before. Permanent failures (bad model, invalid output) degrade at once | Replace silent degraded results; never route on partial results; a pending run can't lose its retry; still one LLM pass per draft through the same citation gate | `test_llm_pending.py`: 4 DB tests of the real job and pgmq, plus a negative control (plain Postgres; CI runs them on Supabase Postgres) |
 | Draft page: "AI check pending" banner, rule-based findings shown read-only, run-log line; fills in via Realtime | The creator sees what's done and doesn't resubmit | Kitchen-sink axe, both themes (sandbox) |
-| `scripts/load_test.py`: default 20 submissions, `--n` for more, local only, in-process consumers running the worker's own code, `--simulate-rate-limit`, report writer, `make load-test` | Repeatable evidence without spending LLM quota | [`apps/worker/eval/load_report.md`](../apps/worker/eval/load_report.md): sandbox run 20/20 pending runs completed, non-LLM P95 4.5 s, 0 lost, 0 failed. **Real-stack run pending** |
+| `scripts/load_test.py`: default 20 submissions, `--n` for more, local only, in-process consumers running the worker's own code, `--simulate-rate-limit`, report writer, `make load-test` | Repeatable evidence without spending LLM quota | [`apps/worker/eval/load_report.md`](../apps/worker/eval/load_report.md): real stack (MacBook Air, 2026-11-01): 20/20 pending runs completed, non-LLM P95 8.46 s, 0 lost, 0 failed (sandbox earlier: P95 4.5 s) |
 
 ### Process
 
@@ -74,6 +74,32 @@ Stretch work (Round 2 extensions E2–E5), built 2026-11-01 from [`specs/V5_rema
 | Inline Tailwind greys, vermilion styling | DESIGN.md tokens; colours from data validated as `#RRGGBB` before becoming inline styles | One design system; no CSS injection |
 
 New migrations: `20261101100025_visual_autoheal.sql`, `20261101100026_fact_kill_switch.sql`.
+
+## Round 3 audit follow-ups (2026-11-03)
+
+An audit of every item in the team's master engineering checklist (80 items: schema, pipeline, Heroes 1–5, UI, tests), run on the real stack. Result before these fixes: 68 pass, 7 partial, 5 missing. Of the passes, 21 are built differently from the checklist's wording on purpose (the deviations above and in [`CLAUDE.md`](../CLAUDE.md)). The 5 missing items are deliberate too: the two MCP write tools (read-only decision) and three standalone `/v1/heroes/*` endpoints whose logic runs inside the pipeline and SQL. Those were kept as they are. These changes close the gaps:
+
+| Change | Why | Evidence |
+|---|---|---|
+| `/review` queue refreshes live (Realtime on `contents`, `findings`) | New submissions and kill-switch revocations needed a reload there; the detail pages were already live | `next build`, tsc |
+| Worker warms bge-small in `lifespan` before serving | The first review or MCP pre-check after boot paid the cold model load | Measured on the MacBook: cold ~415 ms, warm median 4.8 ms (p95 6.1 ms); `test_main.py` |
+| Demo campaign `ends_on` and E-19 `valid_until`: 2026-11-15 → 2027-03-31 (`seed.sql`, `demo_data.py`, `facts.csv`) | Demos after Nov 15 would see the webinar fact as expired. Fixed dates keep tests and eval deterministic | pgTAP and DB-gated tests pass on the new seed |
+| Publish receipt: live "expires in …" countdown, warning style within 7 days | The receipt showed only a date | `lib/review/__tests__/countdown.test.ts` |
+| Services & AI use: open-source licence section (PyMuPDF → AGPL-3.0, licence and source links), in-app and public | The licence was only in the marketing footer | Rendered on `/ai-use` |
+| Visual auto-heal: CSS shown, plus "Copy CSS fix" | Designers can paste the fix; built only from validated `#RRGGBB` values, so no schema change | `visual-fix.test.ts` |
+| Vault: delete a fact. Approved dependants go back to revision via the existing BEFORE DELETE kill-switch; a fact that findings cite is **retired** (expires now) instead, because `findings.fact_id` keeps the citation | Invariant 1 and audit history; both paths are audited | pgTAP `11_fact_delete` (10 tests) |
+
+**Real-stack results (local Supabase on the MacBook, 2026-11-03).** At the audit, before these changes:
+
+- Worker: 311 passed, 17 DB-gated skipped; the 4 DB-gated files pass 19/19.
+- Vitest 191, pgTAP 172 in 11 files.
+- `make mcp-check` 20/20, with 0 of 3 planted canaries leaked.
+
+After these changes:
+
+- Worker: 313 passed, 17 skipped; **330 passed, 0 skipped** with `TEST_DATABASE_URL`.
+- Vitest 196, pgTAP 182 in 12 files.
+- ruff, mypy, ESLint, Prettier and tsc clean; `next build` 19 routes.
 
 ## Round 2 build (2026-10-20 to 2026-10-29): deviations from the Round 1 plan
 

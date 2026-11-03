@@ -39,9 +39,9 @@ reason, and Errata never publishes.
 
 | # | Improvement | Done when | Status |
 |---|---|---|---|
-| 1 | **Read-only MCP server**: `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource `brandvault://campaigns/active`, prompt `brandlens-governed-draft`; personal `bl_mcp_` keys; Settings → AI tools (MCP) | 20 test calls return only live facts for the requested campaign and no never-send text | **Built.** 20/20 on plain Postgres with three planted canaries; a negative control (filter removed) fails as it should. Real-stack run (`make mcp-check`) pending |
+| 1 | **Read-only MCP server**: `get_campaign_context`, `precheck_draft_fast`, `verify_claim_evidence`, resource `brandvault://campaigns/active`, prompt `brandlens-governed-draft`; personal `bl_mcp_` keys; Settings → AI tools (MCP) | 20 test calls return only live facts for the requested campaign and no never-send text | **Built.** 20/20 on the real stack (2026-10-31, re-run 2026-11-03) and on plain Postgres, with three planted canaries; a negative control (filter removed) fails as it should. Real-stack run (`make mcp-check`) pending |
 | 2 | **Real users**: A/B benchmark (manual vs Errata) and SUS; Clarity Score on real data | SUS ≥ 70, and participants catch more seeded issues with Errata than by hand | **Kit built; sessions not run yet.** The real-data filter (`contents.simulated`, "Real reviews only") is built and tested (pgTAP, real stack). No usability numbers exist yet |
-| 3 | **Hold up under load**: "AI check pending" instead of silent degraded results, plus a repeatable load test | Non-LLM P95 < 15 s, zero lost jobs, every pending run completes | **Built.** Sandbox load test: 20/20 pending runs completed, non-LLM P95 4.5 s, 0 lost, 0 failed. Real-stack run (`make load-test`) pending |
+| 3 | **Hold up under load**: "AI check pending" instead of silent degraded results, plus a repeatable load test | Non-LLM P95 < 15 s, zero lost jobs, every pending run completes | **Built.** Real-stack load test (MacBook Air, 2026-11-01): 20/20 pending runs completed, non-LLM P95 8.46 s, 0 lost, 0 failed (sandbox earlier: P95 4.5 s) |
 
 Details: [`docs/MCP.md`](MCP.md), [`docs/usability/`](usability/), [`apps/worker/eval/load_report.md`](../apps/worker/eval/load_report.md), [`docs/CHANGELOG-R3.md`](CHANGELOG-R3.md).
 
@@ -66,16 +66,16 @@ Deviations from that spec, and why, are in [`CHANGELOG-R3.md`](CHANGELOG-R3.md#r
 | Rewrite intent check (`INTENT_COSINE` 0.74) | Keeps 15/16 good rewrites, rejects 24/24 bad ones | Eval |
 | Text review latency, 30 drafts | P50 3.0 s, P95 15.2 s (LLM time as recorded; target ≤ 15 s, just missed) | Eval |
 | Images / PDFs | Logo found in 9/9 creatives, 0 false positives; contrast within ±0.1 of WebAIM on 40/40 pairs; 9/9 seeded deck issues on the right page; 40-page deck under 512 MB | Eval |
-| Database tests (pgTAP) | **147 tests in 9 files, all pass** (RLS, workflow, retrieval, Clarity Score, rate limit, MCP keys, real-data split). With the extras: **172 in 11 files** | 147: real stack, 2026-10-31. 172: plain Postgres, 2026-11-01 (real-stack run pending) |
-| `make check` | Green: ruff, mypy, ESLint, Prettier, tsc; worker 239 passed / 7 skipped (the 7 need a database URL); web 188 passed | Real stack, 2026-10-31 (at `d19c525`) |
-| DB-gated worker tests (pending flow + MCP golden set) | 9 passed, including negative controls that fail when the logic is removed | Plain Postgres; CI runs them on Supabase Postgres |
-| MCP acceptance | 20/20 calls; 33 returned facts/rules checked against the database; 3 canaries never returned | Plain Postgres, stand-in embedder |
-| Load (20 submissions, simulated 45 s rate limit) | 20 went pending, 20 completed, 0 degraded; non-LLM P50 4.3 s, P95 4.5 s; 0 lost; 0 failed | Sandbox (plain Postgres, stand-in embedder) |
+| Database tests (pgTAP) | **182 tests in 12 files, all pass** (RLS, workflow, retrieval, Clarity Score, rate limit, MCP keys, real-data split, heroes, kill-switch, fact delete) | Real stack, 2026-11-03 (172 in 11 files at the audit, before the fact-delete tests) |
+| `make check` | Green: ruff, mypy, ESLint, Prettier, tsc; worker 313 passed / 17 skipped (the 17 need a database URL; 330 passed with it); web 196 passed; `next build` 19 routes | Real stack, 2026-11-03 |
+| DB-gated worker tests (pending flow + MCP golden set) | 19 passed (pending flow, MCP golden set, kill-switch, GCS shadow), including negative controls that fail when the logic is removed | Real stack, 2026-11-03; CI runs them on Supabase Postgres |
+| MCP acceptance | 20/20 calls; 33 returned facts/rules checked against the database; 3 canaries never returned | Real stack, 2026-10-31 and 2026-11-03 ([`mcp_check.md`](../apps/worker/eval/mcp_check.md)) |
+| Load (20 submissions, simulated 45 s rate limit) | 20 went pending, 20 completed, 0 degraded; non-LLM P50 6.42 s, P95 8.46 s; 0 lost; 0 failed | Real stack, MacBook Air, 2026-11-01 ([`load_report.md`](../apps/worker/eval/load_report.md)) |
 | Accessibility | 0 serious/critical axe violations on every route × 2 themes (2026-10-28, local stack); production UI gates 49 passed, 1 skipped (2026-10-27, live); Round 3 components 0 violations (sandbox) | As stated |
 | Usability (A/B, SUS) | **Pending real sessions** | — |
 
-The sandbox numbers show the code paths work. The real-stack runs that still need doing are listed
-in §4.
+Numbers marked sandbox or plain Postgres show the code paths work; the test suites, `make mcp-check`
+and the load test have since passed on the real stack. What still needs doing is listed in §4.
 
 ## 4. Testing and reliability evidence
 
@@ -89,9 +89,9 @@ in §4.
 - **CI:** lint, types, unit tests, pgTAP, schema lint, the DB-gated worker tests, the worker
   image build, and the golden-set precision gate on prompt changes.
 
-Still to run on the real stack before the merge (commands in `PROGRESS.md` → Handoff):
-`make mcp-check`, `make load-test`, the DB-gated worker tests (now 19, including the extras), the
-signed-in axe pass on the Round 3 pages, and the extras end to end.
+Still to run on the real stack (commands in `PROGRESS.md` → Handoff): the signed-in axe pass on
+the Round 3 pages and the extras end to end in the UI. `make mcp-check`, `make load-test` and the
+19 DB-gated worker tests have passed there.
 
 ## 5. Limitations and roadmap
 

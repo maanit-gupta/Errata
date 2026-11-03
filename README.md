@@ -39,15 +39,15 @@ Built for the Inkloom AI brand-governance problem statement (We Code Coders; Rou
 
 ## Round 3 improvements
 
-Status on 2026-10-31. Sources: **real stack** = local Supabase on the team's MacBook; **plain Postgres** = Postgres 16 with every migration, in the build sandbox; **sandbox** = build sandbox with stand-ins noted.
+Status on 2026-11-03. Sources: **real stack** = local Supabase on the team's MacBook; **plain Postgres** = Postgres 16 with every migration, in the build sandbox; **sandbox** = build sandbox with stand-ins noted.
 
 | # | Improvement | Done when | Status |
 |---|---|---|---|
-| 1 | **Read-only MCP server** ([docs](docs/MCP.md)) | 20 test calls return only live facts for the requested campaign and no never-send text | ✅ Built. 20/20 on plain Postgres with three planted canaries (a negative control fails). ⏳ Real-stack `make mcp-check` pending |
+| 1 | **Read-only MCP server** ([docs](docs/MCP.md)) | 20 test calls return only live facts for the requested campaign and no never-send text | ✅ Built. 20/20 on the real stack (2026-10-31, re-run 2026-11-03) and on plain Postgres, with three planted canaries never returned (a negative control fails) |
 | 2 | **Real users** ([kit](docs/usability/)): A/B (manual vs Errata) + SUS; Clarity Score on real data | SUS ≥ 70, and more seeded issues caught with Errata than by hand | ⏳ **Sessions not run yet; no results.** ✅ Real-data filter built (pgTAP, real stack) |
-| 3 | **Hold up under load** ([report](apps/worker/eval/load_report.md)): "AI check pending" + repeatable load test | Non-LLM P95 < 15 s, 0 lost jobs, every pending run completes | ✅ Built. Sandbox: P95 4.5 s, 0 lost, 20/20 pending runs completed. ⏳ Real-stack `make load-test` pending |
+| 3 | **Hold up under load** ([report](apps/worker/eval/load_report.md)): "AI check pending" + repeatable load test | Non-LLM P95 < 15 s, 0 lost jobs, every pending run completes | ✅ Built. Real stack (MacBook Air, 2026-11-01): non-LLM P95 8.46 s, 0 lost, 20/20 pending runs completed (sandbox earlier: P95 4.5 s) |
 
-**Extras (stretch, not commitments; 2026-11-01).** Four more features from the plan's extension list, each with its own pass/fail target. All four pass in the sandbox or on plain Postgres; none has run on the real stack yet. Details: [report](docs/REPORT.md#round-3-extras-stretch-work-not-commitments).
+**Extras (stretch, not commitments; 2026-11-01).** Four more features from the plan's extension list, each with its own pass/fail target. All four pass; the numbers below were measured in the sandbox or on plain Postgres, and the same hero tests (80) pass on the real stack (2026-11-03). Details: [report](docs/REPORT.md#round-3-extras-stretch-work-not-commitments).
 
 | Hero | Result |
 |---|---|
@@ -69,7 +69,7 @@ Never-send items, expired facts and other campaigns' facts are excluded in SQL; 
 
 **AI check pending.** If every LLM provider is rate-limited, a review saves its rule-based findings at once, shows an "AI check pending" banner, keeps the draft out of reviewers' queues and retries the AI pass on its own (60/120/240/480 s, queued in the same transaction so it can't be lost). It fills in via Realtime. After the last retry it finishes degraded, as before. Still one LLM pass per draft, through the same citation gate.
 
-**Tests:** pgTAP 147 tests in 9 files, all pass; `make check` green (worker 239 passed / 7 DB-gated skipped, web 188) on the real stack (2026-10-31). With the extras: pgTAP 172 in 11 files and worker 309 passed / 19 DB-gated skipped, web 191 (sandbox and plain Postgres, 2026-11-01; real-stack run pending). Everything that changed is in the [change log](docs/CHANGELOG-R3.md).
+**Tests (real stack, 2026-11-03):** pgTAP 182 tests in 12 files, all pass; ruff, mypy, ESLint, Prettier and tsc clean; worker 330 passed with the database (313 passed / 17 DB-gated skipped without it); web 196. Everything that changed is in the [change log](docs/CHANGELOG-R3.md).
 
 ## The problem, and what Errata does
 
@@ -261,7 +261,7 @@ The full checklist with evidence is in [`docs/SECURITY.md`](docs/SECURITY.md): R
 | Before the router cool-down (35-draft burst; snapshot when 32 had finished, then lost to a local DB reset) | 32 | 0 | 4 | ≥ 14 min | ≤ 2.3/min | mean 7.0 min | max 14.1 min |
 | After the cool-down (50 drafts) | 50 | 0 | 0 | 58 s | 51.6/min | 49.5 s | 57.5 s |
 
-**Round 3 load test** (`make load-test`; in-process consumers running the worker's code, a simulated LLM that answers 429 for 45 s; 20 submissions): 20/20 runs went "AI check pending" and 20/20 completed after the first retry; non-LLM-path P50 4.3 s, P95 4.5 s; 0 lost, 0 failed. This ran in the **build sandbox** (plain Postgres, stand-in embedder); the real-stack run replaces [`load_report.md`](apps/worker/eval/load_report.md).
+**Round 3 load test** (`make load-test`; in-process consumers running the worker's code, a simulated LLM that answers 429 for 45 s; 20 submissions): on the real stack (MacBook Air, local Supabase, bge-small, 3 consumers, 2026-11-01) 20/20 runs went "AI check pending" and 20/20 completed; non-LLM-path P50 6.42 s, P95 8.46 s; end-to-end P50 67 s (the first retry is at 60 s); 0 lost, 0 failed ([`load_report.md`](apps/worker/eval/load_report.md)). The earlier sandbox run (plain Postgres, stand-in embedder) gave P95 4.5 s.
 
 The bottleneck is the free LLM tiers, not the pipeline. Groq and Gemini rate limits were already spent by the day's eval runs, so in the second run every review came back degraded (deterministic findings only, flagged in the UI) and none failed. Without rate limits, an LLM review takes P50 2.9 s and P95 15.2 s (recorded provider latency, `apps/worker/eval/report.md`). A paid tier or a per-org LLM budget is the fix for sustained bursts. We didn't load-test the deployed stack, so the live demo's quota stays intact; the script now refuses non-local databases, and a cloud run needs the team's go-ahead.
 
