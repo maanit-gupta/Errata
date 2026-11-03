@@ -15,19 +15,17 @@ Errata checks every marketing draft against your approved brand rules and facts 
 
 ### Demo video
 
-[![Play the 60-second Errata demo: a CL-03 finding card with its cited rule and fact IDs](apps/web/public/demo/errata-how-it-works-poster.jpg)](apps/web/public/demo/errata-how-it-works.mp4)
+[![Play the 87-second Errata demo: the "Six things are new" list from Round 3](apps/web/public/demo/errata-whats-new-poster.jpg)](apps/web/public/demo/errata-whats-new.mp4)
 
-**[▶ Watch the 60-second demo](apps/web/public/demo/errata-how-it-works.mp4)** (MP4, silent, 5 MB) · or watch it with captions under "How it works" on the [live landing page](https://brandlens-app.vercel.app/#how-it-works).
+**[▶ Watch the 87-second demo](apps/web/public/demo/errata-whats-new.mp4)** (MP4, silent) · or watch it with captions under "How it works" on the [live landing page](https://brandlens-app.vercel.app/#how-it-works).
 
 What it shows:
-1. A creator writes an Instagram caption and fills in its intent: goal, audience, call to action, channel and campaign.
-2. Six check stages run. A flag survives only if it cites an approved rule or fact.
-3. **CL-03** flags "assured returns" on a market-linked fund, and **E-19** catches last campaign's date and venue without AI judgement.
-4. **G-07** flags the brand spelling, and **WCAG 1.4.3** flags poster text at 2.89 : 1 contrast.
-5. The fix keeps the intent, and the claim is routed to Legal, who signs off with a reason.
-6. The audit trail records who decided, when and why. Errata never publishes.
+1. A creator writes an Instagram caption and fills in its intent; six check stages run, and a flag survives only if it cites an approved rule or fact.
+2. **CL-03** flags "assured returns" on a market-linked fund, and **E-19** catches last campaign's date and venue without AI judgement.
+3. What's new in Round 3, one scene each: **AI check pending** (rule-based findings at once, the AI check retries by itself), the **cross-check** of image text, caption and landing page against fact E-19, **contrast fixes from the brand palette**, the **publish receipt and fact kill-switch**, the **Clarity backtest**, and the **read-only MCP server** for Claude or Cursor.
+4. Legal signs off with a reason, every decision is audited, and Errata never publishes.
 
-The full transcript is in [`demo-video.tsx`](apps/web/components/marketing/demo-video.tsx) and the captions in [`errata-how-it-works.en.vtt`](apps/web/public/demo/errata-how-it-works.en.vtt).
+Scenes built from component previews say "sample data" on screen. The plan, sources and the measurement behind every number are in [`docs/video/`](docs/video/README.md); the transcript is in [`demo-video.tsx`](apps/web/components/marketing/demo-video.tsx) and the captions in [`errata-whats-new.en.vtt`](apps/web/public/demo/errata-whats-new.en.vtt). The first (Round 2) video is kept in [`docs/video/round2/`](docs/video/round2/).
 
 > Errata was called BrandLens until 2026-10-28. The code lives at https://github.com/maanit-gupta/Errata; some hosting, package and database names still use `brandlens` (see [Names that still say brandlens](#names-that-still-say-brandlens)).
 
@@ -309,7 +307,7 @@ Per General Rules 6–7, we disclose that this codebase is written with AI assis
 | P16 | README (pitch, architecture, results, licences, contributions), demo script, demo reset script, usability templates |
 | UI redesign (R0–R6, R7–R10 first pass) | Design study, the flat outlined design system and tokens, the WCAG contrast test and colour lint rules, restyled components, app shell, landing, sign-in and feature panels, original SVG illustrations and the wordmark |
 | Rename and repo move | User-facing rename to Errata, the list of identifiers that keep `brandlens`, and links pointing at the `maanit-gupta/Errata` repo |
-| Demo video | Capture script for real app screens, a HyperFrames composition (storyboard in `apps/web/video-src/brag-plan.md`), renders, captions, transcript and the landing-page embed |
+| Demo video | Capture scripts (real app screens; Round 3 components), two HyperFrames compositions (storyboards in `apps/web/video-src/brag-plan.md` and `docs/video/README.md`), renders, captions, transcript and the landing-page embed |
 | Local stack | `make db-start lite=1`, the Supabase CLI fallback and local env defaults so a fresh clone runs |
 | Round 3 extras | Heroes 2–5 from the team's spec: publish receipt and fact kill-switch (migration, workflow branch, sweep), palette-only contrast auto-heal, cross-modal date/time/rate check, GCS shadow backtest (authenticated worker endpoint); their tests, fixtures and UI. Run by Jagpreet with Claude Code |
 | Round 3 | Read-only MCP server (migration, worker package, settings UI, tests, acceptance script) built from the team's spec; `contents.simulated` and the real-data Insights filter; "AI check pending" (router classification, delayed pgmq retry, banner, DB tests); load test with a simulated rate limit; usability kit and summary script; the Round 3 documents. Run by Jagpreet with Claude Code on `round3/improvements` |
@@ -334,7 +332,7 @@ Model IDs come from env (`GROQ_MODEL_*`, `GEMINI_MODEL_*`). The table lists the 
 
 **Templates and assets:** shadcn/ui components (MIT, copied into `apps/web/components/ui`); fonts DM Sans and DM Mono (SIL OFL 1.1, via `next/font`); lucide icons (ISC). Illustrations and the wordmark are original inline SVGs drawn for this project; no third-party artwork or templates are used.
 
-**Demo video tooling** (build time only, not shipped in the app bundle): HyperFrames (Apache-2.0, run via `npx`) and GSAP (Standard "no charge" licence, vendored in `apps/web/video-src/composition/vendor/`). Every screen in the video is a capture of the running app with the fictional PayWise data.
+**Demo video tooling** (build time only, not shipped in the app bundle): HyperFrames (Apache-2.0, run via `npx`) and GSAP (Standard "no charge" licence, vendored in `apps/web/video-src/composition/vendor/`). In the Round 3 video, the core-loop screens are captures of the running app; the new-feature screens are the real components on the dev kitchen sink with sample data, labelled as such on screen. All data is the fictional PayWise brand.
 
 **Libraries**
 

@@ -163,3 +163,13 @@ Times are commit times in IST (`TZ=Asia/Kolkata git log --date=format-local:%H:%
   2. Update the two cloud seed rows (SQL in `PROGRESS.md` → Handoff).
   3. Restore the env files.
   4. Run the signed-in axe and a manual look at the three new UI bits.
+
+### 2026-11-03: Round 3 demo video
+
+- **Owner:** re-make the site's demo video to show the updated features clearly, using the "Motion graphics with Claude Code" handout and the brag skill; put it in a `docs/video` folder and on the site.
+- **Did:**
+  - New 87 s cut, "What's new", same look and tooling as the first video (HyperFrames 0.8.212, GSAP, 1920×1080, 30 fps, silent with captions). It has a short core loop (write, six checks, CL-03 and E-19), then one scene per Round 3 feature: AI check pending, cross-check, palette contrast fixes, Legal sign-off, publish receipt and kill-switch, Clarity backtest, MCP server.
+  - **Brag:** the brag plugin isn't installed in this cloud session (not in the plugin catalog either), so its rubric was answered by hand from the first video's plan.
+  - **Screens:** this sandbox has no Supabase or `.env.local`. The core-loop screens reuse the 2026-10-28 real-app captures. The new-feature screens are the real components on the dev kitchen sink with sample data (`video-src/capture-r3.mjs`), labelled "Component preview · sample data" on screen. The cross-check scene uses fixture post `c01-date` with the real `check_cross_modal` output. Every on-screen number is traced to its measurement in `docs/video/README.md`.
+  - **Site:** `demo-video.tsx` now serves `/demo/errata-whats-new.{webm,mp4,en.vtt}` plus a poster, with a new transcript and label. A Vitest test keeps the transcript equal to the captions. The first video moved to `docs/video/round2/` (git mv).
+- **Measured (sandbox):** render 87.0 s, 1920×1080, 30 fps, H.264. Web MP4 7.0 MB and WebM 6.1 MB (re-encoded from the 12.2 MB render). Checked on the landing page in Chromium: the WebM loads, 87 s, 1920×1080, captions track present. ESLint, Prettier and tsc clean; Vitest 197 passed (196 + the new transcript test). No worker or SQL changes, so pgTAP and the worker tests are unaffected (not re-run here).

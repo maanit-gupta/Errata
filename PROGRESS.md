@@ -336,6 +336,10 @@ Status values: `todo` · `in-progress` · `partial` · `done` · `blocked`
 | 2026-11-03 | R3.6 | Fact delete falls back to retiring (`valid_until = now()`) when findings cite the fact | `findings.fact_id` must keep its citation (invariant 1, audit history); both paths fire the kill-switch |
 | 2026-11-03 | R3.6 | Embedder warmed in `lifespan` before serving (blocking, ~0.4 s on the MacBook; failure logged, not fatal) | The first review or MCP pre-check after boot paid the cold load |
 | 2026-11-03 | R3.6 | Auto-heal CSS built in the web app from the validated hexes, not stored by the worker | Works for existing findings; no schema or worker change; nothing unvalidated reaches the clipboard |
+| 2026-11-03 | video | Landing video replaced by an 87 s Round 3 cut ("What's new"), same look and tooling (HyperFrames 0.8.212, GSAP, handout moves); source in `apps/web/video-src/round3/` + `round3.template.html`; plan, storyboard and the measurement behind every on-screen number in `docs/video/README.md`. The first video moved to `docs/video/round2/` (git mv, no new blobs) | Owner asked for the updated features, shown clearly, in a `docs/video` folder and on the site |
+| 2026-11-03 | video | The brag plugin isn't available in the cloud session, so its rubric was answered by hand from the first video's plan | Honest about the tooling |
+| 2026-11-03 | video | Core-loop screens reuse the 2026-10-28 real-app captures; the six new-feature screens are the real components on the dev kitchen sink with sample data (`video-src/capture-r3.mjs`), labelled "Component preview · sample data" on screen; the cross-check scene uses fixture post `c01-date` and the real `check_cross_modal` output | No Supabase or `.env.local` in the cloud sandbox; never present sample data as measured |
+| 2026-11-03 | video | A Vitest test keeps the transcript in `demo-video.tsx` equal to the WebVTT cues | Before, only a code comment kept them in sync |
 
 **Dependencies and licences** (append when adding any dependency):
 
