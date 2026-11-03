@@ -7,6 +7,7 @@ import {
   TrustPoints,
 } from "@/components/marketing/sections";
 import { DemoVideo } from "@/components/marketing/demo-video";
+import { TourPlayer } from "@/components/marketing/product-tour/tour-player";
 import { SkipToast } from "@/components/marketing/skip-toast";
 import { getSession } from "@/lib/auth/session";
 
@@ -23,6 +24,14 @@ export default async function Landing() {
     <>
       {session?.status === "ok" ? <SkipToast /> : null}
       <Hero />
+      <Section
+        id="tour"
+        band="pink"
+        title="Watch one draft go from risky to publish-ready"
+        intro="Eight scenes, about a minute. Let it play, or step through and inspect each screen."
+      >
+        <TourPlayer />
+      </Section>
       <Section id="how-it-works" band="grey" angled title="How it works">
         <div className="space-y-12">
           <DemoVideo />

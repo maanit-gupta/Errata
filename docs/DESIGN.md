@@ -378,6 +378,8 @@ Everything on it must be true: no invented customers, logos, testimonials or num
 6. **Featured card:** the black demo card with a yellow "Live demo" badge and "Try a demo role".
 7. **Footer:** yellow, with product, trust and build links, the licence, and "PayWise is a fictional demo brand" on the black bottom bar.
 
+2a. **Product tour** (added 2026-11-03, owner's request; `#tour`, pink band, between the hero and How it works): an eight-scene motion walkthrough (`components/marketing/product-tour/`, copy and timing in `lib/marketing/tour.ts`). The canvas is decorative (`aria-hidden`); each scene's full text is the visible caption and the "Read the tour as text" list. Auto-play only while on screen, never under reduced motion (step-through instead), stops on keyboard focus and at the end (no loop). Every number is sourced; the insights scene is labelled illustrative. This supersedes the "pipeline animation" and "evidence stats" cuts below for the tour only.
+
 Cut: announcement bar, typewriter, pipeline animation, "Built on" row, guarantees and evidence stats bands, "What we heard", mega-menu. `/ai-use` uses the same nav and footer with outlined service cards.
 
 ---
