@@ -26,7 +26,7 @@ from tests.vault_fixture import HERO, d, paywise_vault
 CREATOR_KEY = "bl_mcp_" + "1" * 48
 AGENCY_KEY = "bl_mcp_" + "2" * 48
 OTHER_ORG_CAMPAIGN = "99999999-0000-4000-8000-000000000001"
-DIWALI = Campaign(d.DIWALI, "Diwali SIP 2026", "active", "2026-10-10", "2026-11-15")
+DIWALI = Campaign(d.DIWALI, "Diwali SIP 2026", "active", "2026-10-10", "2027-03-31")
 NAVRATRI = Campaign(d.NAVRATRI, "Navratri Savings 2026", "ended", "2026-09-22", "2026-10-19")
 INTENT = {"goal": "webinar sign-ups", "audience": "first-time investors", "cta": "Register now"}
 REMEDIATED = (

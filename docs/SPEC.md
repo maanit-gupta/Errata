@@ -522,7 +522,7 @@ All fictional. The screens must reproduce the plan's mock-ups using these exact 
 **Org:** PayWise (fictional Indian fintech).
 
 **Campaigns**
-- `Diwali SIP 2026` (active, Oct 10 – Nov 15)
+- `Diwali SIP 2026` (active, Oct 10, 2026 – Mar 31, 2027; extended from Nov 15 so demos after that date still work)
 - `Navratri Savings 2026` (ended), the source of bleed values
 
 **Rule cards**

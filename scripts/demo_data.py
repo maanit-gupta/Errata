@@ -24,7 +24,7 @@ CAMPAIGNS: list[dict[str, Any]] = [
         "org_id": ORG_ID,
         "name": "Diwali SIP 2026",
         "starts_on": "2026-10-10",
-        "ends_on": "2026-11-15",
+        "ends_on": "2027-03-31",
         "status": "active",
     },
     {
@@ -148,7 +148,7 @@ FACTS: list[dict[str, Any]] = [
             "venue": "online",
         },
         "required_disclaimer": None,
-        "valid_until": "2026-11-15T23:59:59+05:30",
+        "valid_until": "2027-03-31T23:59:59+05:30",
     },
     {
         "org_id": ORG_ID,

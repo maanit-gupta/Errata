@@ -43,7 +43,7 @@ on conflict (id) do nothing;
 insert into public.campaigns (id, org_id, name, starts_on, ends_on, status)
 values
   ('20000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-0000000000a1',
-   'Diwali SIP 2026', '2026-10-10', '2026-11-15', 'active'),
+   'Diwali SIP 2026', '2026-10-10', '2027-03-31', 'active'),
   ('20000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-0000000000a1',
    'Navratri Savings 2026', '2026-09-22', '2026-10-19', 'ended')
 on conflict (id) do nothing;
@@ -80,7 +80,7 @@ values
   ('00000000-0000-4000-8000-0000000000a1', '20000000-0000-4000-8000-000000000001', 'E-19', 'event',
    'Diwali Wealth Webinar: online only, Oct 28, 7:00 PM IST',
    '{"name": "Diwali Wealth Webinar", "date": "2026-10-28", "time": "19:00", "tz": "Asia/Kolkata", "venue": "online"}',
-   null, '2026-11-15T23:59:59+05:30'),
+   null, '2027-03-31T23:59:59+05:30'),
   ('00000000-0000-4000-8000-0000000000a1', '20000000-0000-4000-8000-000000000002', 'E-11', 'event',
    'Navratri Investor Meet: Oct 18, Hall B, Chandigarh',
    '{"name": "Navratri Investor Meet", "date": "2026-10-18", "venue": "Hall B, Chandigarh"}',

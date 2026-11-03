@@ -35,10 +35,10 @@ export const MANIFEST_ACTIVE = {
   hash: "5d2a9c0f1e7b3a4c8d6e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c",
   hashOf: "normalised body",
   facts: [
-    { code: "E-19", valid_until: "2026-11-15T18:29:59Z" },
+    { code: "E-19", valid_until: "2027-03-31T18:29:59Z" },
     { code: "F-048", valid_until: null },
   ],
-  validUntil: "2026-11-15T18:29:59Z",
+  validUntil: "2027-03-31T18:29:59Z",
   issuedAt: "2026-11-01T06:00:00Z",
   revokedAt: null,
   revokedReason: null,

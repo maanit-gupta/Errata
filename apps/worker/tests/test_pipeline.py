@@ -159,7 +159,7 @@ def test_bleed_works_in_the_other_direction() -> None:
 
 
 def test_expired_in_scope_fact_is_a_warning() -> None:
-    later = datetime.fromisoformat("2026-11-20T00:00:00+05:30")
+    later = datetime.fromisoformat("2027-04-02T00:00:00+05:30")  # after E-19 expires (Mar 31)
     found = findings_for("Join our Diwali Wealth Webinar, online on Oct 28.", now=later)
     assert ("facts", "warning", ["E-19"], "Oct 28") in found
 
