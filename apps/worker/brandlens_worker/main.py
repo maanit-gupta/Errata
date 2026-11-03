@@ -129,6 +129,7 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
     from brandlens_worker.mcp import PgMcpStore
 
     services["embedder"] = Embedder(settings.embedding_model, settings.model_cache_dir)
+    await warm_embedder(services["embedder"])
     services["mcp_store"] = PgMcpStore(pool)
     from brandlens_worker.heroes.api import PgHeroStore, SupabaseUserVerifier
 
@@ -159,6 +160,19 @@ async def _start(settings: Settings, state: dict[str, Any], app: FastAPI) -> Non
                 name=f"consume:{queue}:{i}",
             )
         )
+
+
+async def warm_embedder(embedder: Any) -> None:
+    """Load the ONNX model before serving, so the first review or MCP pre-check after boot doesn't
+    pay the cold load (~0.4 s on a MacBook). Never raises: on failure the model loads on first use,
+    as before."""
+    started = time.perf_counter()
+    try:
+        await asyncio.to_thread(embedder.embed, ["warm-up"])
+    except Exception as exc:
+        log.warning("embedder warm-up failed", extra={"error": type(exc).__name__})
+        return
+    log.info("embedder warm", extra={"ms": round((time.perf_counter() - started) * 1000)})
 
 
 async def sweep_facts(pool: Any, stop: asyncio.Event) -> None:
