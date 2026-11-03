@@ -9,3 +9,8 @@ video-src/composition/renders
 video-src/composition/.hyperframes
 video-src/composition/index.html
 video-src/composition/hero-scene.svg
+video-src/round3/vendor
+video-src/round3/fonts
+video-src/round3/renders
+video-src/round3/.hyperframes
+video-src/round3/index.html

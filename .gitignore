@@ -42,3 +42,9 @@ supabase/.temp/
 # Demo video build output (apps/web/video-src): renders and HyperFrames caches stay local.
 apps/web/video-src/composition/renders/
 apps/web/video-src/composition/.hyperframes/
+# Round 3 video (apps/web/video-src/round3): build.mjs copies fonts, GSAP and the v1 shots in.
+apps/web/video-src/round3/renders/
+apps/web/video-src/round3/.hyperframes/
+apps/web/video-src/round3/fonts/
+apps/web/video-src/round3/vendor/
+apps/web/video-src/round3/shots/v1/

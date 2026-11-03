@@ -1,32 +1,66 @@
 /**
- * "How it works" demo video (apps/web/video-src, brag-plan.md). Native controls, muted, never
- * autoplays (so reduced-motion users are never surprised), 16:9 box reserved up front so the page
- * doesn't shift, captions track plus a text transcript with the same words as the on-screen text.
- * Keep TRANSCRIPT in sync with public/demo/errata-how-it-works.en.vtt.
+ * "How it works" demo video, Round 3 cut (source: apps/web/video-src/round3, storyboard:
+ * docs/video/README.md). Native controls, muted, never autoplays (so reduced-motion users are never
+ * surprised), 16:9 box reserved up front so the page doesn't shift, captions track plus a text
+ * transcript with the same words as the on-screen text.
+ * Keep TRANSCRIPT in sync with public/demo/errata-whats-new.en.vtt (checked by a unit test).
  */
-const SRC = "/demo/errata-how-it-works";
+const SRC = "/demo/errata-whats-new";
+
+export const VTT_PATH = `public${SRC}.en.vtt`;
 
 export const TRANSCRIPT: { at: string; text: string }[] = [
-  { at: "0:00", text: "Errata checks every draft against your approved brand rules." },
+  {
+    at: "0:00",
+    text: "Errata checks every draft against your approved brand rules and cites the rule behind every flag.",
+  },
   {
     at: "0:04",
     text: "A creator writes a caption and sets its intent: goal, audience, call to action, channel and campaign.",
   },
-  { at: "0:12", text: "Six steps run. A flag survives only if it cites an approved rule or fact." },
+  { at: "0:10", text: "Six steps run. A flag survives only if it cites an approved rule or fact." },
   {
-    at: "0:19",
+    at: "0:15",
     text: "CL-03: “assured returns” on a market-linked fund, quoting F-112 without its disclaimer.",
   },
   {
-    at: "0:24",
+    at: "0:20",
     text: "E-19: Oct 18 at Hall B belongs to another campaign. Caught without AI judgement.",
   },
-  { at: "0:29", text: "G-07: the brand is written PayWise, not “Paywise app”." },
-  { at: "0:34", text: "WCAG 1.4.3: poster text at 2.89 : 1. Large text needs 3 : 1." },
-  { at: "0:39", text: "Fixes keep your intent. AI rewrites are re-checked before you see them." },
-  { at: "0:45", text: "The claim goes to Legal, who signs off with a reason." },
-  { at: "0:51", text: "The audit trail records who decided, when and why." },
-  { at: "0:55", text: "Humans approve. Errata never publishes." },
+  { at: "0:25", text: "New since Round 2: six features, each one shown next." },
+  {
+    at: "0:30",
+    text: "If the AI provider is busy, rule-based findings show at once and the AI check retries by itself.",
+  },
+  {
+    at: "0:37",
+    text: "The image says Oct 18, the caption says Oct 28. Fact E-19 says Oct 28, so the image is flagged.",
+  },
+  {
+    at: "0:44",
+    text: "Low-contrast text gets the closest colour from your own palette that passes. Nothing changes until a person accepts it.",
+  },
+  {
+    at: "0:51",
+    text: "Claims go to Legal, who signs off with a reason. Every decision is audited.",
+  },
+  {
+    at: "0:58",
+    text: "At publish-ready, Errata issues a receipt: a hash of the approved text and the facts it relies on.",
+  },
+  {
+    at: "1:02",
+    text: "If one of those facts changes or expires, approval is revoked and the draft goes back for revision.",
+  },
+  {
+    at: "1:06",
+    text: "Unclear rules get better examples. A backtest on recent real reviews projects the effect before anyone approves them.",
+  },
+  {
+    at: "1:13",
+    text: "Claude or Cursor can fetch live campaign facts and pre-check drafts, with a personal read-only key.",
+  },
+  { at: "1:21", text: "Humans approve. Errata never publishes." },
 ];
 
 export function DemoVideo() {
@@ -42,7 +76,7 @@ export function DemoVideo() {
           poster={`${SRC}-poster.jpg`}
           width={1920}
           height={1080}
-          aria-label="Errata demo, 60 seconds, no sound: a caption is checked, flagged with cited rules, fixed and signed off by Legal"
+          aria-label="Errata demo, 87 seconds, no sound: a caption is checked and flagged with cited rules, then the six Round 3 features are shown one by one"
         >
           <source src={`${SRC}.webm`} type="video/webm" />
           <source src={`${SRC}.mp4`} type="video/mp4" />

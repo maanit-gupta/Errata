@@ -62,6 +62,9 @@ const eslintConfig = defineConfig([
     "video-src/composition/vendor/**",
     "video-src/composition/renders/**",
     "video-src/composition/.hyperframes/**",
+    "video-src/round3/vendor/**",
+    "video-src/round3/renders/**",
+    "video-src/round3/.hyperframes/**",
   ]),
 ]);
 

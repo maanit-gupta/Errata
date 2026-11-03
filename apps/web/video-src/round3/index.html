@@ -1,0 +1,1215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Errata: what's new in Round 3</title>
+    <script src="vendor/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "DM Sans";
+        src: url("fonts/DMSans-variable-latin.woff2") format("woff2");
+        font-weight: 100 1000;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-400-latin.woff2") format("woff2");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: "DM Mono";
+        src: url("fonts/DMMono-500-latin.woff2") format("woff2");
+        font-weight: 500;
+      }
+      :root {
+        --ink: #000000;
+        --paper: #ffffff;
+        --yellow: #f7b924;
+        --pink: #facbed;
+        --grey: #eeeeec;
+        --muted: #45453f;
+        --red: #a31428;
+        --orange: #a14400;
+        --peach: #fde7d6;
+        --green: #137a52;
+        --illo-ink: #000000;
+        --illo-paper: #ffffff;
+        --illo-yellow: #f7b924;
+        --illo-pink: #facbed;
+        --illo-green: #189364;
+        --illo-blue: #5e7d99;
+        --illo-red: #a31428;
+        --illo-grey: #eeeeec;
+        --font-dm-mono: "DM Mono";
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: "DM Sans", sans-serif;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+      }
+      .mono {
+        font-family: "DM Mono", monospace;
+        font-weight: 500;
+      }
+
+      /* Persistent top bar */
+      .topbar {
+        position: absolute;
+        left: 80px;
+        right: 80px;
+        top: 40px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .wordmark {
+        position: relative;
+        display: inline-block;
+        font-weight: 700;
+        font-size: 40px;
+        letter-spacing: -0.03em;
+        line-height: 1;
+      }
+      .wordmark span {
+        position: relative;
+        z-index: 1;
+      }
+      .wordmark::after {
+        content: "";
+        position: absolute;
+        left: -4px;
+        right: -4px;
+        bottom: 2px;
+        height: 0.4em;
+        background: var(--yellow);
+        border-radius: 3px;
+        z-index: 0;
+      }
+      .step {
+        position: absolute;
+        right: 80px;
+        top: 44px;
+        height: 56px;
+        padding: 0 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--yellow);
+        border: 2px solid var(--ink);
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .step .mono {
+        font-size: 28px;
+      }
+
+      /* Caption bar */
+      .caption {
+        position: absolute;
+        left: 50%;
+        bottom: 120px;
+        width: 1640px;
+        margin-left: -820px;
+        min-height: 132px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 22px 48px;
+        background: var(--paper);
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        font-size: 38px;
+        line-height: 1.3;
+        font-weight: 500;
+        text-align: center;
+      }
+
+      /* Screenshot frame with zoom */
+      .frame {
+        position: absolute;
+        left: 160px;
+        top: 132px;
+        width: 1600px;
+        height: 640px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--grey);
+      }
+      .frame.right {
+        left: 860px;
+        width: 900px;
+      }
+      .zoom {
+        position: absolute;
+        left: 0;
+        top: 0;
+        transform-origin: 0 0;
+      }
+      .zoom img {
+        display: block;
+      }
+      .tick {
+        position: absolute;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: var(--green);
+        border: 4px solid var(--ink);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tick svg {
+        width: 44px;
+        height: 44px;
+      }
+
+      /* Findings: left column */
+      .facts {
+        position: absolute;
+        left: 160px;
+        top: 200px;
+        width: 640px;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+      .ids {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .id {
+        display: inline-flex;
+        align-items: center;
+        height: 84px;
+        padding: 0 22px;
+        border: 3px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 52px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        height: 56px;
+        padding: 0 18px;
+        border: 2px solid;
+        border-radius: 6px;
+        font-size: 28px;
+        font-weight: 700;
+        width: max-content;
+      }
+      .badge.blocker {
+        background: var(--red);
+        border-color: var(--red);
+        color: var(--paper);
+      }
+      .badge.warning {
+        background: var(--peach);
+        border-color: var(--orange);
+        color: var(--orange);
+      }
+      .badge svg {
+        width: 28px;
+        height: 28px;
+      }
+      .dim {
+        font-size: 30px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .quote {
+        font-size: 34px;
+        line-height: 1.35;
+        font-weight: 600;
+      }
+
+      /* Pipeline */
+      .pipeline {
+        position: absolute;
+        left: 160px;
+        top: 150px;
+        width: 1600px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+      .stage {
+        position: relative;
+        height: 290px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        padding: 24px 30px;
+        background: var(--paper);
+      }
+      .stage .num {
+        font-size: 28px;
+        color: var(--muted);
+      }
+      .stage h3 {
+        margin: 12px 0 10px;
+        font-size: 48px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .stage p {
+        margin: 0;
+        font-size: 30px;
+        line-height: 1.3;
+        color: var(--muted);
+      }
+      .stage .tick {
+        top: 26px;
+        right: 26px;
+        width: 64px;
+        height: 64px;
+      }
+      .stage .tick svg {
+        width: 36px;
+        height: 36px;
+      }
+      .stage.ai {
+        background: var(--pink);
+      }
+      .stage.gate {
+        background: var(--yellow);
+      }
+      .stage.gate p,
+      .stage.ai p,
+      .stage.gate .num,
+      .stage.ai .num {
+        color: var(--ink);
+      }
+
+      /* Fix */
+      .fixbox {
+        position: absolute;
+        left: 475px;
+        top: 184px;
+        width: 970px;
+        height: 420px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--paper);
+      }
+      .chips {
+        position: absolute;
+        left: 160px;
+        top: 652px;
+        width: 1600px;
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+      }
+      .chip {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        height: 76px;
+        padding: 0 24px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--paper);
+        font-size: 28px;
+        white-space: nowrap;
+      }
+      .chip b {
+        font-weight: 700;
+      }
+      .chip .tick {
+        position: static;
+        width: 42px;
+        height: 42px;
+        border-width: 3px;
+      }
+      .chip .tick svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* Title cards */
+      .hook {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 1fr 720px;
+        align-items: center;
+        gap: 40px;
+        padding: 0 120px;
+      }
+      .hook h1,
+      .end h1 {
+        margin: 0;
+        font-size: 104px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        font-weight: 700;
+      }
+      .hook .wordmark {
+        font-size: 56px;
+        margin-bottom: 48px;
+      }
+      .hook svg {
+        width: 720px;
+        height: auto;
+        display: block;
+      }
+      .end {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 56px;
+        background: var(--pink);
+      }
+      .end .wordmark {
+        font-size: 84px;
+      }
+      .end .tagline {
+        font-size: 40px;
+        font-weight: 500;
+        margin-top: -24px;
+      }
+      .end .ink {
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 16px;
+        padding: 36px 64px;
+      }
+      .end .ink h1 {
+        font-size: 92px;
+      }
+
+      /* ---- Round 3 additions ---- */
+      .step.new {
+        background: var(--pink);
+      }
+      .hook .pill {
+        display: inline-flex;
+        align-items: center;
+        height: 60px;
+        padding: 0 24px;
+        margin-top: 40px;
+        border: 2px solid var(--ink);
+        border-radius: 8px;
+        background: var(--pink);
+        font-size: 32px;
+        font-weight: 700;
+      }
+      .ntitle {
+        position: absolute;
+        left: 160px;
+        top: 140px;
+        width: 1060px;
+      }
+      .ntitle .eyebrow {
+        font-size: 26px;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      .ntitle h2 {
+        margin: 10px 0 0;
+        font-size: 66px;
+        line-height: 1.02;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+      .stat {
+        position: absolute;
+        right: 160px;
+        top: 140px;
+        width: 520px;
+        text-align: right;
+      }
+      .stat .big {
+        font-size: 72px;
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+      .stat .big mark {
+        background: var(--yellow);
+        color: var(--ink);
+        padding: 0 10px;
+        border-radius: 6px;
+      }
+      .stat .lbl {
+        margin-top: 8px;
+        font-size: 24px;
+        white-space: nowrap;
+        line-height: 1.3;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .shot {
+        position: absolute;
+        left: 160px;
+        top: 330px;
+        width: 1600px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        overflow: hidden;
+        background: var(--paper);
+        transform-origin: 50% 50%;
+      }
+      .shot img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .bare {
+        position: absolute;
+        left: 160px;
+        transform-origin: 0 50%;
+      }
+      .bare img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .sample {
+        height: 40px;
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0 16px;
+        border: 2px dashed var(--muted);
+        border-radius: 6px;
+        font-size: 20px;
+        color: var(--muted);
+        background: var(--paper);
+      }
+      .row {
+        position: absolute;
+        left: 160px;
+        width: 1600px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+      .arrow {
+        font-size: 44px;
+        font-weight: 700;
+      }
+
+      /* What's new list */
+      .newlist {
+        position: absolute;
+        left: 160px;
+        top: 330px;
+        width: 1600px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 26px 40px;
+      }
+      .newrow {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        height: 112px;
+        padding: 0 28px;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        background: var(--paper);
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .newrow .mono {
+        font-size: 26px;
+        color: var(--muted);
+      }
+      .newrow .tick {
+        position: static;
+        flex: none;
+        width: 60px;
+        height: 60px;
+      }
+      .newrow .tick svg {
+        width: 34px;
+        height: 34px;
+      }
+
+      /* Cross-check surfaces */
+      .surfaces {
+        position: absolute;
+        left: 160px;
+        top: 330px;
+        width: 1600px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 40px;
+      }
+      .surface {
+        height: 290px;
+        padding: 26px 30px;
+        border: 2px solid var(--ink);
+        border-radius: 16px;
+        background: var(--paper);
+      }
+      .surface.vault {
+        background: var(--yellow);
+      }
+      .surface .lbl {
+        font-size: 24px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .surface.vault .lbl {
+        color: var(--ink);
+      }
+      .surface p {
+        margin: 18px 0 0;
+        font-size: 40px;
+        line-height: 1.3;
+        font-weight: 600;
+      }
+      .hl {
+        padding: 0 6px;
+        border-radius: 6px;
+        border: 3px solid transparent;
+      }
+      .xfinding .id {
+        height: 72px;
+        font-size: 42px;
+      }
+      .xfinding .txt {
+        font-size: 32px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="87"
+    >
+      <!-- Persistent top bar (scenes 2–12) -->
+      <div id="bar" class="clip" data-start="4" data-duration="77" data-track-index="9">
+        <div id="bar-in" class="topbar">
+          <div class="wordmark"><span>Errata</span></div>
+        </div>
+      </div>
+
+      <!-- 1. Hook (0–4) -->
+      <section id="s1" class="clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="hook">
+          <div id="s1-text">
+            <div class="wordmark"><span>Errata</span></div>
+            <h1>Every draft, checked before it ships.</h1>
+            <div class="pill">What's new in Round 3</div>
+          </div>
+          <div id="s1-art" data-layout-ignore><svg viewBox="0 0 520 440" aria-hidden="true" focusable="false"><circle cx="300" cy="210" r="170" fill="var(--illo-pink)"></circle><g><rect x="90" y="60" width="320" height="270" rx="16" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M106 60 H394 Q410 60 410 76 V103 H90 V76 Q90 60 106 60 Z" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><circle cx="102" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><circle cx="112" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><circle cx="122" cy="81.5" r="2.5" fill="var(--illo-ink)"></circle><rect x="112" y="124" width="150" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="150" width="250" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="176" width="220" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="110" y="198" width="190" height="20" rx="4" fill="var(--illo-pink)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M112 226 H298" stroke="var(--illo-red)" stroke-width="3" stroke-linecap="round"></path><rect x="112" y="246" width="240" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="272" width="180" height="10" rx="5" fill="var(--illo-grey)" stroke="none"></rect><rect x="112" y="296" width="96" height="22" rx="4" fill="var(--illo-ink)"></rect></g><rect x="392" y="268" width="26" height="86" rx="10" fill="var(--illo-yellow)" transform="rotate(-45 405 311)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><circle cx="356" cy="236" r="58" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></circle><rect x="318" y="222" width="76" height="26" rx="5" fill="var(--illo-pink)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M318 256 H394" stroke="var(--illo-red)" stroke-width="4" stroke-linecap="round"></path><g><rect x="18" y="168" width="104" height="38" rx="6" fill="var(--illo-paper)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><rect x="30" y="181" width="12" height="12" rx="2" fill="var(--illo-red)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><text x="50" y="193" font-size="16" font-weight="500" fill="var(--illo-ink)" style="font-family:var(--font-dm-mono), monospace">CL-03</text></g><g><rect x="36" y="222" width="90" height="38" rx="6" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><text x="52" y="247" font-size="16" font-weight="500" fill="var(--illo-ink)" style="font-family:var(--font-dm-mono), monospace">E-19</text></g><g><circle cx="412" cy="64" r="26" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></circle><path d="M400.85714285714283 64 l7.428571428571429 8.357142857142858 l14.857142857142858 -16.714285714285715" fill="none" stroke="var(--illo-paper)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></g><g transform="translate(70 318) rotate(-28)"><path d="M0 0 C 38.7 21.5, 38.7 64.5, 0 86 C -38.7 64.5, -38.7 21.5, 0 0 Z" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 12.9 V 81.7" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><g transform="translate(112 330) rotate(8)"><path d="M0 0 C 33.300000000000004 18.5, 33.300000000000004 55.5, 0 74 C -33.300000000000004 55.5, -33.300000000000004 18.5, 0 0 Z" fill="var(--illo-yellow)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 11.1 V 70.3" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><g transform="translate(40 352) rotate(-58)"><path d="M0 0 C 27 15, 27 45, 0 60 C -27 45, -27 15, 0 0 Z" fill="var(--illo-blue)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path><path d="M0 9 V 57" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" fill="none"></path></g><rect x="430" y="364" width="56" height="44" rx="5" fill="var(--illo-blue)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><rect x="452" y="326" width="40" height="38" rx="5" fill="var(--illo-green)" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></rect><path d="M20 410 H500" stroke="var(--illo-ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg></div>
+        </div>
+        <div id="s1-cap" class="caption">
+          Errata checks every draft against your approved brand rules and cites the rule behind
+          every flag.
+        </div>
+      </section>
+
+      <!-- 2. Write (4–10) -->
+      <section id="s2" class="clip" data-start="4" data-duration="6" data-track-index="1">
+        <div id="s2-step" class="step"><span class="mono">1</span>Write</div>
+        <div id="s2-frame" class="frame">
+          <div
+            id="s2-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/v1/01-write.png" width="2880" height="1800" alt="" />
+            <div id="t1" class="tick" style="left: 1002px; top: 622px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t2" class="tick" style="left: 1002px; top: 823px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t3" class="tick" style="left: 1002px; top: 1028px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t4" class="tick" style="left: 1002px; top: 1234px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div id="t5" class="tick" style="left: 1002px; top: 1399px"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <div id="s2-cap" class="caption">
+          A creator writes a caption and sets its intent: goal, audience, call to action, channel
+          and campaign.
+        </div>
+      </section>
+
+      <!-- 3. Check (10–15) -->
+      <section id="s3" class="clip" data-start="10" data-duration="5" data-track-index="1">
+        <div id="s3-step" class="step"><span class="mono">2</span>Check</div>
+        <div class="pipeline"><div id="st1" class="stage">
+            <div class="num mono">01</div>
+            <h3>Ingest</h3>
+            <p>Read the text, file or image.</p>
+            <div id="st1-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st2" class="stage">
+            <div class="num mono">02</div>
+            <h3>Protect</h3>
+            <p>Redact personal data and secrets.</p>
+            <div id="st2-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st3" class="stage">
+            <div class="num mono">03</div>
+            <h3>Filters</h3>
+            <p>Rule checks without AI: facts, terms, claims, contrast.</p>
+            <div id="st3-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st4" class="stage">
+            <div class="num mono">04</div>
+            <h3>Retrieve</h3>
+            <p>Find the approved rules and facts that apply.</p>
+            <div id="st4-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st5" class="stage ai">
+            <div class="num mono">05</div>
+            <h3>AI pass</h3>
+            <p>One AI call judges tone and claims.</p>
+            <div id="st5-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div id="st6" class="stage gate">
+            <div class="num mono">06</div>
+            <h3>Citation gate</h3>
+            <p>Keep a flag only if its rule was found and its quote is in the draft.</p>
+            <div id="st6-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div></div>
+        <div id="s3-cap" class="caption">
+          Six steps run. A flag survives only if it cites an approved rule or fact.
+        </div>
+      </section>
+
+      <!-- 4. Findings (15–25) -->
+      <section id="s4" class="clip" data-start="15" data-duration="10" data-track-index="1">
+        <div id="s4-step" class="step"><span class="mono">3</span>Findings</div>
+        <div id="fa-facts" class="facts">
+          <div class="ids">
+            <span class="id mono">CL-03</span><span class="id mono">F-112</span>
+          </div>
+          <div class="badge blocker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Blocker</div>
+          <div class="dim">Claims</div>
+          <div class="quote mono">“lock in 14.2% assured annual returns”</div>
+        </div>
+        <div id="fa-frame" class="frame right">
+          <div
+            id="fa-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 800px; height: 1330px"
+          >
+            <img src="shots/v1/card-CL-03.png" width="800" height="1330" alt="" />
+          </div>
+        </div>
+        <div id="fa-cap" class="caption">
+          CL-03: “assured returns” on a market-linked fund, quoting F-112 without its disclaimer.
+        </div>
+        <div id="fb-facts" class="facts">
+          <div class="ids"><span class="id mono">E-19</span></div>
+          <div class="badge blocker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Blocker</div>
+          <div class="dim">Facts</div>
+          <div class="quote mono">“Oct 18 at Hall B, Chandigarh”</div>
+        </div>
+        <div id="fb-frame" class="frame right">
+          <div
+            id="fb-zoom"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 800px; height: 922px"
+          >
+            <img src="shots/v1/card-E-19.png" width="800" height="922" alt="" />
+          </div>
+        </div>
+        <div id="fb-cap" class="caption">
+          E-19: Oct 18 at Hall B belongs to another campaign. Caught without AI judgement.
+        </div>
+      </section>
+
+      <!-- 5. What's new (25–30) -->
+      <section id="s5" class="clip" data-start="25" data-duration="5" data-track-index="1">
+        <div id="s5-step" class="step new"><span class="mono">R3</span>New</div>
+        <div id="s5-title" class="ntitle">
+          <div class="eyebrow mono">Round 3</div>
+          <h2>Six things are new.</h2>
+        </div>
+        <div class="newlist"><div id="n1" class="newrow"><div id="n1-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">01</span>AI check pending</div>
+          <div id="n2" class="newrow"><div id="n2-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">02</span>Cross-check: image, caption, landing page</div>
+          <div id="n3" class="newrow"><div id="n3-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">03</span>Contrast fixes from your palette</div>
+          <div id="n4" class="newrow"><div id="n4-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">04</span>Publish receipt and fact kill-switch</div>
+          <div id="n5" class="newrow"><div id="n5-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">05</span>Clarity backtest on real reviews</div>
+          <div id="n6" class="newrow"><div id="n6-tick" class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="mono">06</span>Read-only MCP server</div></div>
+        <div id="s5-cap" class="caption">New since Round 2: six features, each one shown next.</div>
+      </section>
+
+      <!-- 6. AI check pending (30–37) -->
+      <section id="s6" class="clip" data-start="30" data-duration="7" data-track-index="1">
+        <div id="s6-step" class="step new"><span class="mono">1/6</span>New</div>
+        <div id="s6-title" class="ntitle">
+          <div class="eyebrow mono">When the AI is busy</div>
+          <h2>AI check pending</h2>
+        </div>
+        <div id="s6-stat" class="stat">
+          <div class="big"><mark>20/20</mark></div>
+          <div class="lbl">load test: pending runs done, 0 lost</div>
+          <div id="s6-sample" class="sample mono">Component preview · sample data</div>
+        </div>
+        <div id="s6-shot" class="shot">
+          <img src="shots/r3-pending.png" width="2436" height="267" alt="" />
+        </div>
+        <div class="row" style="top: 560px">
+          <div id="s6-f1" class="chip"><b>Rule-based findings</b> shown now<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="s6-a1" class="arrow">→</div>
+          <div id="s6-f2" class="chip"><b>AI check</b> retries after 1, 2, 4, 8 min</div>
+          <div id="s6-a2" class="arrow">→</div>
+          <div id="s6-f3" class="chip"><b>Reviewers</b> see it when done</div>
+        </div>
+        <div id="s6-cap" class="caption">
+          If the AI provider is busy, rule-based findings show at once and the AI check retries by
+          itself.
+        </div>
+      </section>
+
+      <!-- 7. Cross-check (37–44) -->
+      <section id="s7" class="clip" data-start="37" data-duration="7" data-track-index="1">
+        <div id="s7-step" class="step new"><span class="mono">2/6</span>New</div>
+        <div id="s7-title" class="ntitle">
+          <div class="eyebrow mono">Image · caption · landing page</div>
+          <h2>Cross-check</h2>
+        </div>
+        <div id="s7-stat" class="stat">
+          <div class="big"><mark>10/10</mark></div>
+          <div class="lbl">conflicts flagged, 0 false flags</div>
+        </div>
+        <div class="surfaces">
+          <div id="s7-a" class="surface">
+            <div class="lbl mono">Image text (OCR)</div>
+            <p>Diwali Wealth Webinar <span id="s7-bad" class="hl">Oct 18</span>, 7 PM</p>
+          </div>
+          <div id="s7-b" class="surface">
+            <div class="lbl mono">Caption</div>
+            <p>Join us on <span id="s7-ok1" class="hl">Oct 28</span> at 7 PM. Register now</p>
+          </div>
+          <div id="s7-c" class="surface vault">
+            <div class="lbl mono">Vault fact · E-19</div>
+            <p>
+              Diwali Wealth Webinar: online only, <span id="s7-ok2" class="hl">Oct 28</span>, 7:00
+              PM IST
+            </p>
+          </div>
+        </div>
+        <div id="s7-finding" class="row xfinding" style="top: 662px">
+          <span class="id mono">E-19</span>
+          <div class="badge blocker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>Blocker</div>
+          <span class="txt">Image text flagged: the caption matches the vault.</span>
+        </div>
+        <div id="s7-cap" class="caption">
+          The image says Oct 18, the caption says Oct 28. Fact E-19 says Oct 28, so the image is
+          flagged.
+        </div>
+      </section>
+
+      <!-- 8. Contrast auto-heal (44–51) -->
+      <section id="s8" class="clip" data-start="44" data-duration="7" data-track-index="1">
+        <div id="s8-step" class="step new"><span class="mono">3/6</span>New</div>
+        <div id="s8-title" class="ntitle">
+          <div class="eyebrow mono">WCAG 1.4.3 · images</div>
+          <h2>Palette contrast fixes</h2>
+        </div>
+        <div id="s8-stat" class="stat">
+          <div class="big"><mark>18/18</mark></div>
+          <div class="lbl">fixable samples fixed on-palette</div>
+          <div id="s8-sample" class="sample mono">Component preview · sample data</div>
+        </div>
+        <div id="s8-shot" class="shot">
+          <img src="shots/r3-autoheal.png" width="2436" height="615" alt="" />
+        </div>
+        <div id="s8-cap" class="caption">
+          Low-contrast text gets the closest colour from your own palette that passes. Nothing
+          changes until a person accepts it.
+        </div>
+      </section>
+
+      <!-- 9. Review (51–58) -->
+      <section id="s9" class="clip" data-start="51" data-duration="7" data-track-index="1">
+        <div id="s9-step" class="step"><span class="mono">4</span>Review</div>
+        <div
+          id="s9-frameA"
+          class="frame"
+          style="left: 352px; top: 330px; width: 1215px; height: 284px; background: #ffffff"
+        >
+          <div
+            id="s9-zoomA"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/v1/04-legal.png" width="2880" height="1800" alt="" />
+          </div>
+        </div>
+        <div id="s9-frame" class="frame">
+          <div
+            id="s9-zoomB"
+            class="zoom"
+            data-layout-allow-overflow
+            style="width: 2880px; height: 1800px"
+          >
+            <img src="shots/v1/05-signoff.png" width="2880" height="1800" alt="" />
+          </div>
+        </div>
+        <div id="s9-cap" class="caption">
+          Claims go to Legal, who signs off with a reason. Every decision is audited.
+        </div>
+      </section>
+
+      <!-- 10. Publish receipt and kill-switch (58–66) -->
+      <section id="s10" class="clip" data-start="58" data-duration="8" data-track-index="1">
+        <div id="s10-step" class="step new"><span class="mono">4/6</span>New</div>
+        <div id="s10-title" class="ntitle">
+          <div class="eyebrow mono">At publish-ready</div>
+          <h2>Receipt and kill-switch</h2>
+        </div>
+        <div id="s10-stat" class="stat">
+          <div class="big"><mark>22/22</mark></div>
+          <div class="lbl">kill-switch database tests pass</div>
+          <div id="s10-sample" class="sample mono">Component preview · sample data</div>
+        </div>
+        <div id="s10-receipt" class="bare" style="top: 340px; width: 1300px">
+          <img src="shots/r3-receipt.png" width="1560" height="90" alt="" />
+        </div>
+        <div class="row" style="top: 460px">
+          <div id="s10-f1" class="chip"><b>Fact E-19</b> changes in the vault</div>
+          <div id="s10-a1" class="arrow">→</div>
+          <div id="s10-f2" class="chip"><b>Approval revoked</b> at once</div>
+          <div id="s10-a2" class="arrow">→</div>
+          <div id="s10-f3" class="chip"><b>Needs revision</b> · audited<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+        </div>
+        <div id="s10-revoked" class="bare" style="top: 586px; width: 1600px">
+          <img src="shots/r3-receipt-revoked.png" width="2436" height="135" alt="" />
+        </div>
+        <div id="s10-capA" class="caption">
+          At publish-ready, Errata issues a receipt: a hash of the approved text and the facts it
+          relies on.
+        </div>
+        <div id="s10-capB" class="caption">
+          If one of those facts changes or expires, approval is revoked and the draft goes back for
+          revision.
+        </div>
+      </section>
+
+      <!-- 11. Clarity backtest (66–73) -->
+      <section id="s11" class="clip" data-start="66" data-duration="7" data-track-index="1">
+        <div id="s11-step" class="step new"><span class="mono">5/6</span>New</div>
+        <div id="s11-title" class="ntitle">
+          <div class="eyebrow mono">Guideline Clarity Score</div>
+          <h2>Backtest a rule fix</h2>
+        </div>
+        <div id="s11-stat" class="stat">
+          <div class="big"><mark>0 AI calls</mark></div>
+          <div class="lbl">local embeddings, last 30 findings</div>
+          <div id="s11-sample" class="sample mono">Component preview · sample data</div>
+        </div>
+        <div id="s11-shot" class="shot">
+          <img src="shots/r3-shadow.png" width="2436" height="615" alt="" />
+        </div>
+        <div id="s11-cap" class="caption">
+          Unclear rules get better examples. A backtest on recent real reviews projects the effect
+          before anyone approves them.
+        </div>
+      </section>
+
+      <!-- 12. MCP server (73–81) -->
+      <section id="s12" class="clip" data-start="73" data-duration="8" data-track-index="1">
+        <div id="s12-step" class="step new"><span class="mono">6/6</span>New</div>
+        <div id="s12-title" class="ntitle">
+          <div class="eyebrow mono">Settings · AI tools</div>
+          <h2>Read-only MCP server</h2>
+        </div>
+        <div id="s12-stat" class="stat">
+          <div class="big"><mark>20/20</mark></div>
+          <div class="lbl">test calls: only live facts</div>
+        </div>
+        <div id="s12-shot" class="shot">
+          <img src="shots/r3-mcp.png" width="2436" height="513" alt="" />
+        </div>
+        <div class="row" style="top: 694px">
+          <div id="tool1" class="chip mono">get_campaign_context<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="tool2" class="chip mono">precheck_draft_fast<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="tool3" class="chip mono">verify_claim_evidence<span class="tick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          <div id="s12-sample" class="sample mono" style="margin: 0 0 0 auto">Sample data</div>
+        </div>
+        <div id="s12-cap" class="caption">
+          Claude or Cursor can fetch live campaign facts and pre-check drafts, with a personal
+          read-only key.
+        </div>
+      </section>
+
+      <!-- 13. End (81–87) -->
+      <section id="s13" class="clip" data-start="81" data-duration="6" data-track-index="1">
+        <div class="end">
+          <div id="s13-ink" class="ink"><h1>Humans approve. Errata never publishes.</h1></div>
+          <div id="s13-mark" class="wordmark"><span>Errata</span></div>
+          <div id="s13-tag" class="tagline">Pre-publication checks with cited rules.</div>
+        </div>
+      </section>
+    </div>
+
+    <script>
+      // Frame helper: place a zoom layer so the rect [x0, y0, x1, y1] (in image px) fills the
+      // frame, capped at maxK so 2x screenshots are never upscaled past 1:1 device pixels.
+      function view(frameW, frameH, rect, maxK, pad) {
+        const [x0, y0, x1, y1] = rect;
+        const w = x1 - x0;
+        const h = y1 - y0;
+        const k = Math.min(maxK ?? 1, (frameW * (pad ?? 0.92)) / w, (frameH * (pad ?? 0.92)) / h);
+        return { scale: k, x: frameW / 2 - k * (x0 + w / 2), y: frameH / 2 - k * (y0 + h / 2) };
+      }
+      const FW = 1600,
+        FH = 640,
+        RW = 900;
+      const E = "power3.out";
+      const tl = gsap.timeline({ paused: true });
+      const rise = (sel, at, dur) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, y: 28 },
+          { opacity: 1, y: 0, duration: dur ?? 0.6, ease: E },
+          at,
+        );
+      const fadeOut = (sel, at) =>
+        tl.to(sel, { opacity: 0, duration: 0.35, ease: "power2.in" }, at);
+      const tick = (sel, at) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, scale: 0.6 },
+          { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" },
+          at,
+        );
+      const pop = (sel, at) =>
+        tl.fromTo(
+          sel,
+          { opacity: 0, scale: 0.85 },
+          { opacity: 1, scale: 1, duration: 0.45, ease: "power3.out" },
+          at,
+        );
+      const push = (sel, at, dur) =>
+        tl.fromTo(sel, { scale: 1 }, { scale: 1.02, duration: dur, ease: "none" }, at);
+
+      // Top bar
+      tl.fromTo("#bar-in", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 4);
+
+      // 1. Hook (0–4)
+      rise("#s1-text", 0.2, 0.7);
+      tl.fromTo(
+        "#s1-art",
+        { opacity: 0, scale: 0.96 },
+        { opacity: 1, scale: 1, duration: 0.8, ease: E },
+        0.4,
+      );
+      rise("#s1-cap", 0.9);
+      fadeOut(["#s1-text", "#s1-art", "#s1-cap"], 3.6);
+
+      // 2. Write (4–10): the caption text, then the intent fields ticked.
+      rise("#s2-step", 4.1);
+      rise("#s2-frame", 4.1, 0.6);
+      tl.set("#s2-zoom", view(FW, FH, [0, 0, 2880, 1800]), 4);
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [1160, 470, 1990, 830]), duration: 1.0, ease: "power2.inOut" },
+        4.8,
+      );
+      tl.to(
+        "#s2-zoom",
+        { ...view(FW, FH, [560, 500, 1150, 1500], 1, 0.96), duration: 1.0, ease: "power2.inOut" },
+        6.6,
+      );
+      ["#t1", "#t2", "#t3", "#t4", "#t5"].forEach((t, i) => tick(t, 7.7 + i * 0.35));
+      rise("#s2-cap", 4.4);
+      fadeOut(["#s2-step", "#s2-frame", "#s2-cap"], 9.6);
+
+      // 3. Check (10–15): six labelled steps tick in order.
+      rise("#s3-step", 10.1);
+      for (let i = 1; i <= 6; i++) {
+        rise(`#st${i}`, 10.1 + i * 0.1, 0.5);
+        tick(`#st${i}-tick`, 11.0 + i * 0.45);
+      }
+      rise("#s3-cap", 10.4);
+      fadeOut(["#s3-step", ".pipeline", "#s3-cap"], 14.6);
+
+      // 4. Findings (15–25): two cited findings, 5 s each.
+      rise("#s4-step", 15.1);
+      const beats = [
+        ["a", 15.0, [0, 0, 800, 760]],
+        ["b", 20.0, [0, 0, 800, 740]],
+      ];
+      for (const [id, t0, rect] of beats) {
+        rise(`#f${id}-facts`, t0 + 0.15, 0.6);
+        tl.set(`#f${id}-zoom`, view(RW, FH, rect, 1.2, 0.94), t0);
+        tl.fromTo(
+          `#f${id}-frame`,
+          { opacity: 0, x: 60 },
+          { opacity: 1, x: 0, duration: 0.6, ease: E },
+          t0 + 0.25,
+        );
+        tl.fromTo(
+          `#f${id}-frame`,
+          { scale: 1 },
+          { scale: 1.03, duration: 3.8, ease: "none" },
+          t0 + 0.85,
+        );
+        rise(`#f${id}-cap`, t0 + 0.4);
+        fadeOut([`#f${id}-facts`, `#f${id}-frame`, `#f${id}-cap`], t0 + 4.65);
+      }
+      fadeOut("#s4-step", 24.6);
+
+      // 5. What's new (25–30): six rows tick one by one.
+      rise("#s5-step", 25.1);
+      rise("#s5-title", 25.15, 0.6);
+      for (let i = 1; i <= 6; i++) {
+        rise(`#n${i}`, 25.3 + i * 0.12, 0.5);
+        tick(`#n${i}-tick`, 26.2 + i * 0.4);
+      }
+      rise("#s5-cap", 25.5);
+      fadeOut(["#s5-step", "#s5-title", ".newlist", "#s5-cap"], 29.6);
+
+      // Feature scene: title, stat, component, sample label, caption; slow push-in; fade out.
+      function feature(n, t0, dur, extra) {
+        rise(`#s${n}-step`, t0 + 0.1);
+        rise(`#s${n}-title`, t0 + 0.15, 0.6);
+        pop(`#s${n}-stat`, t0 + 0.9);
+        rise(`#s${n}-cap`, t0 + 0.45);
+        if (extra) extra(t0);
+        fadeOut([`#s${n}-step`, `#s${n}-title`, `#s${n}-stat`, `#s${n}-cap`], t0 + dur - 0.4);
+      }
+
+      // 6. AI check pending (30–37)
+      feature(6, 30, 7, (t0) => {
+        rise("#s6-shot", t0 + 0.4, 0.7);
+        push("#s6-shot", t0 + 1.1, 5.4);
+        rise("#s6-sample", t0 + 1.2, 0.5);
+        ["#s6-f1", "#s6-a1", "#s6-f2", "#s6-a2", "#s6-f3"].forEach((c, i) =>
+          rise(c, t0 + 2.2 + i * 0.35, 0.5),
+        );
+        fadeOut(["#s6-shot", "#s6 .row"], t0 + 6.6);
+      });
+
+      // 7. Cross-check (37–44): three surfaces, then the conflict and the cited finding.
+      feature(7, 37, 7, (t0) => {
+        rise("#s7-a", t0 + 0.4, 0.6);
+        rise("#s7-b", t0 + 0.6, 0.6);
+        rise("#s7-c", t0 + 0.8, 0.6);
+        tl.to(
+          "#s7-bad",
+          { borderColor: "#a31428", backgroundColor: "#fbe3e6", duration: 0.3 },
+          t0 + 2.0,
+        );
+        tl.to(
+          ["#s7-ok1", "#s7-ok2"],
+          { borderColor: "#137a52", backgroundColor: "#ddf3ea", duration: 0.3 },
+          t0 + 2.5,
+        );
+        rise("#s7-finding", t0 + 3.0, 0.6);
+        fadeOut([".surfaces", "#s7-finding"], t0 + 6.6);
+      });
+
+      // 8. Contrast auto-heal (44–51)
+      feature(8, 44, 7, (t0) => {
+        rise("#s8-shot", t0 + 0.4, 0.7);
+        push("#s8-shot", t0 + 1.1, 5.4);
+        rise("#s8-sample", t0 + 1.2, 0.5);
+        fadeOut(["#s8-shot", "#s8-sample"], t0 + 6.6);
+      });
+
+      // 9. Review (51–58): routing line as Legal, then the sign-off dialog.
+      rise("#s9-step", 51.1);
+      tl.set("#s9-zoomA", view(1215, 284, [560, 203, 1775, 487], 1, 1), 51);
+      tl.set("#s9-zoomB", view(FW, FH, [900, 560, 1980, 1240]), 51);
+      rise("#s9-frameA", 51.1, 0.7);
+      tl.to("#s9-frameA", { opacity: 0, duration: 0.3 }, 53.8);
+      tl.fromTo("#s9-frame", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 54.0);
+      push("#s9-frame", 54.4, 3.2);
+      rise("#s9-cap", 51.5);
+      fadeOut(["#s9-step", "#s9-frame", "#s9-cap"], 57.6);
+
+      // 10. Publish receipt and kill-switch (58–66)
+      rise("#s10-step", 58.1);
+      rise("#s10-title", 58.15, 0.6);
+      pop("#s10-stat", 58.9);
+      rise("#s10-receipt", 58.6, 0.6);
+      rise("#s10-sample", 59.2, 0.5);
+      rise("#s10-capA", 58.45);
+      tl.to("#s10-capA", { opacity: 0, duration: 0.3 }, 61.7);
+      rise("#s10-capB", 62.0);
+      rise("#s10-f1", 62.1, 0.5);
+      rise("#s10-a1", 62.5, 0.4);
+      rise("#s10-f2", 62.7, 0.5);
+      tl.to("#s10-receipt", { opacity: 0.35, duration: 0.4 }, 62.9);
+      rise("#s10-a2", 63.1, 0.4);
+      rise("#s10-f3", 63.3, 0.5);
+      rise("#s10-revoked", 63.6, 0.6);
+      fadeOut(
+        [
+          "#s10-step",
+          "#s10-title",
+          "#s10-stat",
+          "#s10-receipt",
+          "#s10 .row",
+          "#s10-revoked",
+          "#s10-sample",
+          "#s10-capB",
+        ],
+        65.6,
+      );
+
+      // 11. Clarity backtest (66–73)
+      feature(11, 66, 7, (t0) => {
+        rise("#s11-shot", t0 + 0.4, 0.7);
+        push("#s11-shot", t0 + 1.1, 5.4);
+        rise("#s11-sample", t0 + 1.2, 0.5);
+        fadeOut(["#s11-shot", "#s11-sample"], t0 + 6.6);
+      });
+
+      // 12. MCP server (73–81)
+      feature(12, 73, 8, (t0) => {
+        rise("#s12-shot", t0 + 0.4, 0.7);
+        push("#s12-shot", t0 + 1.1, 6.4);
+        ["#tool1", "#tool2", "#tool3"].forEach((c, i) => rise(c, t0 + 1.6 + i * 0.35, 0.5));
+        rise("#s12-sample", t0 + 2.8, 0.5);
+        fadeOut(["#s12-shot", "#s12 .row"], t0 + 7.6);
+      });
+      tl.to("#bar-in", { opacity: 0, duration: 0.35 }, 80.6);
+
+      // 13. End (81–87)
+      rise("#s13-ink", 81.2, 0.7);
+      rise("#s13-mark", 81.9);
+      rise("#s13-tag", 82.3);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
